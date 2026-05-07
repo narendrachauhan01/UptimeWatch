@@ -82,6 +82,30 @@ server-monitor/
 - PM2 (`npm install -g pm2`)
 - MongoDB Atlas account
 
+### Install Node.js (Ubuntu/EC2)
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v && npm -v
+```
+
+### Install Google Chrome (Ubuntu/EC2)
+
+> Required for WhatsApp Web automation via Puppeteer
+
+```bash
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y ./google-chrome-stable_current_amd64.deb
+google-chrome --version
+```
+
+### Install PM2
+
+```bash
+npm install -g pm2
+```
+
 ### 1. Backend Setup
 
 ```bash
