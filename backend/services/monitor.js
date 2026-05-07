@@ -5,8 +5,9 @@ const Recipient = require('../models/Recipient');
 const Alert = require('../models/Alert');
 const wa = require('./whatsapp');
 const { checkSSL, checkDomain, extractHostname, extractRootDomain } = require('./expiry');
+const { sendEmail, downEmailHtml, recoveredEmailHtml, sslEmailHtml } = require('./email');
 
-const COOLDOWN_MS = 30 * 60 * 1000;
+const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown
 const lastAlertTime = {};
 const SSL_MILESTONES = [30, 15, 7];   // alert at these days remaining
 const DOMAIN_MILESTONES = [30, 15, 7];
@@ -29,6 +30,9 @@ function checkUrl(url) {
 }
 
 function getEligibleRecipients(recipients, serverId) {
+    // servers.length === 0 means ALL sites (default)
+    // servers with specific IDs means only those sites
+    // If you want everyone to get all alerts, clear their site assignments
     return recipients.filter(r =>
         r.servers.length === 0 ||
         r.servers.some(s => s._id.toString() === serverId.toString())
@@ -52,16 +56,23 @@ async function checkAll() {
 
             if (!result.up) {
                 server.status = 'down';
-                if (prevStatus !== 'down') server.lastDownAt = new Date();
+                const isNewDown = prevStatus !== 'down';
+                if (isNewDown) server.lastDownAt = new Date();
 
                 const cooldownOk = !lastAlertTime[server._id] || (Date.now() - lastAlertTime[server._id]) > COOLDOWN_MS;
-                if (prevStatus !== 'down' || cooldownOk) {
+                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} cooldownOk:${cooldownOk}`);
+
+                if (isNewDown || cooldownOk) {
                     const eligible = getEligibleRecipients(recipients, server._id);
+                    console.log(`[Monitor] ${server.name} → eligible recipients: ${eligible.length}`);
                     await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
                     lastAlertTime[server._id] = Date.now();
+                } else {
+                    console.log(`[Monitor] ${server.name} → alert skipped (cooldown active)`);
                 }
             } else {
                 server.status = 'up';
+                console.log(`[Monitor] ${server.name} prevStatus: ${prevStatus}`);
                 if (prevStatus === 'down') {
                     server.lastUpAt = new Date();
                     const eligible = getEligibleRecipients(recipients, server._id);
@@ -70,17 +81,20 @@ async function checkAll() {
                 }
             }
 
-            // Save history (keep last 50 data points)
-            server.history = server.history || [];
-            server.history.push({
-                time: new Date(),
+            // Use findByIdAndUpdate with $set to avoid version conflict with checkExpiry
+            const setFields = {
+                lastChecked: new Date(),
                 responseTime: result.time,
-                status: result.up ? 'up' : 'down',
                 httpCode: result.code,
-            });
-            if (server.history.length > 50) server.history = server.history.slice(-50);
+                status: result.up ? 'up' : 'down',
+            };
+            if (!result.up && prevStatus !== 'down') setFields.lastDownAt = new Date();
+            if (result.up && prevStatus === 'down') setFields.lastUpAt = new Date();
 
-            await server.save();
+            await Server.findByIdAndUpdate(server._id, {
+                $set: setFields,
+                $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -50 } },
+            });
         }
     } catch (err) {
         console.error('[Monitor] checkAll error:', err.message);
@@ -89,18 +103,30 @@ async function checkAll() {
 
 async function sendAlerts(server, recipients, type, detail) {
     const isDown = type === 'down';
-    const msg = isDown
+    const waMsg = isDown
         ? `🚨 *Site Down Alert!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Time:* ${now()}\n\nSite is currently *DOWN* ❌\nPlease check immediately!`
         : `✅ *Site Recovered!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Time:* ${now()}\n\nSite is back *UP* and running! ✅`;
 
+    const emailSubject = isDown ? `🚨 Site Down: ${server.name}` : `✅ Site Recovered: ${server.name}`;
+    const emailHtml = isDown
+        ? downEmailHtml(server.name, server.url, now())
+        : recoveredEmailHtml(server.name, server.url, now());
+
     const sentTo = [];
     for (const r of recipients) {
-        try {
-            await wa.sendMessage(r.phone, msg);
-            sentTo.push({ name: r.name, phone: r.phone });
-        } catch (e) {
-            console.error(`[Monitor] Failed to send to ${r.phone}:`, e.message);
+        // WhatsApp
+        if (r.phone) {
+            try {
+                await wa.sendMessage(r.phone, waMsg);
+            } catch (e) {
+                console.error(`[Monitor] WA failed to ${r.phone}:`, e.message);
+            }
         }
+        // Email
+        if (r.email) {
+            await sendEmail(r.email, emailSubject, emailHtml);
+        }
+        sentTo.push({ name: r.name, phone: r.phone || '', email: r.email || '' });
     }
 
     await Alert.create({
@@ -133,9 +159,10 @@ async function checkExpiry() {
                 if (SSL_MILESTONES.includes(ssl.daysLeft)) {
                     const eligible = getEligibleRecipients(recipients, server._id);
                     const emoji = ssl.daysLeft <= 7 ? '🚨' : ssl.daysLeft <= 15 ? '⚠️' : '📢';
-                    const msg = `${emoji} *SSL Certificate Alert!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Expires:* ${ssl.expiry.toDateString()}\n*Days Left:* ${ssl.daysLeft} days\n\nPlease renew the SSL certificate before it expires!`;
+                    const waMsg = `${emoji} *SSL Certificate Alert!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Expires:* ${ssl.expiry.toDateString()}\n*Days Left:* ${ssl.daysLeft} days\n\nPlease renew SSL certificate!`;
                     for (const r of eligible) {
-                        try { await wa.sendMessage(r.phone, msg); } catch (_) {}
+                        if (r.phone) { try { await wa.sendMessage(r.phone, waMsg); } catch (_) {} }
+                        if (r.email) { await sendEmail(r.email, `${emoji} SSL Expiring: ${server.name} (${ssl.daysLeft} days)`, sslEmailHtml(server.name, server.url, ssl.daysLeft, ssl.expiry)); }
                     }
                     console.log(`[Monitor] SSL expiry alert sent for ${server.name} (${ssl.daysLeft} days left)`);
                 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Servers from './pages/Servers';
 import Recipients from './pages/Recipients';
@@ -9,22 +9,44 @@ import DomainSSL from './pages/DomainSSL';
 import Charts from './pages/Charts';
 import './App.css';
 
+function Navbar() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  React.useEffect(() => setOpen(false), [location]);
+
+  const links = [
+    { to: '/charts', label: 'Analytics' },
+    { to: '/', label: 'Dashboard' },
+    { to: '/servers', label: 'Servers' },
+    { to: '/recipients', label: 'Recipients' },
+    { to: '/alerts', label: 'Alerts' },
+    { to: '/domain-ssl', label: 'Domain & SSL' },
+    { to: '/whatsapp', label: 'WhatsApp' },
+  ];
+
+  return (
+    <nav className="navbar">
+      <div className="nav-brand"><div className="nav-logo">SM</div><span>Server Monitor</span></div>
+      <button className="nav-hamburger" onClick={() => setOpen(!open)} aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div className={`nav-links ${open ? 'nav-open' : ''}`}>
+        {links.map(l => (
+          <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setOpen(false)}>
+            {l.label}
+          </NavLink>
+        ))}
+      </div>
+      {open && <div className="nav-backdrop" onClick={() => setOpen(false)} />}
+    </nav>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <nav className="navbar">
-          <div className="nav-brand"><span>Server Monitor</span></div>
-          <div className="nav-links">
-            <NavLink to="/charts">Analytics</NavLink>
-            <NavLink to="/">Dashboard</NavLink>
-            <NavLink to="/servers">Servers</NavLink>
-            <NavLink to="/recipients">Recipients</NavLink>
-            <NavLink to="/alerts">Alerts</NavLink>
-            <NavLink to="/domain-ssl">Domain & SSL</NavLink>
-            <NavLink to="/whatsapp">WhatsApp</NavLink>
-          </div>
-        </nav>
+        <Navbar />
         <main className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -37,7 +59,9 @@ export default function App() {
           </Routes>
         </main>
         <footer className="app-footer">
-          <span>Managed by <strong>Narendra Singh</strong> &mdash; DevOps Engineer</span>
+          <div className="footer-bottom">
+            <span>© 2026 All rights reserved &mdash; Built & managed by <strong>Narendra Singh</strong> &mdash; DevOps Engineer</span>
+          </div>
         </footer>
       </div>
     </BrowserRouter>

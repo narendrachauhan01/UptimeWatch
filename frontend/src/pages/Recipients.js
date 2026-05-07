@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getRecipients, addRecipient, deleteRecipient, updateRecipient, getServers } from '../api';
 
-const empty = { name: '', phone: '', servers: [] };
+const empty = { name: '', phone: '', email: '', servers: [] };
 
 export default function Recipients() {
   const [recipients, setRecipients] = useState([]);
@@ -28,15 +28,24 @@ export default function Recipients() {
     setError('');
   };
 
+  const validateForm = () => {
+    if (!form.name.trim()) return 'Please enter a name';
+    if (!form.phone && !form.email) return 'Enter at least WhatsApp number or Email';
+    if (form.phone && form.phone.length < 10) return 'Enter valid 10-digit number';
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter valid email address';
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.name.trim()) { setError('Please enter a name'); return; }
-    if (!form.phone || form.phone.length < 10) { setError('Please enter a valid 10-digit number'); return; }
-    const phone = form.phone.startsWith('91') ? form.phone : '91' + form.phone;
+    const err = validateForm();
+    if (err) { setError(err); return; }
+    const phone = form.phone ? (form.phone.startsWith('91') ? form.phone : '91' + form.phone) : null;
+    const email = form.email.trim() || null;
     setSaving(true);
     try {
-      await addRecipient({ name: form.name.trim(), phone, servers: form.servers });
+      await addRecipient({ name: form.name.trim(), phone, email, servers: form.servers });
       setForm(empty);
       load();
     } catch (e) {
@@ -58,15 +67,16 @@ export default function Recipients() {
 
   const startEdit = (r) => {
     setEditId(r._id);
-    const raw = r.phone.startsWith('91') ? r.phone.slice(2) : r.phone;
-    setEditForm({ name: r.name, phone: raw });
+    const raw = r.phone ? (r.phone.startsWith('91') ? r.phone.slice(2) : r.phone) : '';
+    setEditForm({ name: r.name, phone: raw, email: r.email || '' });
     setExpandedId(null);
   };
 
   const saveEdit = async () => {
-    if (!editForm.name.trim() || editForm.phone.length < 10) return;
-    const phone = editForm.phone.startsWith('91') ? editForm.phone : '91' + editForm.phone;
-    await updateRecipient(editId, { name: editForm.name.trim(), phone });
+    if (!editForm.name.trim()) return;
+    const phone = editForm.phone ? (editForm.phone.startsWith('91') ? editForm.phone : '91' + editForm.phone) : null;
+    const email = editForm.email?.trim() || null;
+    await updateRecipient(editId, { name: editForm.name.trim(), phone, email });
     setEditId(null);
     load();
   };
@@ -89,7 +99,7 @@ export default function Recipients() {
   };
 
   const formatPhone = (phone) => {
-    if (!phone) return '';
+    if (!phone) return null;
     const p = phone.startsWith('91') ? phone.slice(2) : phone;
     return `+91 ${p.slice(0, 5)} ${p.slice(5)}`;
   };
@@ -122,7 +132,7 @@ export default function Recipients() {
                 onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="add-field">
-              <label>WhatsApp Number</label>
+              <label>WhatsApp Number <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span></label>
               <div className="phone-input-wrap">
                 <span className="phone-prefix">🇮🇳 +91</span>
                 <input type="tel" placeholder="98765 43210"
@@ -130,6 +140,13 @@ export default function Recipients() {
                   onChange={e => handlePhoneChange(e.target.value)} maxLength={10} />
               </div>
               <span className="field-hint">10-digit mobile number</span>
+            </div>
+            <div className="add-field">
+              <label>Email <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span></label>
+              <input type="email" placeholder="name@example.com"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })} />
+              <span className="field-hint">Alert email address</span>
             </div>
           </div>
           <div style={{ marginTop: 16 }}>
@@ -176,7 +193,8 @@ export default function Recipients() {
                 <div className="recipient-avatar">{r.name.charAt(0).toUpperCase()}</div>
                 <div className="recipient-info">
                   <div className="recipient-name">{r.name}</div>
-                  <div className="recipient-phone">{formatPhone(r.phone)}</div>
+                  {r.phone && <div className="recipient-phone">📱 {formatPhone(r.phone)}</div>}
+                  {r.email && <div className="recipient-phone">✉️ {r.email}</div>}
                   <div className="recipient-sites">🌐 {getSiteLabel(r)}</div>
                 </div>
                 <span className={`status-pill ${r.active ? 'active' : 'paused'}`}>
@@ -208,9 +226,14 @@ export default function Recipients() {
                       <label>WhatsApp Number</label>
                       <div className="phone-input-wrap">
                         <span className="phone-prefix">🇮🇳 +91</span>
-                        <input type="tel" maxLength={10} value={editForm.phone}
+                        <input type="tel" maxLength={10} value={editForm.phone || ''}
                           onChange={e => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, '') })} />
                       </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input type="email" placeholder="name@example.com" value={editForm.email || ''}
+                        onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                       <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
