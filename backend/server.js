@@ -27,8 +27,10 @@ app.use(express.json());
 app.use('/api/servers', require('./routes/servers'));
 app.use('/api/recipients', require('./routes/recipients'));
 app.use('/api/alerts', require('./routes/alerts'));
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/whatsapp', require('./routes/whatsapp'));
 app.use('/api/expiry', require('./routes/expiry'));
+app.use('/api/email-config', require('./routes/emailConfig'));
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {

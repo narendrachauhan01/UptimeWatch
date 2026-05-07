@@ -2,6 +2,10 @@ const nodemailer = require('nodemailer');
 
 let transporter = null;
 
+function resetTransporter() {
+    transporter = null;
+}
+
 function getTransporter() {
     if (!transporter) {
         transporter = nodemailer.createTransport({
@@ -104,4 +108,4 @@ function sslEmailHtml(name, url, daysLeft, expiry) {
     </div>`;
 }
 
-module.exports = { sendEmail, downEmailHtml, recoveredEmailHtml, sslEmailHtml };
+module.exports = { sendEmail, resetTransporter, downEmailHtml, recoveredEmailHtml, sslEmailHtml };
