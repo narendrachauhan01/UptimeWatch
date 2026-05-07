@@ -1,0 +1,25 @@
+# WhatsApp session (contains auth tokens)
+.ww-session/
+.ww-temp/
+.wwebjs_cache/
+
+# Environment files
+backend/.env
+frontend/.env
+frontend/.env.*
+
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Production build
+frontend/build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
