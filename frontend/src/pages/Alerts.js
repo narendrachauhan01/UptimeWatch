@@ -9,67 +9,50 @@ export default function Alerts() {
   useEffect(() => { getAlerts().then(r => setAlerts(r.data)); }, []);
 
   const filtered = alerts.filter(a => {
-    const matchSearch = a.serverName?.toLowerCase().includes(search.toLowerCase()) ||
-      a.serverUrl?.toLowerCase().includes(search.toLowerCase()) ||
-      a.sentTo?.some(r => r.name.toLowerCase().includes(search.toLowerCase()));
+    const q = search.toLowerCase();
+    const matchSearch = a.serverName?.toLowerCase().includes(q) || a.serverUrl?.toLowerCase().includes(q) || a.sentTo?.some(r => r.name.toLowerCase().includes(q));
     const matchFilter = filter === 'all' || a.type === filter;
     return matchSearch && matchFilter;
   });
 
   return (
-    <div>
-      <div className="section-header">
-        <h2>Alert History</h2>
+    <div className="pg-wrap">
+      <div className="pg-header">
+        <div>
+          <h1 className="pg-title">Alert History</h1>
+          <p className="pg-sub">{alerts.length} total alerts</p>
+        </div>
       </div>
 
       <div className="filter-bar">
         <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input className="search-input" placeholder="Search by site name, URL or recipient..."
-            value={search} onChange={e => setSearch(e.target.value)} />
+          <svg width="16" height="16" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input className="search-input" placeholder="Search alerts..." value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button className="search-clear" onClick={() => setSearch('')}>✕</button>}
         </div>
-        <div className="filter-tabs">
-          {[{ key: 'all', label: `All (${alerts.length})` }, { key: 'down', label: '🔴 Down' }, { key: 'recovered', label: '✅ Recovered' }].map(f => (
-            <button key={f.key} className={`filter-tab ${filter === f.key ? 'active' : ''}`}
-              onClick={() => setFilter(f.key)}>{f.label}</button>
+        <div className="filter-pills">
+          {[['all',`All (${alerts.length})`],['down','Down'],['recovered','Recovered']].map(([k,l]) => (
+            <button key={k} className={`filter-pill ${filter===k?'active':''}`} onClick={() => setFilter(k)}>{l}</button>
           ))}
         </div>
       </div>
 
-      <div className="card">
+      <div className="data-card">
         {filtered.length === 0 ? (
-          <div className="empty">{alerts.length === 0 ? 'No alerts yet.' : 'No results found.'}</div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Site</th>
-                <th>URL</th>
-                <th>Message</th>
-                <th>Sent To</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(a => (
-                <tr key={a._id}>
-                  <td>
-                    <span className={`badge ${a.type === 'down' ? 'badge-down' : 'badge-up'}`}>
-                      {a.type === 'down' ? 'DOWN' : 'RECOVERED'}
-                    </span>
-                  </td>
-                  <td><strong>{a.serverName}</strong></td>
-                  <td style={{ fontSize: 12 }}>{a.serverUrl}</td>
-                  <td style={{ fontSize: 12 }}>{a.message}</td>
-                  <td style={{ fontSize: 12 }}>{a.sentTo?.map(r => r.name).join(', ') || '-'}</td>
-                  <td className="response-time">{new Date(a.createdAt).toLocaleString('en-IN')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+          <div className="empty-msg">{alerts.length === 0 ? 'No alerts yet. Alerts appear here when a site goes down.' : 'No results found.'}</div>
+        ) : filtered.map(a => (
+          <div key={a._id} className={`alert-row alert-${a.type}`}>
+            <div className={`alert-badge ${a.type}`}>{a.type === 'down' ? '↓ Down' : '↑ Recovered'}</div>
+            <div className="alert-info">
+              <div className="alert-site">{a.serverName}</div>
+              <div className="alert-url">{a.serverUrl}</div>
+            </div>
+            <div className="alert-meta">
+              {a.sentTo?.length > 0 && <span className="meta-txt">📨 {a.sentTo.map(r => r.name).join(', ')}</span>}
+              <span className="meta-txt">{new Date(a.createdAt).toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

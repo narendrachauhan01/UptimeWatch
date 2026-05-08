@@ -36,26 +36,28 @@ export default function DomainSSL() {
     return Math.floor((new Date(date) - Date.now()) / (1000 * 60 * 60 * 24));
   };
 
-  const expiryClass = (days) => {
-    if (days == null) return 'expiry-na';
-    if (days <= 7) return 'expiry-critical';
-    if (days <= 30) return 'expiry-warn';
-    return 'expiry-ok';
+  const expiryColor = (days) => {
+    if (days == null) return '#94a3b8';
+    if (days <= 7) return '#ef4444';
+    if (days <= 30) return '#f59e0b';
+    return '#10b981';
   };
 
-  const expiryLabel = (days, date) => {
-    if (days == null) return 'Not set';
-    return `${days}d — ${new Date(date).toLocaleDateString('en-IN')}`;
+  const expiryBg = (days) => {
+    if (days == null) return '#f1f5f9';
+    if (days <= 7) return 'rgba(239,68,68,0.08)';
+    if (days <= 30) return 'rgba(245,158,11,0.08)';
+    return 'rgba(16,185,129,0.08)';
   };
 
-  const getSslInfo = (s) => {
+  const getSsl = (s) => {
     const r = results[s._id];
     if (r?.ssl) return { days: r.ssl.daysLeft, date: r.ssl.expiry };
     if (s.sslExpiry) return { days: s.sslDaysLeft, date: s.sslExpiry };
     return null;
   };
 
-  const getDomainInfo = (s) => {
+  const getDomain = (s) => {
     const r = results[s._id];
     if (r?.domain) return { days: r.domain.daysLeft, date: r.domain.expiry, registrar: r.domain.registrar };
     if (s.domainExpiry) return { days: daysLeft(s.domainExpiry), date: s.domainExpiry };
@@ -63,125 +65,102 @@ export default function DomainSSL() {
   };
 
   const filtered = servers.filter(s => {
-    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.url.toLowerCase().includes(search.toLowerCase());
-    const ssl = getSslInfo(s);
-    const dom = daysLeft(s.domainExpiry);
+    const q = search.toLowerCase();
+    const matchSearch = s.name.toLowerCase().includes(q) || s.url.toLowerCase().includes(q);
+    const ssl = getSsl(s); const dom = getDomain(s);
     if (filter === 'ssl-warn') return matchSearch && ssl && ssl.days <= 30;
-    if (filter === 'domain-warn') return matchSearch && dom != null && dom <= 30;
-    if (filter === 'no-domain') return matchSearch && !s.domainExpiry;
+    if (filter === 'dom-warn') return matchSearch && dom && dom.days <= 30;
     return matchSearch;
   });
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="pg-wrap">
+      <div className="pg-header">
         <div>
-          <h1 className="page-title">Domain & SSL</h1>
-          <p className="page-subtitle">Monitor SSL certificates and domain expiry for all sites</p>
+          <h1 className="pg-title">Domain & SSL</h1>
+          <p className="pg-sub">Monitor SSL certificates and domain expiry</p>
         </div>
-        <button className="btn-refresh" onClick={checkAll} disabled={checkingAll}>
-          {checkingAll ? 'Checking...' : 'Check All'}
+        <button className="btn-primary-pill" onClick={checkAll} disabled={checkingAll}>
+          {checkingAll ? '⏳ Checking...' : '🔍 Check All'}
         </button>
       </div>
 
-      {/* Search + Filter bar */}
+      {/* Filter */}
       <div className="filter-bar">
         <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input className="search-input" placeholder="Search by site name or URL..."
-            value={search} onChange={e => setSearch(e.target.value)} />
+          <svg width="16" height="16" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input className="search-input" placeholder="Search sites..." value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button className="search-clear" onClick={() => setSearch('')}>✕</button>}
         </div>
-        <div className="filter-tabs">
-          {[
-            { key: 'all', label: `All (${servers.length})` },
-            { key: 'ssl-warn', label: '⚠️ SSL Expiring' },
-            { key: 'domain-warn', label: '⚠️ Domain Expiring' },
-            { key: 'no-domain', label: '🌐 No Domain Set' },
-          ].map(f => (
-            <button key={f.key}
-              className={`filter-tab ${filter === f.key ? 'active' : ''}`}
-              onClick={() => setFilter(f.key)}>
-              {f.label}
-            </button>
+        <div className="filter-pills">
+          {[['all','All'], ['ssl-warn','⚠️ SSL Expiring'], ['dom-warn','⚠️ Domain Expiring']].map(([k,l]) => (
+            <button key={k} className={`filter-pill ${filter===k?'active':''}`} onClick={() => setFilter(k)}>{l}</button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        {filtered.length === 0 ? (
-          <div className="empty">No sites found.</div>
-        ) : (
-          <table className="ssl-table">
-            <thead>
-              <tr>
-                <th>Site</th>
-                <th>URL</th>
-                <th>🔒 SSL Certificate</th>
-                <th>🌐 Domain Expiry</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(s => {
-                const ssl = getSslInfo(s);
-                const domDays = daysLeft(s.domainExpiry);
-                const r = results[s._id];
-                return (
-                  <tr key={s._id}>
-                    <td>
-                      <div className="ssl-site-name-td">{s.name}</div>
-                      <div className={`ssl-status-dot-inline ${s.status}`}></div>
-                    </td>
-                    <td>
-                      <a href={s.url} target="_blank" rel="noreferrer" className="ssl-url-link">{s.url}</a>
-                    </td>
-                    <td>
-                      {r?.error ? (
-                        <span className="expiry-badge expiry-critical">Error</span>
-                      ) : ssl ? (
-                        <div>
-                          <span className={`expiry-badge ${expiryClass(ssl.days)}`}>
-                            {ssl.days} days left
-                          </span>
-                          <div className="ssl-sub-date">{new Date(ssl.date).toLocaleDateString('en-IN')}</div>
-                        </div>
-                      ) : (
-                        <span className="expiry-badge expiry-na">Click Check</span>
-                      )}
-                    </td>
-                    <td>
-                      {(() => {
-                        const di = getDomainInfo(s);
-                        return di ? (
-                          <div>
-                            <span className={`expiry-badge ${expiryClass(di.days)}`}>{di.days} days left</span>
-                            <div className="ssl-sub-date">{new Date(di.date).toLocaleDateString('en-IN')}</div>
-                            {di.registrar && <div className="ssl-sub-date" style={{color:'#7c3aed'}}>🏢 {di.registrar}</div>}
-                          </div>
-                        ) : (
-                          <span className="expiry-badge expiry-na">Click Check</span>
-                        );
-                      })()}
-                    </td>
-                    <td>
-                      <button
-                        className={`btn-check-ssl-sm ${checking[s._id] ? 'loading' : ''}`}
-                        onClick={() => checkOne(s)}
-                        disabled={checking[s._id]}
-                      >
-                        {checking[s._id] ? '...' : '🔍 Check'}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {/* Cards */}
+      {filtered.length === 0 ? (
+        <div className="data-card"><div className="empty-msg">No sites found.</div></div>
+      ) : (
+        <div className="ssl-cards-grid">
+          {filtered.map(s => {
+            const ssl = getSsl(s);
+            const dom = getDomain(s);
+            const r = results[s._id];
+            const isChecking = checking[s._id];
+            return (
+              <div key={s._id} className="ssl-site-card">
+                {/* Card Header */}
+                <div className="ssl-site-header">
+                  <div className="ssl-site-dot" style={{ background: s.status === 'up' ? '#10b981' : s.status === 'down' ? '#ef4444' : '#f59e0b' }} />
+                  <div className="ssl-site-info">
+                    <div className="ssl-site-name">{s.name}</div>
+                    <a href={s.url} target="_blank" rel="noreferrer" className="ssl-site-url" onClick={e => e.stopPropagation()}>{s.url}</a>
+                  </div>
+                  <button className="ssl-check-btn" onClick={() => checkOne(s)} disabled={isChecking}>
+                    {isChecking ? '⏳' : '🔍 Check'}
+                  </button>
+                </div>
+
+                {/* SSL + Domain */}
+                <div className="ssl-expiry-grid">
+                  <div className="ssl-expiry-box" style={{ background: ssl ? expiryBg(ssl.days) : '#f8fafc', borderColor: ssl ? expiryColor(ssl.days) + '30' : '#e2e8f0' }}>
+                    <div className="ssl-expiry-label">🔒 SSL Certificate</div>
+                    {isChecking ? (
+                      <div className="ssl-checking">Checking...</div>
+                    ) : r?.error ? (
+                      <div className="ssl-val" style={{ color: '#ef4444' }}>Check failed</div>
+                    ) : ssl ? (
+                      <>
+                        <div className="ssl-val" style={{ color: expiryColor(ssl.days) }}>{ssl.days} days left</div>
+                        <div className="ssl-date">{new Date(ssl.date).toLocaleDateString('en-IN')}</div>
+                      </>
+                    ) : (
+                      <div className="ssl-na">Click Check</div>
+                    )}
+                  </div>
+
+                  <div className="ssl-expiry-box" style={{ background: dom ? expiryBg(dom.days) : '#f8fafc', borderColor: dom ? expiryColor(dom.days) + '30' : '#e2e8f0' }}>
+                    <div className="ssl-expiry-label">🌐 Domain Expiry</div>
+                    {isChecking ? (
+                      <div className="ssl-checking">Checking...</div>
+                    ) : dom ? (
+                      <>
+                        <div className="ssl-val" style={{ color: expiryColor(dom.days) }}>{dom.days} days left</div>
+                        <div className="ssl-date">{new Date(dom.date).toLocaleDateString('en-IN')}</div>
+                        {dom.registrar && <div className="ssl-registrar">🏢 {dom.registrar}</div>}
+                      </>
+                    ) : (
+                      <div className="ssl-na">Click Check</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
