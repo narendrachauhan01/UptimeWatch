@@ -274,7 +274,49 @@ export default function Resources() {
                   )}
                 </InfoBox>
 
-                {/* Active Sessions (w command) */}
+                {/* Who is Logged In - w command */}
+                {s.activeSessions && (
+                  <div className="res-info-box res-w-box">
+                    <div className="res-info-box-header" style={{ borderLeft: '3px solid #10b981' }}>
+                      <span>👥</span>
+                      <span className="res-info-box-title">Who is Logged SSH</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 11, color: '#10b981', fontWeight: 700 }}>
+                        {s.activeSessions.length} user{s.activeSessions.length !== 1 ? 's' : ''} online
+                      </span>
+                    </div>
+                    <div className="res-w-table-wrap">
+                      {s.activeSessions.length === 0 ? (
+                        <div style={{ padding: '14px 16px', color: '#94a3b8', fontSize: 13 }}>🔴 No active sessions</div>
+                      ) : (
+                        <table className="res-w-table">
+                          <thead>
+                            <tr>
+                              <th>USER</th>
+                              <th>TTY</th>
+                              <th>FROM</th>
+                              <th>LOGIN</th>
+                              <th>IDLE</th>
+                              <th>WHAT</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {s.activeSessions.map((u, i) => (
+                              <tr key={i}>
+                                <td><strong style={{ color: '#7c3aed' }}>{u.user}</strong></td>
+                                <td style={{ color: '#94a3b8' }}>{u.tty}</td>
+                                <td><span style={{ fontFamily: 'monospace', color: '#10b981', fontSize: 12 }}>{u.from !== '-' ? u.from : '—'}</span></td>
+                                <td style={{ color: '#475569' }}>{u.loginTime}</td>
+                                <td style={{ color: u.idle === '0.00s' || u.idle?.includes('s') ? '#10b981' : '#f59e0b' }}>{u.idle}</td>
+                                <td style={{ color: '#64748b', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }} title={u.what}>{u.what || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <InfoBox icon="🔐" title="SSH Active Sessions" accent="#ef4444">
                   {s.activeSessions && s.activeSessions.length > 0 ? (
                     <>
