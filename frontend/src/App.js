@@ -27,7 +27,7 @@ function Navbar({ onLogout }) {
     { to: '/servers', label: 'Servers' },
     { to: '/recipients', label: 'Recipients' },
     { to: '/alerts', label: 'Alerts' },
-    { to: '/server-resources', label: 'Server Resources' },
+    { to: '/server-resources', label: 'Infra Monitor' },
     { to: '/domain-ssl', label: 'Domain & SSL' },
     { to: '/email', label: 'Email' },
     { to: '/whatsapp', label: 'WhatsApp' },

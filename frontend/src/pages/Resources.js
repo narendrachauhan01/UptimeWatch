@@ -154,7 +154,7 @@ export default function Resources() {
     <div className="pg-wrap">
       <div className="pg-header">
         <div>
-          <h1 className="pg-title">Server Resources</h1>
+          <h1 className="pg-title">Infra Monitor</h1>
           <p className="pg-sub">Real-time CPU, RAM & Disk monitoring</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
