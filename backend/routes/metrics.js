@@ -13,10 +13,20 @@ function authAgent(req, res, next) {
 // POST /api/metrics — agent sends metrics
 router.post('/', authAgent, async (req, res) => {
     try {
-        const { serverId, serverName, hostname, cpu, ramUsed, ramTotal, diskUsed, diskTotal, uptime, platform } = req.body;
+        const { serverId, serverName, hostname, platform, cpu,
+                ramUsed, ramTotal, diskUsed, diskTotal,
+                swapUsed, swapTotal, load1, load5, load15,
+                uptime, cpuCores, cpuModel, cpuArch,
+                localIp, publicIp, lastSsh } = req.body;
         if (!serverId || !serverName) return res.status(400).json({ error: 'serverId and serverName required' });
 
-        await ServerMetric.create({ serverId, serverName, hostname, cpu, ramUsed, ramTotal, diskUsed, diskTotal, uptime, platform });
+        await ServerMetric.create({
+            serverId, serverName, hostname, platform, cpu,
+            ramUsed, ramTotal, diskUsed, diskTotal,
+            swapUsed, swapTotal, load1, load5, load15,
+            uptime, cpuCores, cpuModel, cpuArch,
+            localIp, publicIp, lastSsh,
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
