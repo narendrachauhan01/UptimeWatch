@@ -87,7 +87,7 @@ export default function Charts() {
     <div className="pg-wrap">
       <div className="pg-header">
         <div>
-          <h1 className="pg-title">Analytics</h1>
+          <h1 className="pg-title">Performance</h1>
           <p className="pg-sub">Response time, uptime and alert trends</p>
         </div>
       </div>
