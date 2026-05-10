@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 import { API_URL } from '../api';
@@ -89,11 +89,16 @@ export default function Resources() {
   const [selected, setSelected] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [secondsAgo, setSecondsAgo] = useState(0);
+  const tickRef = useRef(null);
 
   const loadLatest = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/api/metrics/latest`);
       setServers(res.data);
+      setLastUpdated(new Date());
+      setSecondsAgo(0);
       if (res.data.length > 0 && !selected) setSelected(res.data[0]);
     } catch (e) {
       console.error('Failed to load metrics:', e.message);
@@ -116,9 +121,15 @@ export default function Resources() {
 
   useEffect(() => {
     loadLatest();
-    const t = setInterval(loadLatest, 30000);
+    const t = setInterval(loadLatest, 10000); // poll every 10s
     return () => clearInterval(t);
   }, [loadLatest]);
+
+  // Live seconds counter
+  useEffect(() => {
+    tickRef.current = setInterval(() => setSecondsAgo(s => s + 1), 1000);
+    return () => clearInterval(tickRef.current);
+  }, []);
 
   useEffect(() => {
     if (selected) loadHistory(selected.serverId);
@@ -158,7 +169,9 @@ export default function Resources() {
           <p className="pg-sub">Real-time CPU, RAM & Disk monitoring</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="res-live-badge">🟢 Live — updates every 30s</span>
+          <span className="res-live-badge">
+            🟢 Live {secondsAgo > 0 && `— ${secondsAgo}s ago`}
+          </span>
         </div>
       </div>
 

@@ -22,7 +22,7 @@ function Navbar({ onLogout }) {
   React.useEffect(() => setOpen(false), [location]);
 
   const links = [
-    { to: '/charts', label: 'Performance' },
+    { to: '/charts', label: 'Site Performance' },
     { to: '/server-resources', label: 'Infra Monitor' },
     { to: '/', label: 'Dashboard' },
     { to: '/servers', label: 'Servers' },
