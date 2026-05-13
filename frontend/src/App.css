@@ -1089,6 +1089,11 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 ══════════════════════════════════════ */
 .nav-mobile-header { display: none; }
 .nav-close-btn { display: none; }
+
+/* Hamburger → X animation when open */
+.nav-hamburger-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-hamburger-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-hamburger-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 .nav-hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; border-radius: 10px; transition: background 0.2s; z-index: 102; }
 .nav-hamburger:hover { background: #f1f5f9; }
 .nav-hamburger span { display: block; width: 22px; height: 2.5px; background: #1e293b; border-radius: 4px; transition: all 0.3s; }
