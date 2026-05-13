@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [selected, setSelected] = useState(null);
   const [siteChecking, setSiteChecking] = useState(false);
   const [siteResult, setSiteResult] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const load = () => getServers().then(r => { setServers(r.data); setLastUpdated(new Date()); });
 
@@ -70,21 +71,21 @@ export default function Dashboard() {
       </div>
 
       <div className="stats-row">
-        <div className="stat-box total">
+        <div className={`stat-box total ${statusFilter==='all'?'stat-active':''}`} onClick={() => setStatusFilter('all')} style={{cursor:'pointer'}}>
           <div className="stat-icon">🖥️</div>
           <div className="stat-info">
             <div className="stat-value">{servers.length}</div>
             <div className="stat-name">Total Sites</div>
           </div>
         </div>
-        <div className="stat-box online">
+        <div className={`stat-box online ${statusFilter==='up'?'stat-active':''}`} onClick={() => setStatusFilter(statusFilter==='up'?'all':'up')} style={{cursor:'pointer'}}>
           <div className="stat-icon">✅</div>
           <div className="stat-info">
             <div className="stat-value">{up}</div>
             <div className="stat-name">Online</div>
           </div>
         </div>
-        <div className="stat-box offline">
+        <div className={`stat-box offline ${statusFilter==='down'?'stat-active':''}`} onClick={() => setStatusFilter(statusFilter==='down'?'all':'down')} style={{cursor:'pointer'}}>
           <div className="stat-icon">🔴</div>
           <div className="stat-info">
             <div className="stat-value">{down}</div>
@@ -92,7 +93,7 @@ export default function Dashboard() {
           </div>
         </div>
         {unknown > 0 && (
-          <div className="stat-box unknown">
+          <div className={`stat-box unknown ${statusFilter==='unknown'?'stat-active':''}`} onClick={() => setStatusFilter(statusFilter==='unknown'?'all':'unknown')} style={{cursor:'pointer'}}>
             <div className="stat-icon">❓</div>
             <div className="stat-info">
               <div className="stat-value">{unknown}</div>
@@ -110,7 +111,7 @@ export default function Dashboard() {
             <p>Go to <strong>Servers</strong> page to add your first site</p>
           </div>
         ) : (
-          servers.map(s => (
+          servers.filter(s => statusFilter === 'all' || s.status === statusFilter).map(s => (
             <div key={s._id} className={`site-card ${s.status}`} onClick={() => openSite(s)} style={{ cursor: 'pointer' }}>
               <div className="site-card-header">
                 <div className="site-status-dot" data-status={s.status}></div>
