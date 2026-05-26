@@ -101,24 +101,24 @@ export default function Landing() {
           <div className="lp-hero-left">
             <div className="lp-hero-tag">
               <span className="lp-tag-dot" />
-              24/7 Monitoring · WhatsApp + Email Alerts
+              Live · 24/7 Uptime Monitoring
             </div>
             <h1 className="lp-hero-h1">
-              Your website goes down?<br />
-              <span className="lp-hero-gradient">You'll know in 60 seconds.</span>
+              Never miss a<br />
+              <span className="lp-hero-gradient">website outage again.</span>
             </h1>
             <p className="lp-hero-p">
-              UptimeWatch checks your sites every 60 seconds and sends instant WhatsApp &amp; email alerts the moment something goes wrong — downtime, SSL expiry, or domain renewal.
+              Get instant WhatsApp &amp; email alerts the moment your site goes down. Track SSL expiry, domain renewal, and response time — all from one simple dashboard.
             </p>
             <div className="lp-hero-actions">
               <button className="lp-btn-primary" onClick={() => { localStorage.removeItem('sm_intended_plan'); navigate('/register'); }}>
-                Start Monitoring Free
+                Start Free — Just ₹2
                 <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
-              <a href="#pricing" className="lp-btn-outline">See Plans</a>
+              <a href="#pricing" className="lp-btn-outline">View Plans</a>
             </div>
             <div className="lp-hero-trust">
-              {['5-day free trial', '₹2 verification only', 'Setup in 2 minutes', 'No auto-renewals'].map(t => (
+              {['5-day free trial', 'Alerts in under 60 sec', 'WhatsApp + Email', 'No hidden charges'].map(t => (
                 <div key={t} className="lp-trust-item"><span className="lp-trust-check">✓</span>{t}</div>
               ))}
             </div>
@@ -139,28 +139,31 @@ export default function Landing() {
               <div className="lp-preview-sites">
                 <div className="lp-site-row up">
                   <div className="lp-site-dot green" />
-                  <div className="lp-site-info"><span>myshop.com</span><span className="lp-site-meta">⚡ 234ms · 🔒 SSL 87d</span></div>
+                  <div className="lp-site-info"><span>yourstore.in</span><span className="lp-site-meta">⚡ 189ms · 🔒 SSL 94d</span></div>
                   <span className="lp-site-badge up">Online</span>
                 </div>
                 <div className="lp-site-row down">
                   <div className="lp-site-dot red pulse" />
-                  <div className="lp-site-info"><span>api.staging.com</span><span className="lp-site-meta" style={{ color: '#ef4444' }}>📱 WhatsApp alert sent!</span></div>
+                  <div className="lp-site-info"><span>checkout.yourstore.in</span><span className="lp-site-meta" style={{ color: '#ef4444' }}>🚨 Down · Alert sent!</span></div>
                   <span className="lp-site-badge down">Offline</span>
                 </div>
                 <div className="lp-site-row up">
                   <div className="lp-site-dot green" />
-                  <div className="lp-site-info"><span>blog.mysite.com</span><span className="lp-site-meta">⚡ 512ms · 🌐 Domain 42d</span></div>
+                  <div className="lp-site-info"><span>mybusiness.com</span><span className="lp-site-meta">⚡ 341ms · 🌐 Domain 58d</span></div>
                   <span className="lp-site-badge up">Online</span>
                 </div>
                 <div className="lp-site-row warn">
                   <div className="lp-site-dot yellow" />
-                  <div className="lp-site-info"><span>store.example.in</span><span className="lp-site-meta" style={{ color: '#f59e0b' }}>🔒 SSL expires in 6 days!</span></div>
+                  <div className="lp-site-info"><span>clientsite.in</span><span className="lp-site-meta" style={{ color: '#f59e0b' }}>⚠️ SSL expires in 7 days</span></div>
                   <span className="lp-site-badge warn">SSL Alert</span>
                 </div>
               </div>
               <div className="lp-preview-alert">
                 <div className="lp-alert-icon">📱</div>
-                <div><div className="lp-alert-title">WhatsApp Alert Sent</div><div className="lp-alert-sub">api.staging.com is DOWN — just now</div></div>
+                <div>
+                  <div className="lp-alert-title">WhatsApp Alert Sent</div>
+                  <div className="lp-alert-sub">checkout.yourstore.in is DOWN · 43 sec ago</div>
+                </div>
               </div>
             </div>
           </div>
