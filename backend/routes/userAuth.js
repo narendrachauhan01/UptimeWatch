@@ -178,8 +178,8 @@ router.post('/forgot-password', async (req, res) => {
                 <p style="color:rgba(255,255,255,0.7);margin-bottom:24px;">Hi ${user.name}, click the button below to reset your password. This link expires in 15 minutes.</p>
                 <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">Reset Password</a>
                 <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:24px;">If you didn't request this, ignore this email.</p>
-            </div>`,
-        });
+            </div>`
+        );
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
