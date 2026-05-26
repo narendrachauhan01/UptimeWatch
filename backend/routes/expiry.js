@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const Server = require('../models/Server');
 const { checkSSL, checkDomain, extractHostname, extractRootDomain } = require('../services/expiry');
+const auth = require('../middleware/auth');
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
     try {
         const server = await Server.findById(req.params.id);
         if (!server) return res.status(404).json({ error: 'Server not found' });

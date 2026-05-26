@@ -11,7 +11,10 @@ const monitor = require('./services/monitor');
 const app        = express();
 const httpServer = http.createServer(app);
 
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api/servers',      require('./routes/servers'));

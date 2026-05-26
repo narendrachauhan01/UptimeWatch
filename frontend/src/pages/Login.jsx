@@ -55,8 +55,7 @@ export default function Login({ onLogin }) {
     window.google.accounts.id.prompt();
   };
 
-  const handleUserForgot = async (e) => {
-    e.preventDefault();
+  const handleUserForgot = async () => {
     if (!forgotEmail) return;
     setForgotLoading(true);
     try {
@@ -247,19 +246,20 @@ export default function Login({ onLogin }) {
                 </button>
               </div>
               {showForgot && !forgotSent && (
-                <form onSubmit={handleUserForgot} className="login-forgot-form">
+                <div className="login-forgot-form">
                   <input
                     className="login-input"
                     type="email"
                     placeholder="Enter your email"
                     value={forgotEmail}
                     onChange={e => setForgotEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleUserForgot()}
                     autoFocus
                   />
-                  <button className="login-submit" type="submit" disabled={forgotLoading} style={{marginTop:8}}>
+                  <button className="login-submit" type="button" onClick={handleUserForgot} disabled={forgotLoading} style={{marginTop:8}}>
                     {forgotLoading ? <><span className="login-spinner" /> Sending...</> : 'Send Reset Link'}
                   </button>
-                </form>
+                </div>
               )}
               {forgotSent && (
                 <div className="login-forgot-sent">✓ Reset link sent! Check your email.</div>

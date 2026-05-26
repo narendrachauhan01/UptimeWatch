@@ -3,6 +3,13 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const { resetTransporter } = require('../services/email');
+const auth = require('../middleware/auth');
+
+router.use(auth);
+router.use((req, res, next) => {
+    if (!req.isAdmin) return res.status(403).json({ error: 'Admin only' });
+    next();
+});
 
 const ENV_PATH = path.join(__dirname, '../.env');
 
