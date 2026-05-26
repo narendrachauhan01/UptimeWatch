@@ -2089,10 +2089,11 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 
 /* Navbar */
 .lp-nav {
-  position: sticky; top: 0; z-index: 100;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
   background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(0,0,0,0.06);
 }
+.lp-nav + * { padding-top: 68px; }
 .lp-nav-wrap {
   max-width: 1140px; margin: 0 auto; padding: 14px 24px;
   display: flex; align-items: center; gap: 32px;
