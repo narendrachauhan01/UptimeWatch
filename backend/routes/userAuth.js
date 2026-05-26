@@ -170,10 +170,10 @@ router.post('/forgot-password', async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         userResetTokens[token] = { userId: user._id, expiry: Date.now() + 15 * 60 * 1000 };
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&type=user`;
-        await sendEmail({
-            to: user.email,
-            subject: 'UptimeForge — Reset Your Password',
-            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0f0a1e;color:#fff;border-radius:16px;">
+        await sendEmail(
+            user.email,
+            'UptimeForge — Reset Your Password',
+            `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0f0a1e;color:#fff;border-radius:16px;">
                 <h2 style="color:#a78bfa;margin-bottom:8px;">Reset Your Password</h2>
                 <p style="color:rgba(255,255,255,0.7);margin-bottom:24px;">Hi ${user.name}, click the button below to reset your password. This link expires in 15 minutes.</p>
                 <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">Reset Password</a>
