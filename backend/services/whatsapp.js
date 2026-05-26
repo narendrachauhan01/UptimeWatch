@@ -1,137 +1,120 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode');
-const fs = require('fs');
-const path = require('path');
+/**
+ * WhatsApp Service — Green API (https://green-api.com)
+ * OPTIONAL: if GREEN_API_INSTANCE + GREEN_API_TOKEN not set in .env,
+ * WhatsApp alerts are silently skipped. App runs normally without it.
+ *
+ * Hot-reload: watches .env file — new credentials are auto-detected,
+ * no backend restart required.
+ */
 
-const SESSION_PATH = process.env.WA_SESSION_PATH || path.join(__dirname, '../../.ww-session');
+const https  = require('https');
+const fs     = require('fs');
+const path   = require('path');
+const dotenv = require('dotenv');
 
-// Clear stale Chrome lock files on startup to prevent "browser already running" error
-try {
-    const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
-    const sessionDir = `${SESSION_PATH}/session`;
-    lockFiles.forEach(f => {
-        const p = `${sessionDir}/${f}`;
-        if (fs.existsSync(p)) { fs.unlinkSync(p); }
-    });
-} catch (_) {}
+const ENV_PATH = path.resolve(__dirname, '../.env');
 
-// Patch inject() to survive frame detach during WA's QR→main page navigation.
-// The framenavigated handler in Client.js will re-call inject() on the new frame anyway.
-const _origInject = Client.prototype.inject;
-Client.prototype.inject = async function () {
+// Re-read .env into process.env (override existing values)
+function reloadEnv() {
     try {
-        return await _origInject.call(this);
-    } catch (e) {
-        const isFrameErr = e?.message && (
-            e.message.includes('detached') ||
-            e.message.includes('Frame') ||
-            e.message.includes('Execution context')
-        );
-        if (isFrameErr) {
-            console.log('[WhatsApp] Frame changed during inject — waiting for framenavigated to retry');
-            return; // framenavigated handler will call inject() again on the new frame
+        dotenv.config({ path: ENV_PATH, override: true });
+    } catch (_) {}
+}
+
+// Watch .env file — reload when saved
+let watchDebounce = null;
+fs.watch(ENV_PATH, () => {
+    clearTimeout(watchDebounce);
+    watchDebounce = setTimeout(() => {
+        const wasBefore = isConfigured();
+        reloadEnv();
+        const isNow = isConfigured();
+        if (!wasBefore && isNow) {
+            console.log(`[WhatsApp] ✅ Credentials detected — Green API enabled (instance ${process.env.GREEN_API_INSTANCE})`);
+        } else if (wasBefore && !isNow) {
+            console.log('[WhatsApp] ⚠️  Credentials removed — WhatsApp alerts disabled');
         }
-        throw e;
-    }
-};
+    }, 500);
+});
 
-let client = null;
-let waStatus = 'disconnected';
-let qrDataUrl = null;
-let io = null;
-let isConnecting = false;
-
-function init(socketIo) {
-    io = socketIo;
-    connect();
+// ─────────────────────────────────────────────────────────────
+function isConfigured() {
+    return !!(process.env.GREEN_API_INSTANCE && process.env.GREEN_API_TOKEN);
 }
 
-async function destroyClient() {
-    if (!client) return;
-    try { await client.destroy(); } catch (_) {}
-    client = null;
+function formatPhone(phone) {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) return `91${digits}@c.us`;
+    if (digits.length === 12 && digits.startsWith('91')) return `${digits}@c.us`;
+    return `${digits}@c.us`;
 }
 
-async function connect() {
-    if (isConnecting) return;
-    isConnecting = true;
-
-    await destroyClient();
-    waStatus = 'connecting';
-
-    client = new Client({
-        authStrategy: new LocalAuth({ dataPath: SESSION_PATH }),
-        puppeteer: {
-            executablePath: '/usr/bin/google-chrome',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--disable-gpu',
-                '--no-first-run',
-                '--no-zygote',
-                '--window-size=1280,720',
-            ],
-            headless: true,
-        }
+function httpPost(url, body) {
+    return new Promise((resolve, reject) => {
+        const u       = new URL(url);
+        const payload = JSON.stringify(body);
+        const req     = https.request({
+            hostname: u.hostname,
+            path:     u.pathname,
+            method:   'POST',
+            headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+        }, (res) => {
+            let data = '';
+            res.on('data', c => data += c);
+            res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({ raw: data }); } });
+        });
+        req.on('error', reject);
+        req.write(payload);
+        req.end();
     });
-
-    client.on('qr', async (qr) => {
-        waStatus = 'qr';
-        qrDataUrl = await qrcode.toDataURL(qr);
-        emit('wa:status', { status: 'qr', qr: qrDataUrl });
-        console.log('[WhatsApp] QR generated — scan now');
-    });
-
-    client.on('ready', () => {
-        waStatus = 'ready';
-        qrDataUrl = null;
-        isConnecting = false;
-        emit('wa:status', { status: 'ready' });
-        console.log('[WhatsApp] Ready');
-    });
-
-    client.on('auth_failure', async () => {
-        waStatus = 'disconnected';
-        isConnecting = false;
-        emit('wa:status', { status: 'disconnected' });
-        console.log('[WhatsApp] Auth failed — clearing session');
-        const fs = require('fs');
-        try { fs.rmSync(SESSION_PATH, { recursive: true, force: true }); } catch (_) {}
-        setTimeout(connect, 5000);
-    });
-
-    client.on('disconnected', () => {
-        waStatus = 'disconnected';
-        isConnecting = false;
-        emit('wa:status', { status: 'disconnected' });
-        console.log('[WhatsApp] Disconnected, reconnecting in 15s...');
-        setTimeout(connect, 15000);
-    });
-
-    client.initialize().catch(async (err) => {
-        console.error('[WhatsApp] Init error, retrying in 30s:', err.message);
-        waStatus = 'disconnected';
-        isConnecting = false;
-        emit('wa:status', { status: 'disconnected' });
-        await destroyClient();
-        setTimeout(connect, 30000);
-    });
-}
-
-function emit(event, data) {
-    if (io) io.emit(event, data);
 }
 
 async function sendMessage(phone, message) {
-    if (waStatus !== 'ready') throw new Error('WhatsApp not ready');
-    const chatId = phone.replace(/\D/g, '') + '@c.us';
-    await client.sendMessage(chatId, message);
+    if (!isConfigured()) {
+        console.log('[WhatsApp] Not configured — skipping alert');
+        return;
+    }
+    const { GREEN_API_INSTANCE: id, GREEN_API_TOKEN: token } = process.env;
+    const url    = `https://api.green-api.com/waInstance${id}/sendMessage/${token}`;
+    const chatId = formatPhone(phone);
+    try {
+        const result = await httpPost(url, { chatId, message });
+        if (result.idMessage) {
+            console.log(`[WhatsApp] Sent to ${phone} ✓ (${result.idMessage})`);
+        } else {
+            console.warn('[WhatsApp] Send failed:', JSON.stringify(result));
+        }
+        return result;
+    } catch (e) {
+        console.error('[WhatsApp] HTTP error:', e.message);
+    }
+}
+
+async function getInstanceState() {
+    if (!isConfigured()) return null;
+    const { GREEN_API_INSTANCE: id, GREEN_API_TOKEN: token } = process.env;
+    const url = `https://api.green-api.com/waInstance${id}/getStateInstance/${token}`;
+    return new Promise((resolve) => {
+        https.get(url, (res) => {
+            let data = '';
+            res.on('data', c => data += c);
+            res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve(null); } });
+        }).on('error', () => resolve(null));
+    });
 }
 
 function getStatus() {
-    return { status: waStatus, qr: qrDataUrl };
+    if (!isConfigured()) return { status: 'not_configured' };
+    return { status: 'ready', instance: process.env.GREEN_API_INSTANCE };
 }
 
-module.exports = { init, sendMessage, getStatus };
+function init() {
+    if (isConfigured()) {
+        console.log(`[WhatsApp] Green API ready — instance ${process.env.GREEN_API_INSTANCE}`);
+    } else {
+        console.log('[WhatsApp] Green API not configured — WhatsApp alerts disabled (optional)');
+        console.log('[WhatsApp] Add GREEN_API_INSTANCE + GREEN_API_TOKEN to .env — auto-detected on save, no restart needed');
+    }
+}
+
+module.exports = { init, sendMessage, getStatus, getInstanceState, isConfigured };

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getServers, addServer, deleteServer, updateServer } from '../api';
 
 const empty = { name: '', url: '', checkInterval: 60, domainExpiry: '' };
 
-export default function Servers() {
+export default function Servers({ user, isAdmin, onNotify }) {
+  const navigate = useNavigate();
   const [servers, setServers] = useState([]);
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
@@ -11,23 +13,36 @@ export default function Servers() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [showAdd, setShowAdd] = useState(false);
+  const [addError, setAddError] = useState('');
 
   const load = () => getServers().then(r => setServers(r.data));
   useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setAddError('');
     if (!form.name || !form.url) return;
-    await addServer(form);
-    setForm(empty);
-    setShowAdd(false);
-    load();
+    try {
+      await addServer(form);
+      setForm(empty);
+      setShowAdd(false);
+      load();
+      onNotify?.();
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.limitReached || data?.planExpired) {
+        setAddError(data.error);
+      } else {
+        setAddError(data?.error || 'Failed to add server');
+      }
+    }
   };
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     await deleteServer(id);
     load();
+    onNotify?.();
   };
 
   const toggleActive = async (s) => {
@@ -46,6 +61,7 @@ export default function Servers() {
     await updateServer(editId, editForm);
     setEditId(null);
     load();
+    onNotify?.();
   };
 
   const filtered = servers.filter(s => {
@@ -62,18 +78,41 @@ export default function Servers() {
       {/* Header */}
       <div className="pg-header">
         <div>
-          <h1 className="pg-title">Servers</h1>
-          <p className="pg-sub">{servers.length} site{servers.length !== 1 ? 's' : ''} being monitored</p>
+          <h1 className="pg-title">Sites</h1>
+          <p className="pg-sub">{servers.length} site{servers.length !== 1 ? 's' : ''} being monitored
+            {!isAdmin && user && <span style={{color:'#94a3b8'}}> · {user.siteLimit} max on {user.plan} plan</span>}
+          </p>
         </div>
-        <button className="btn-primary-pill" onClick={() => setShowAdd(!showAdd)}>
+        <button className="btn-primary-pill" onClick={() => { setShowAdd(!showAdd); setAddError(''); }}>
           {showAdd ? '✕ Cancel' : '+ Add Site'}
         </button>
       </div>
 
+      {/* Plan usage bar (for users) */}
+      {!isAdmin && user && (
+        <div className="plan-usage-bar">
+          <div className="plan-usage-track">
+            <div
+              className="plan-usage-fill"
+              style={{
+                width: `${Math.min(100, (servers.length / user.siteLimit) * 100)}%`,
+                background: servers.length >= user.siteLimit ? '#ef4444' : 'linear-gradient(90deg,#7c3aed,#a78bfa)',
+              }}
+            />
+          </div>
+          <span className="plan-usage-label">
+            {servers.length} / {user.siteLimit} sites used
+            {servers.length >= user.siteLimit && (
+              <button className="plan-upgrade-inline" onClick={() => navigate('/account')}>Upgrade</button>
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Add Form */}
       {showAdd && (
         <div className="form-card">
-          <h3 className="form-card-title">Add New Server</h3>
+          <h3 className="form-card-title">Add New Site</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div className="form-group">
@@ -89,7 +128,15 @@ export default function Servers() {
                 <input type="number" value={form.checkInterval} onChange={e => setForm({ ...form, checkInterval: parseInt(e.target.value) })} />
               </div>
             </div>
-            <button type="submit" className="btn-submit">Add Server</button>
+            {addError && (
+              <div className="form-error" style={{ marginBottom: 8 }}>
+                {addError}
+                {(addError.includes('limit') || addError.includes('expired')) && (
+                  <button className="plan-upgrade-inline" onClick={() => navigate('/account')}>Upgrade Plan</button>
+                )}
+              </div>
+            )}
+            <button type="submit" className="btn-submit">Add Site</button>
           </form>
         </div>
       )}

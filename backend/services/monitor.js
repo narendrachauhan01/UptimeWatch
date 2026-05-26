@@ -7,8 +7,8 @@ const wa = require('./whatsapp');
 const { checkSSL, checkDomain, extractHostname, extractRootDomain } = require('./expiry');
 const { sendEmail, downEmailHtml, recoveredEmailHtml, sslEmailHtml } = require('./email');
 
-const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown
-const lastAlertTime = {};
+// Track which servers have had a DOWN alert sent (reset on recovery)
+const alertSentForDown = {};
 const SSL_MILESTONES = [30, 15, 7];   // alert at these days remaining
 const DOMAIN_MILESTONES = [30, 15, 7];
 
@@ -59,25 +59,30 @@ async function checkAll() {
                 const isNewDown = prevStatus !== 'down';
                 if (isNewDown) server.lastDownAt = new Date();
 
-                const cooldownOk = !lastAlertTime[server._id] || (Date.now() - lastAlertTime[server._id]) > COOLDOWN_MS;
-                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} cooldownOk:${cooldownOk}`);
+                const sid = server._id.toString();
+                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} alertSentForDown:${!!alertSentForDown[sid]}`);
 
-                if (isNewDown || cooldownOk) {
+                if (isNewDown && !alertSentForDown[sid]) {
+                    // First time this site went down — send email + WhatsApp ONCE
                     const eligible = getEligibleRecipients(recipients, server._id);
-                    console.log(`[Monitor] ${server.name} → eligible recipients: ${eligible.length}`);
-                    await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
-                    lastAlertTime[server._id] = Date.now();
+                    console.log(`[Monitor] ${server.name} → DOWN alert sending to ${eligible.length} recipients`);
+                    await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`, true);
+                    alertSentForDown[sid] = true;
                 } else {
-                    console.log(`[Monitor] ${server.name} → alert skipped (cooldown active)`);
+                    // Site still down — save alert to DB only (no email/WhatsApp)
+                    console.log(`[Monitor] ${server.name} → still down, saving to DB only (no repeated notification)`);
+                    await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
                 }
             } else {
                 server.status = 'up';
                 console.log(`[Monitor] ${server.name} prevStatus: ${prevStatus}`);
+                const sid = server._id.toString();
                 if (prevStatus === 'down') {
                     server.lastUpAt = new Date();
                     const eligible = getEligibleRecipients(recipients, server._id);
-                    await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
-                    delete lastAlertTime[server._id];
+                    // Site recovered — send recovery email + WhatsApp ONCE
+                    await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`, true);
+                    delete alertSentForDown[sid];
                 }
             }
 
@@ -93,7 +98,7 @@ async function checkAll() {
 
             await Server.findByIdAndUpdate(server._id, {
                 $set: setFields,
-                $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -50 } },
+                $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -1440 } },
             });
         }
     } catch (err) {
@@ -101,28 +106,38 @@ async function checkAll() {
     }
 }
 
+// Save alert to DB only — no email/WhatsApp (used while site stays down)
+async function saveAlertOnly(server, type, detail) {
+    await Alert.create({
+        server:     server._id,
+        serverName: server.name,
+        serverUrl:  server.url,
+        type,
+        message:    detail,
+        sentTo:     [],
+    });
+}
+
+// Send email + WhatsApp AND save to DB
 async function sendAlerts(server, recipients, type, detail) {
     const isDown = type === 'down';
     const waMsg = isDown
         ? `🚨 *Site Down Alert!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Time:* ${now()}\n\nSite is currently *DOWN* ❌\nPlease check immediately!`
         : `✅ *Site Recovered!*\n\n*Site:* ${server.name}\n*URL:* ${server.url}\n*Time:* ${now()}\n\nSite is back *UP* and running! ✅`;
 
-    const emailSubject = isDown ? `🚨 Site Down: ${server.name}` : `✅ Site Recovered: ${server.name}`;
+    const emailSubject = isDown
+        ? `🚨 Site Down: ${server.name}`
+        : `✅ Site Recovered: ${server.name}`;
     const emailHtml = isDown
         ? downEmailHtml(server.name, server.url, now())
         : recoveredEmailHtml(server.name, server.url, now());
 
     const sentTo = [];
     for (const r of recipients) {
-        // WhatsApp
         if (r.phone) {
-            try {
-                await wa.sendMessage(r.phone, waMsg);
-            } catch (e) {
-                console.error(`[Monitor] WA failed to ${r.phone}:`, e.message);
-            }
+            try { await wa.sendMessage(r.phone, waMsg); }
+            catch (e) { console.error(`[Monitor] WA failed to ${r.phone}:`, e.message); }
         }
-        // Email
         if (r.email) {
             await sendEmail(r.email, emailSubject, emailHtml);
         }
@@ -130,11 +145,11 @@ async function sendAlerts(server, recipients, type, detail) {
     }
 
     await Alert.create({
-        server: server._id,
+        server:     server._id,
         serverName: server.name,
-        serverUrl: server.url,
+        serverUrl:  server.url,
         type,
-        message: detail,
+        message:    detail,
         sentTo,
     });
 

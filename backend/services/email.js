@@ -53,7 +53,7 @@ function downEmailHtml(name, url, time) {
         </div>
       </div>
       <div style="padding:16px 32px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px">
-        SM Server Monitor &mdash; &copy; 2026 Narendra Singh
+        UptimeWatch &mdash; &copy; 2026 Narendra Singh
       </div>
     </div>`;
 }
@@ -77,7 +77,7 @@ function recoveredEmailHtml(name, url, time) {
         </div>
       </div>
       <div style="padding:16px 32px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px">
-        SM Server Monitor &mdash; &copy; 2026 Narendra Singh
+        UptimeWatch &mdash; &copy; 2026 Narendra Singh
       </div>
     </div>`;
 }
@@ -103,9 +103,32 @@ function sslEmailHtml(name, url, daysLeft, expiry) {
         </div>
       </div>
       <div style="padding:16px 32px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px">
-        SM Server Monitor &mdash; &copy; 2026 Narendra Singh
+        UptimeWatch &mdash; &copy; 2026 Narendra Singh
       </div>
     </div>`;
 }
 
-module.exports = { sendEmail, resetTransporter, downEmailHtml, recoveredEmailHtml, sslEmailHtml };
+function otpEmailHtml(name, otp) {
+    return `
+    <div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10)">
+      <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px;text-align:center">
+        <div style="width:56px;height:56px;background:rgba(255,255,255,0.15);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <span style="font-size:26px">🔐</span>
+        </div>
+        <h1 style="color:#fff;margin:0;font-size:20px;font-weight:800">Verify your email</h1>
+        <p style="color:rgba(255,255,255,0.75);margin:6px 0 0;font-size:14px">UptimeWatch</p>
+      </div>
+      <div style="padding:32px;text-align:center">
+        <p style="color:#475569;font-size:15px;margin:0 0 24px">Hi <strong style="color:#0f172a">${name}</strong>, use the code below to complete your registration.</p>
+        <div style="background:#f5f3ff;border:2px dashed #c4b5fd;border-radius:16px;padding:20px 32px;display:inline-block;margin-bottom:24px">
+          <div style="font-size:42px;font-weight:900;letter-spacing:12px;color:#7c3aed;font-variant-numeric:tabular-nums">${otp}</div>
+        </div>
+        <p style="color:#94a3b8;font-size:13px;margin:0">This code expires in <strong>10 minutes</strong>.<br/>If you didn't request this, you can safely ignore this email.</p>
+      </div>
+      <div style="padding:16px 32px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px">
+        UptimeWatch &mdash; &copy; 2026 Narendra Singh
+      </div>
+    </div>`;
+}
+
+module.exports = { sendEmail, resetTransporter, downEmailHtml, recoveredEmailHtml, sslEmailHtml, otpEmailHtml };

@@ -1,0 +1,17 @@
+const mongoose = require('mongoose');
+
+const paymentRequestSchema = new mongoose.Schema({
+    userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    userName:  { type: String },
+    userEmail: { type: String },
+    type:      { type: String, enum: ['plan', 'verification'], default: 'plan' },
+    plan:      { type: String, enum: ['bronze', 'silver', 'gold', null], default: null },
+    amount:    { type: Number, required: true },
+    utr:       { type: String, required: true, trim: true },
+    status:    { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    adminNote:  { type: String, default: '' },
+    reviewedAt: { type: Date },
+    planEndsAt: { type: Date },
+}, { timestamps: true });
+
+module.exports = mongoose.model('PaymentRequest', paymentRequestSchema);

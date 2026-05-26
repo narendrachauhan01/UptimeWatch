@@ -17,6 +17,28 @@ function updateEnvPassword(newPassword) {
     process.env.ADMIN_PASSWORD = newPassword;
 }
 
+function updateEnvField(key, value) {
+    let content = fs.existsSync(ENV_PATH) ? fs.readFileSync(ENV_PATH, 'utf8') : '';
+    const re = new RegExp(`^${key}=.*$`, 'm');
+    if (re.test(content)) {
+        content = content.replace(re, `${key}=${value}`);
+    } else {
+        content += `\n${key}=${value}`;
+    }
+    fs.writeFileSync(ENV_PATH, content);
+    process.env[key] = value;
+}
+
+function adminAuthMiddleware(req, res, next) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token' });
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded.username) return res.status(403).json({ error: 'Admin only' });
+        next();
+    } catch { res.status(401).json({ error: 'Invalid token' }); }
+}
+
 router.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
@@ -108,6 +130,28 @@ router.post('/reset-password', (req, res) => {
     updateEnvPassword(password);
     delete resetTokens[token];
     res.json({ success: true, message: 'Password updated successfully' });
+});
+
+router.get('/profile', adminAuthMiddleware, (req, res) => {
+    res.json({
+        username: process.env.ADMIN_USERNAME || '',
+        email: process.env.ADMIN_EMAIL || '',
+    });
+});
+
+router.put('/profile', adminAuthMiddleware, (req, res) => {
+    const { username, email, currentPassword, newPassword } = req.body;
+    if (!currentPassword) return res.status(400).json({ error: 'Current password is required' });
+    if (currentPassword !== process.env.ADMIN_PASSWORD) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+    if (username && username.trim()) updateEnvField('ADMIN_USERNAME', username.trim());
+    if (email && email.trim()) updateEnvField('ADMIN_EMAIL', email.trim());
+    if (newPassword) {
+        if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+        updateEnvField('ADMIN_PASSWORD', newPassword);
+    }
+    res.json({ success: true, message: 'Profile updated successfully' });
 });
 
 module.exports = router;

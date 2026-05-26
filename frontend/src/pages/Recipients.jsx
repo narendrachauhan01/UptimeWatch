@@ -1,7 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { getRecipients, addRecipient, deleteRecipient, updateRecipient, getServers } from '../api';
 
-const empty = { name: '', phone: '', email: '', servers: [] };
+const empty = { name: '', phone: '', email: '', channels: [] };
+
+function ChannelToggle({ value, onChange }) {
+  const toggle = (ch) => onChange(value.includes(ch) ? value.filter(c => c !== ch) : [...value, ch]);
+  return (
+    <div className="channel-toggle-row">
+      <button type="button" className={`channel-btn ${value.includes('whatsapp') ? 'selected' : ''}`} onClick={() => toggle('whatsapp')}>
+        <span className="channel-icon">💬</span> WhatsApp
+      </button>
+      <button type="button" className={`channel-btn ${value.includes('email') ? 'selected' : ''}`} onClick={() => toggle('email')}>
+        <span className="channel-icon">✉️</span> Email
+      </button>
+    </div>
+  );
+}
 
 export default function Recipients() {
   const [recipients, setRecipients] = useState([]);
@@ -9,30 +23,22 @@ export default function Recipients() {
   const [form, setForm] = useState(empty);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [expandedId, setExpandedId] = useState(null);
+  const [editId, setEditId]       = useState(null);
+  const [editForm, setEditForm]   = useState({ name: '', phone: '', email: '', channels: [] });
+  const [sitesId, setSitesId]     = useState(null);
   const [editServers, setEditServers] = useState([]);
-  const [editId, setEditId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', phone: '' });
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
   const load = () => getRecipients().then(r => setRecipients(r.data));
 
-  useEffect(() => {
-    load();
-    getServers().then(r => setServers(r.data));
-  }, []);
-
-  const handlePhoneChange = (val) => {
-    setForm({ ...form, phone: val.replace(/\D/g, '') });
-    setError('');
-  };
+  useEffect(() => { load(); getServers().then(r => setServers(r.data)); }, []);
 
   const validateForm = () => {
     if (!form.name.trim()) return 'Please enter a name';
-    if (!form.phone && !form.email) return 'Enter at least WhatsApp number or Email';
-    if (form.phone && form.phone.length < 10) return 'Enter valid 10-digit number';
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter valid email address';
+    if (form.channels.length === 0) return 'Select at least one alert channel (WhatsApp or Email)';
+    if (form.channels.includes('whatsapp') && form.phone.length < 10) return 'Enter valid 10-digit WhatsApp number';
+    if (form.channels.includes('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter valid email address';
     return null;
   };
 
@@ -41,11 +47,12 @@ export default function Recipients() {
     setError('');
     const err = validateForm();
     if (err) { setError(err); return; }
-    const phone = form.phone ? (form.phone.startsWith('91') ? form.phone : '91' + form.phone) : null;
-    const email = form.email.trim() || null;
+    const phone = form.channels.includes('whatsapp') && form.phone
+      ? (form.phone.startsWith('91') ? form.phone : '91' + form.phone) : null;
+    const email = form.channels.includes('email') ? form.email.trim() || null : null;
     setSaving(true);
     try {
-      await addRecipient({ name: form.name.trim(), phone, email, servers: form.servers });
+      await addRecipient({ name: form.name.trim(), phone, email, servers: [] });
       setForm(empty);
       load();
     } catch (e) {
@@ -66,37 +73,39 @@ export default function Recipients() {
   };
 
   const startEdit = (r) => {
-    setEditId(r._id);
+    setSitesId(null);
+    setEditId(editId === r._id ? null : r._id);
     const raw = r.phone ? (r.phone.startsWith('91') ? r.phone.slice(2) : r.phone) : '';
-    setEditForm({ name: r.name, phone: raw, email: r.email || '' });
-    setExpandedId(null);
+    const channels = [];
+    if (r.phone) channels.push('whatsapp');
+    if (r.email) channels.push('email');
+    setEditForm({ name: r.name, phone: raw, email: r.email || '', channels });
   };
 
   const saveEdit = async () => {
     if (!editForm.name.trim()) return;
-    const phone = editForm.phone ? (editForm.phone.startsWith('91') ? editForm.phone : '91' + editForm.phone) : null;
-    const email = editForm.email?.trim() || null;
+    const phone = editForm.channels.includes('whatsapp') && editForm.phone
+      ? (editForm.phone.startsWith('91') ? editForm.phone : '91' + editForm.phone) : null;
+    const email = editForm.channels.includes('email') ? editForm.email?.trim() || null : null;
     await updateRecipient(editId, { name: editForm.name.trim(), phone, email });
     setEditId(null);
     load();
   };
 
   const openSites = (r) => {
-    if (expandedId === r._id) { setExpandedId(null); return; }
-    setExpandedId(r._id);
     setEditId(null);
+    setSitesId(sitesId === r._id ? null : r._id);
     setEditServers(r.servers?.map(s => s._id || s) || []);
   };
 
   const saveSites = async (r) => {
     await updateRecipient(r._id, { servers: editServers });
-    setExpandedId(null);
+    setSitesId(null);
     load();
   };
 
-  const toggleEditServer = (id) => {
+  const toggleSiteChip = (id) =>
     setEditServers(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
-  };
 
   const formatPhone = (phone) => {
     if (!phone) return null;
@@ -114,7 +123,7 @@ export default function Recipients() {
       <div className="pg-header">
         <div>
           <h1 className="pg-title">Alert Recipients</h1>
-          <p className="pg-sub">People who will receive WhatsApp alerts when a site goes down</p>
+          <p className="pg-sub">People who will receive alerts when a site goes down</p>
         </div>
         <div className="recipient-count">
           <span>{recipients.filter(r => r.active).length}</span> active
@@ -125,31 +134,48 @@ export default function Recipients() {
       <div className="add-recipient-card">
         <div className="add-card-title">➕ Add New Recipient</div>
         <form onSubmit={handleSubmit}>
-          <div className="add-form-row">
+          <div className="add-form-row" style={{ marginBottom: 16 }}>
             <div className="add-field">
               <label>Full Name</label>
               <input type="text" placeholder="Enter full name" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="add-field">
-              <label>WhatsApp Number <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span></label>
-              <div className="phone-input-wrap">
-                <span className="phone-prefix">🇮🇳 +91</span>
-                <input type="tel" placeholder="98765 43210"
-                  value={form.phone.startsWith('91') ? form.phone.slice(2) : form.phone}
-                  onChange={e => handlePhoneChange(e.target.value)} maxLength={10} />
-              </div>
-              <span className="field-hint">10-digit mobile number</span>
-            </div>
-            <div className="add-field">
-              <label>Email <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span></label>
-              <input type="email" placeholder="name@example.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })} />
-              <span className="field-hint">Alert email address</span>
+              <label>Alert via</label>
+              <ChannelToggle value={form.channels}
+                onChange={v => setForm({ ...form, channels: v, phone: '', email: '' })} />
+              <span className="field-hint">Select how this person receives alerts</span>
             </div>
           </div>
-          <div style={{ marginTop: 16 }}>
+
+          {form.channels.length > 0 && (
+            <div className="add-form-row" style={{ marginBottom: 16 }}>
+              {form.channels.includes('whatsapp') && (
+                <div className="add-field">
+                  <label>WhatsApp Number</label>
+                  <div className="phone-input-wrap">
+                    <span className="phone-prefix">🇮🇳 +91</span>
+                    <input type="tel" placeholder="98765 43210"
+                      value={form.phone}
+                      onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })}
+                      maxLength={10} />
+                  </div>
+                  <span className="field-hint">10-digit mobile number</span>
+                </div>
+              )}
+              {form.channels.includes('email') && (
+                <div className="add-field">
+                  <label>Email Address</label>
+                  <input type="email" placeholder="name@example.com"
+                    value={form.email}
+                    onChange={e => setForm({ ...form, email: e.target.value })} />
+                  <span className="field-hint">Alert email address</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: 8 }}>
             <button type="submit" className="btn-add" disabled={saving}>
               {saving ? 'Adding...' : 'Add Recipient'}
             </button>
@@ -180,11 +206,11 @@ export default function Recipients() {
           <div className="empty-state">
             <div className="empty-icon">📱</div>
             <h3>No recipients yet</h3>
-            <p>Add phone numbers above to start receiving WhatsApp alerts</p>
+            <p>Add recipients above to start receiving alerts</p>
           </div>
         ) : (
           recipients.filter(r => {
-            const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) || r.phone.includes(search);
+            const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) || (r.phone || '').includes(search);
             const matchFilter = filter === 'all' || (filter === 'active' ? r.active : !r.active);
             return matchSearch && matchFilter;
           }).map(r => (
@@ -193,7 +219,7 @@ export default function Recipients() {
                 <div className="recipient-avatar">{r.name.charAt(0).toUpperCase()}</div>
                 <div className="recipient-info">
                   <div className="recipient-name">{r.name}</div>
-                  {r.phone && <div className="recipient-phone">📱 {formatPhone(r.phone)}</div>}
+                  {r.phone && <div className="recipient-phone">💬 {formatPhone(r.phone)}</div>}
                   {r.email && <div className="recipient-phone">✉️ {r.email}</div>}
                   <div className="recipient-sites">🌐 {getSiteLabel(r)}</div>
                 </div>
@@ -203,7 +229,7 @@ export default function Recipients() {
                 <div className="recipient-actions">
                   <button className="btn-action edit" onClick={() => startEdit(r)}>✏️ Edit</button>
                   <button className="btn-edit-sites" onClick={() => openSites(r)}>
-                    🌐 Sites {expandedId === r._id ? '▲' : '▼'}
+                    🌐 Sites {sitesId === r._id ? '▲' : '▼'}
                   </button>
                   <button className={`btn-toggle ${r.active ? 'pause' : 'resume'}`} onClick={() => toggleActive(r)}>
                     {r.active ? 'Pause' : 'Resume'}
@@ -212,7 +238,7 @@ export default function Recipients() {
                 </div>
               </div>
 
-              {/* Edit name/phone panel */}
+              {/* Edit name/contact panel */}
               {editId === r._id && (
                 <div className="inline-edit-panel">
                   <div className="inline-edit-title">✏️ Edit — <strong>{r.name}</strong></div>
@@ -223,28 +249,37 @@ export default function Recipients() {
                         onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>WhatsApp Number</label>
-                      <div className="phone-input-wrap">
-                        <span className="phone-prefix">🇮🇳 +91</span>
-                        <input type="tel" maxLength={10} value={editForm.phone || ''}
-                          onChange={e => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, '') })} />
+                      <label>Alert via</label>
+                      <ChannelToggle value={editForm.channels}
+                        onChange={v => setEditForm({ ...editForm, channels: v })} />
+                    </div>
+                    {editForm.channels.includes('whatsapp') && (
+                      <div className="form-group">
+                        <label>WhatsApp Number</label>
+                        <div className="phone-input-wrap">
+                          <span className="phone-prefix">🇮🇳 +91</span>
+                          <input type="tel" maxLength={10} value={editForm.phone || ''}
+                            onChange={e => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, '') })} />
+                        </div>
                       </div>
-                    </div>
-                    <div className="form-group">
-                      <label>Email</label>
-                      <input type="email" placeholder="name@example.com" value={editForm.email || ''}
-                        onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                      <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button>
-                    </div>
+                    )}
+                    {editForm.channels.includes('email') && (
+                      <div className="form-group">
+                        <label>Email Address</label>
+                        <input type="email" placeholder="name@example.com" value={editForm.email || ''}
+                          onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                    <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button>
                   </div>
                 </div>
               )}
 
-              {/* Site selector panel */}
-              {expandedId === r._id && (
+              {/* Sites panel */}
+              {sitesId === r._id && (
                 <div className="site-edit-panel">
                   <div className="site-edit-label">
                     Select sites for <strong>{r.name}</strong>:
@@ -256,8 +291,8 @@ export default function Recipients() {
                     {servers.map(s => (
                       <button key={s._id} type="button"
                         className={`site-chip ${editServers.includes(s._id) ? 'selected' : ''}`}
-                        onClick={() => toggleEditServer(s._id)}>
-                        <span className={`chip-dot ${s.status}`}></span>
+                        onClick={() => toggleSiteChip(s._id)}>
+                        <span className={`chip-dot ${s.status || 'unknown'}`}></span>
                         {s.name}
                         {editServers.includes(s._id) && <span className="chip-check">✓</span>}
                       </button>
@@ -270,7 +305,7 @@ export default function Recipients() {
                   )}
                   <div className="site-edit-actions">
                     <button className="btn-save-sites" onClick={() => saveSites(r)}>Save</button>
-                    <button className="btn-cancel-sites" onClick={() => setExpandedId(null)}>Cancel</button>
+                    <button className="btn-cancel-sites" onClick={() => setSitesId(null)}>Cancel</button>
                   </div>
                 </div>
               )}
