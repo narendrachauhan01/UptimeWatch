@@ -33,11 +33,10 @@ function loadRazorpayScript() {
     });
 }
 
-const PLAN_ORDER = ['bronze', 'silver', 'gold'];
-const PLAN_ICON  = { bronze: '🥉', silver: '🥈', gold: '🥇' };
+const PLAN_ORDER = ['verification', 'bronze', 'silver', 'gold'];
+const PLAN_ICON  = { verification: '🆓', bronze: '🥉', silver: '🥈', gold: '🥇' };
 
 function PlanSelectScreen({ planData, user, onSelect }) {
-    const plans = PLAN_ORDER;
     return (
         <div className="pay-page">
             <div className="pay-select-wrap">
@@ -47,17 +46,24 @@ function PlanSelectScreen({ planData, user, onSelect }) {
                     <p>Welcome, <strong>{user?.name}</strong>! Select a plan to get started.</p>
                 </div>
                 <div className="pay-select-cards">
-                    {plans.map(p => {
-                        const price = planData?.plans?.[p]?.price ?? 0;
-                        const features = planData?.plans?.[p]?.features?.length
-                            ? planData.plans[p].features
-                            : PLAN_FEATURES_FALLBACK[p];
+                    {PLAN_ORDER.map(p => {
+                        const isVerif = p === 'verification';
+                        const price = isVerif
+                            ? (planData?.verificationFee ?? 2)
+                            : (planData?.plans?.[p]?.price ?? 0);
+                        const features = isVerif
+                            ? (planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures : PLAN_FEATURES_FALLBACK.verification)
+                            : (planData?.plans?.[p]?.features?.length ? planData.plans[p].features : PLAN_FEATURES_FALLBACK[p]);
                         return (
                             <div key={p} className={`pay-select-card ${p === 'silver' ? 'pay-select-popular' : ''}`}>
                                 {p === 'silver' && <div className="pay-select-badge">Most Popular</div>}
                                 <div className="pay-select-icon">{PLAN_ICON[p]}</div>
                                 <div className="pay-select-name">{PLAN_LABEL[p]}</div>
-                                <div className="pay-select-price">₹{price}<span>/month</span></div>
+                                <div className="pay-select-price">
+                                    ₹{price}
+                                    <span>{isVerif ? ' one-time' : '/month'}</span>
+                                </div>
+                                {isVerif && <div style={{fontSize:11,color:'#a78bfa',marginBottom:8,textAlign:'center'}}>5-day free trial · Non-refundable</div>}
                                 <ul className="pay-select-features">
                                     {features.map(f => <li key={f}><span>✓</span>{f}</li>)}
                                 </ul>
@@ -66,16 +72,11 @@ function PlanSelectScreen({ planData, user, onSelect }) {
                                     style={{ background: PLAN_GRADIENT[p] }}
                                     onClick={() => onSelect(p)}
                                 >
-                                    Get {PLAN_LABEL[p]}
+                                    {isVerif ? 'Start Free Trial' : `Get ${PLAN_LABEL[p]}`}
                                 </button>
                             </div>
                         );
                     })}
-                </div>
-                <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <button className="pay-cancel-btn" onClick={() => onSelect('skip')}>
-                        Skip for now — use free trial
-                    </button>
                 </div>
             </div>
         </div>
