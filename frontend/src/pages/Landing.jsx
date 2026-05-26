@@ -108,7 +108,7 @@ export default function Landing() {
               <span className="lp-hero-gradient">website outage again.</span>
             </h1>
             <p className="lp-hero-p">
-              HTTP/HTTPS checks every 60s · SSL &amp; domain expiry monitoring · real-time response time tracking · instant multi-channel alerts via WhatsApp &amp; Email — all from a single dashboard.
+              UptimeForge is a 24/7 website monitoring platform built for businesses. It watches your sites every 60 seconds, tracks SSL &amp; domain expiry, measures response time, and instantly alerts you on WhatsApp &amp; Email — so downtime never catches you off guard.
             </p>
             <div className="lp-hero-actions">
               <button className="lp-btn-primary" onClick={() => { localStorage.removeItem('sm_intended_plan'); navigate('/register'); }}>
