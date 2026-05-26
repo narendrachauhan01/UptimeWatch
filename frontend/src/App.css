@@ -2084,7 +2084,7 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 /* ══════════════════════════════════════
    LANDING PAGE — REDESIGN
 ══════════════════════════════════════ */
-.lp { font-family: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:#fff; overflow-x:hidden; }
+.lp { font-family: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:#fff; }
 .lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
 
 /* Navbar */
