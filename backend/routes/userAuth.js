@@ -173,7 +173,6 @@ router.post('/forgot-password', async (req, res) => {
         if (!email) return res.status(400).json({ error: 'Email is required' });
         const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) return res.json({ success: true }); // don't reveal if email exists
-        if (!user.password) return res.status(400).json({ error: 'This account uses Google Sign-In. No password to reset.' });
         const token = crypto.randomBytes(32).toString('hex');
         userResetTokens[token] = { userId: user._id, expiry: Date.now() + 15 * 60 * 1000 };
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&type=user`;
