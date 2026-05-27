@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../api';
 
+const authCfg = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('sm_token')}` } });
+
 export default function EmailPage() {
   const [status, setStatus] = useState(null);
   const [testing, setTesting] = useState(false);
@@ -9,13 +11,13 @@ export default function EmailPage() {
   const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/email-config/status`).then(r => setStatus(r.data));
+    axios.get(`${API_URL}/api/email-config/status`, authCfg()).then(r => setStatus(r.data));
   }, []);
 
   const sendTest = async () => {
     setTesting(true); setTestResult(null);
     try {
-      const res = await axios.post(`${API_URL}/api/email-config/test`, { to: testTo || undefined });
+      const res = await axios.post(`${API_URL}/api/email-config/test`, { to: testTo || undefined }, authCfg());
       setTestResult({ success: true, msg: `Test email sent to ${res.data.sentTo}` });
     } catch (e) {
       setTestResult({ success: false, msg: e.response?.data?.error || 'Failed to send' });
