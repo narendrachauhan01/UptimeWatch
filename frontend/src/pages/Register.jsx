@@ -91,38 +91,26 @@ export default function Register({ onRegister }) {
     setGLoading(false);
   };
 
-  const googleInitialized = useRef(false);
   const googleBtnRef = useRef(null);
-
-  const initGoogle = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId || clientId.includes('your_google') || !window.google) return false;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleResponse,
-      use_fedcm_for_prompt: false,
-    });
-    googleInitialized.current = true;
-    return true;
-  };
 
   const handleGoogleClick = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId || clientId.includes('your_google')) { setError('Google Sign-In not configured yet'); return; }
     if (!window.google) { setError('Google Sign-In script not loaded'); return; }
     setGLoading(true); setError('');
-    if (!googleInitialized.current) initGoogle();
+    try { window.google.accounts.id.cancel(); } catch(_) {}
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleResponse,
+    });
     window.google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         setGLoading(false);
-        googleInitialized.current = false;
         if (googleBtnRef.current) {
-          initGoogle();
+          googleBtnRef.current.style.display = 'block';
           window.google.accounts.id.renderButton(googleBtnRef.current, {
-            type: 'standard', theme: 'filled_blue', size: 'large',
-            width: googleBtnRef.current.offsetWidth || 300,
+            type: 'standard', theme: 'filled_blue', size: 'large', width: 300,
           });
-          setTimeout(() => googleBtnRef.current?.querySelector('div[role=button]')?.click(), 100);
         }
       }
     });
