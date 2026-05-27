@@ -17,12 +17,6 @@ const INDIAN_STATES = [
   'Delhi (NCT)','Jammu & Kashmir','Ladakh','Lakshadweep','Puducherry',
 ];
 
-const PLANS = [
-  { key: 'free_trial', label: 'Free Trial', price: '₹2',    note: 'one-time verification', icon: '🚀', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' },
-  { key: 'bronze',     label: 'Bronze',     price: '₹499',  note: '/month',                icon: '🥉', color: '#b45309', bg: '#fef3c7', border: '#fcd34d' },
-  { key: 'silver',     label: 'Silver',     price: '₹999',  note: '/month',                icon: '⚡', color: '#7c3aed', bg: '#ede9fe', border: '#a78bfa' },
-  { key: 'gold',       label: 'Gold',       price: '₹1499', note: '/month',                icon: '🏆', color: '#ca8a04', bg: '#fefce8', border: '#fde047' },
-];
 
 const EyeOpen = () => <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
 const EyeClosed = () => <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>;
@@ -235,25 +229,6 @@ export default function Register({ onRegister }) {
               <div className="login-divider"><span>or sign up with email</span></div>
 
               <form onSubmit={sendOtp} className="reg-form">
-
-                {/* Plan Cards */}
-                <div className="reg-plan-cards">
-                  {PLANS.map(p => (
-                    <button key={p.key} type="button"
-                      className={`reg-plan-card-new ${selectedPlan === p.key ? 'reg-plan-card-active' : ''}`}
-                      style={selectedPlan === p.key ? { borderColor: p.color, background: p.bg } : {}}
-                      onClick={() => setSelectedPlan(p.key)}
-                    >
-                      <div className="reg-pc-icon">{p.icon}</div>
-                      <div className="reg-pc-name" style={selectedPlan === p.key ? { color: p.color } : {}}>{p.label}</div>
-                      <div className="reg-pc-price" style={selectedPlan === p.key ? { color: p.color } : {}}>{p.price}</div>
-                      <div className="reg-pc-note">{p.note}</div>
-                      {selectedPlan === p.key && (
-                        <div className="reg-pc-check" style={{ background: p.color }}>✓</div>
-                      )}
-                    </button>
-                  ))}
-                </div>
 
                 {/* 2-col: Name + Phone */}
                 <div className="reg-row-2">
