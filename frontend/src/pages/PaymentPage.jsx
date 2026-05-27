@@ -4,22 +4,31 @@ import { getPlans, createOrder, verifyPayment, deleteMyAccount } from '../api';
 import UWLogo from '../components/UWLogo';
 
 const PLAN_LABEL = {
+    verification: 'Free Trial',
     bronze:       'Bronze',
     silver:       'Silver',
     gold:         'Gold',
-    verification: 'Free Trial Verification',
+    custom:       'Custom',
 };
 const PLAN_GRADIENT = {
     bronze:       'linear-gradient(135deg,#b45309,#d97706)',
-    silver:       'linear-gradient(135deg,#475569,#64748b)',
+    silver:       'linear-gradient(135deg,#5b21b6,#7c3aed)',
     gold:         'linear-gradient(135deg,#ca8a04,#eab308)',
     verification: 'linear-gradient(135deg,#7c3aed,#6d28d9)',
 };
+const PLAN_ACCENT = {
+    verification: '#a78bfa',
+    bronze:       '#f59e0b',
+    silver:       '#a78bfa',
+    gold:         '#fbbf24',
+    custom:       '#2dd4bf',
+};
 const PLAN_FEATURES_FALLBACK = {
-    verification: ['5-day free trial', 'Email + WhatsApp alerts', 'SSL & Domain monitoring', '2 sites included'],
-    bronze:       ['5 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Performance charts'],
-    silver:       ['15 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Full analytics'],
-    gold:         ['30 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Priority support'],
+    verification: ['2 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain expiry checks', '60s uptime checks', '5-day full access'],
+    bronze:       ['5 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Performance charts', 'Multi-recipient alerts'],
+    silver:       ['15 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Full analytics & charts', 'Server resource monitoring'],
+    gold:         ['30 sites monitored', 'Email + WhatsApp alerts', 'SSL & Domain tracking', 'Priority support', 'Advanced analytics'],
+    custom:       ['Unlimited sites', 'Dedicated account manager', 'Custom alert integrations', 'SLA guarantee', 'White-label options'],
 };
 
 function loadRazorpayScript() {
@@ -34,49 +43,117 @@ function loadRazorpayScript() {
 }
 
 const PLAN_ORDER = ['verification', 'bronze', 'silver', 'gold'];
-const PLAN_ICON  = { verification: '🆓', bronze: '🥉', silver: '🥈', gold: '🥇' };
 
-function PlanSelectScreen({ planData, user, onSelect }) {
+const PLAN_BADGE = {
+    verification: { text: 'FREE', color: '#7c3aed' },
+    bronze:       null,
+    silver:       { text: 'Most Popular', color: '#7c3aed' },
+    gold:         { text: 'Best Value', color: '#ca8a04' },
+    custom:       null,
+};
+
+function PlanSelectScreen({ planData, user, onSelect, onBack }) {
+    const [customSites, setCustomSites] = useState('');
+
     return (
-        <div className="pay-page">
-            <div className="pay-select-wrap">
-                <div className="pay-select-header">
-                    <UWLogo size={36} />
-                    <h2>Choose Your Plan</h2>
-                    <p>Welcome, <strong>{user?.name}</strong>! Select a plan to get started.</p>
-                </div>
-                <div className="pay-select-cards">
-                    {PLAN_ORDER.map(p => {
-                        const isVerif = p === 'verification';
-                        const price = isVerif
-                            ? (planData?.verificationFee ?? 2)
-                            : (planData?.plans?.[p]?.price ?? 0);
-                        const features = isVerif
-                            ? (planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures : PLAN_FEATURES_FALLBACK.verification)
-                            : (planData?.plans?.[p]?.features?.length ? planData.plans[p].features : PLAN_FEATURES_FALLBACK[p]);
-                        return (
-                            <div key={p} className={`pay-select-card ${p === 'silver' ? 'pay-select-popular' : ''}`}>
-                                {p === 'silver' && <div className="pay-select-badge">Most Popular</div>}
-                                <div className="pay-select-icon">{PLAN_ICON[p]}</div>
-                                <div className="pay-select-name">{PLAN_LABEL[p]}</div>
-                                <div className="pay-select-price">
-                                    ₹{price}
-                                    <span>{isVerif ? ' one-time' : '/month'}</span>
+        <div className="pss-page">
+            <button className="pss-back-btn" onClick={onBack}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path d="M19 12H5M12 5l-7 7 7 7"/>
+                </svg>
+                Back
+            </button>
+
+            <div className="pss-header">
+                <UWLogo size={44} />
+                <h1 className="pss-title">Choose Your Plan</h1>
+                <p className="pss-sub">Welcome, <strong>{user?.name}</strong>! Select a plan to get started.</p>
+            </div>
+
+            <div className="pss-cards">
+                {PLAN_ORDER.map(p => {
+                    const isVerif = p === 'verification';
+                    const price = isVerif
+                        ? (planData?.verificationFee ?? 2)
+                        : (planData?.plans?.[p]?.price ?? { bronze: 499, silver: 999, gold: 1499 }[p]);
+                    const features = isVerif
+                        ? (planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures : PLAN_FEATURES_FALLBACK.verification)
+                        : (planData?.plans?.[p]?.features?.length ? planData.plans[p].features : PLAN_FEATURES_FALLBACK[p]);
+                    const badge = PLAN_BADGE[p];
+                    const accent = PLAN_ACCENT[p];
+                    const isPopular = p === 'silver';
+
+                    return (
+                        <div key={p} className={`pss-card ${isPopular ? 'pss-card-popular' : ''}`}
+                            style={{ '--accent': accent }}>
+                            <div className="pss-card-top-bar" style={{ background: PLAN_GRADIENT[p] || `linear-gradient(135deg,${accent},${accent}99)` }} />
+                            {badge && (
+                                <div className="pss-badge" style={{ background: badge.color }}>
+                                    {badge.text}
                                 </div>
-                                {isVerif && <div style={{fontSize:11,color:'#a78bfa',marginBottom:8,textAlign:'center'}}>5-day free trial · Non-refundable</div>}
-                                <ul className="pay-select-features">
-                                    {features.map(f => <li key={f}><span>✓</span>{f}</li>)}
-                                </ul>
-                                <button
-                                    className="pay-select-btn"
-                                    style={{ background: PLAN_GRADIENT[p] }}
-                                    onClick={() => onSelect(p)}
-                                >
-                                    {isVerif ? 'Start Free Trial' : `Get ${PLAN_LABEL[p]}`}
-                                </button>
+                            )}
+                            <div className="pss-card-icon">
+                                {isVerif ? (
+                                    <div className="pss-free-tag">₹{price}</div>
+                                ) : (
+                                    <div className="pss-price-big" style={{ color: accent }}>
+                                        ₹{price}
+                                    </div>
+                                )}
                             </div>
-                        );
-                    })}
+                            <div className="pss-plan-name">{PLAN_LABEL[p]}</div>
+                            {isVerif
+                                ? <div className="pss-period">one-time verification</div>
+                                : <div className="pss-period">per month</div>
+                            }
+                            {isVerif && <div className="pss-trial-note">5-day free trial · Non-refundable</div>}
+                            <ul className="pss-features">
+                                {features.map(f => (
+                                    <li key={f}>
+                                        <svg width="13" height="13" fill="none" stroke={accent} strokeWidth="2.5" viewBox="0 0 24 24">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        {f}
+                                    </li>
+                                ))}
+                            </ul>
+                            <button className="pss-btn" style={{ background: PLAN_GRADIENT[p] || `linear-gradient(135deg,${accent},${accent}cc)` }}
+                                onClick={() => onSelect(p)}>
+                                {isVerif ? 'Start Free Trial' : `Get ${PLAN_LABEL[p]}`}
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Custom / Enterprise Plan */}
+            <div className="pss-custom-card">
+                <div className="pss-custom-left">
+                    <div className="pss-custom-icon">🏢</div>
+                    <div className="pss-custom-info">
+                        <div className="pss-custom-name">Custom / Enterprise</div>
+                        <div className="pss-custom-sub">Dedicated support · Custom integrations · SLA guarantee</div>
+                    </div>
+                </div>
+                <div className="pss-custom-right">
+                    <div className="pss-custom-input-wrap">
+                        <label className="pss-custom-label">Sites required</label>
+                        <input
+                            className="pss-custom-input"
+                            type="number"
+                            min="1"
+                            placeholder="e.g. 50"
+                            value={customSites}
+                            onChange={e => setCustomSites(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        className="pss-custom-btn"
+                        onClick={() => onSelect('custom', customSites)}
+                        disabled={!customSites || Number(customSites) < 1}
+                    >
+                        Request Quote →
+                    </button>
                 </div>
             </div>
         </div>
@@ -104,26 +181,16 @@ export default function PaymentPage({ user, onUserUpdate }) {
         ? (planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures : PLAN_FEATURES_FALLBACK.verification)
         : (planData?.plans?.[plan]?.features?.length ? planData.plans[plan].features : (PLAN_FEATURES_FALLBACK[plan] || []));
 
+    // ALL hooks before any early return
     useEffect(() => {
         getPlans().then(r => setPlanData(r.data)).catch(() => {});
     }, []);
 
-    // Plan selection screen for new Google users
-    if (isSelect) {
-        return <PlanSelectScreen
-            planData={planData}
-            user={user}
-            onSelect={(p) => navigate(p === 'verification' ? '/pay?plan=verification' : `/pay?plan=${p}`)}
-        />;
-    }
-
-    // Redirect if already verified (on verification plan)
     useEffect(() => {
-        if (!user) return;
+        if (isSelect || !user) return;
         if (plan === 'verification' && user.trialVerified) navigate('/dashboard');
-    }, [user, plan, navigate]);
+    }, [user, plan, navigate, isSelect]);
 
-    // Auto-redirect to dashboard after success
     useEffect(() => {
         if (!success) return;
         const t = setTimeout(() => navigate('/dashboard'), 4000);
@@ -145,7 +212,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
         setError('');
         setPaying(true);
 
-        // Load Razorpay JS
         const loaded = await loadRazorpayScript();
         if (!loaded) {
             setError('Payment gateway load failed. Check your internet connection and try again.');
@@ -153,7 +219,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
             return;
         }
 
-        // Create order on backend
         let orderData;
         try {
             const res = await createOrder({ plan });
@@ -164,7 +229,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
             return;
         }
 
-        // Open Razorpay checkout
         const options = {
             key:         orderData.keyId,
             amount:      orderData.amount,
@@ -179,7 +243,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
                 ondismiss: () => { setPaying(false); handleCancel(); },
             },
             handler: async (response) => {
-                // Payment done — verify with backend
                 try {
                     const res = await verifyPayment({
                         razorpay_order_id:   response.razorpay_order_id,
@@ -210,11 +273,31 @@ export default function PaymentPage({ user, onUserUpdate }) {
         rzp.open();
     };
 
+    // Plan selection screen — after all hooks
+    if (isSelect) {
+        return (
+            <PlanSelectScreen
+                planData={planData}
+                user={user}
+                onBack={() => navigate(-1)}
+                onSelect={(p, customSites) => {
+                    if (p === 'custom') {
+                        const subject = encodeURIComponent('Custom Plan Enquiry');
+                        const body = encodeURIComponent(`Hi,\n\nI need a custom plan for ${customSites} sites.\n\nName: ${user?.name}\nEmail: ${user?.email}`);
+                        window.location.href = `mailto:support@servermonitor.narendrasingh.site?subject=${subject}&body=${body}`;
+                        return;
+                    }
+                    navigate(p === 'verification' ? '/pay?plan=verification' : `/pay?plan=${p}`);
+                }}
+            />
+        );
+    }
+
     return (
         <div className="pay-page">
             <div className="pay-card">
 
-                {/* ── Header ── */}
+                {/* Header */}
                 <div className="pay-header" style={{ background: PLAN_GRADIENT[plan] || PLAN_GRADIENT.verification }}>
                     <div className="pay-header-logo"><UWLogo size={32} /></div>
                     <div className="pay-header-plan">{PLAN_LABEL[plan] || plan}</div>
@@ -227,7 +310,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
                     )}
                 </div>
 
-                {/* ── Cancel bar ── */}
+                {/* Cancel bar */}
                 {!success && (
                     <div className="pay-cancel-bar">
                         <button
@@ -241,7 +324,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
                 )}
 
                 {success ? (
-                    /* ── Success ── */
                     <div className="pay-success">
                         <div className="pay-success-icon">✅</div>
                         <h2>{isVerification ? 'Trial Activated!' : `${PLAN_LABEL[plan]} Plan Activated!`}</h2>
@@ -256,10 +338,8 @@ export default function PaymentPage({ user, onUserUpdate }) {
                         <div className="pay-success-redirect">Redirecting to dashboard in 4s...</div>
                     </div>
                 ) : (
-                    /* ── Payment body ── */
                     <div className="pay-body">
 
-                        {/* Plan summary */}
                         <div className="rzp-summary">
                             <div className="rzp-summary-row">
                                 <span>Plan</span>
@@ -275,7 +355,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
                             </div>
                         </div>
 
-                        {/* Features included */}
                         {planFeatures.length > 0 && (
                             <ul className="rzp-features">
                                 {planFeatures.map(f => (
@@ -297,7 +376,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
 
                         {error && <div className="pay-error">{error}</div>}
 
-                        {/* Pay button */}
                         <button
                             className="rzp-pay-btn"
                             onClick={handlePay}
