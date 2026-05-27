@@ -5,7 +5,9 @@ const auth = require('../middleware/auth');
 
 router.get('/:id', auth, async (req, res) => {
     try {
-        const server = await Server.findById(req.params.id);
+        const filter = { _id: req.params.id };
+        if (!req.isAdmin) filter.userId = req.userId;
+        const server = await Server.findOne(filter);
         if (!server) return res.status(404).json({ error: 'Server not found' });
 
         const hostname = extractHostname(server.url);
