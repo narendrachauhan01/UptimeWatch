@@ -20,6 +20,7 @@ const serverSchema = new mongoose.Schema({
     sslExpiry: { type: Date },
     sslDaysLeft: { type: Number },
     domainExpiry: { type: Date },
+    downAlertSent: { type: Boolean, default: false },
     userId: { type: require('mongoose').Schema.Types.ObjectId, ref: 'User', default: null },
 }, { timestamps: true });
 

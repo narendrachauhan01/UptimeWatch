@@ -7,8 +7,8 @@ const wa = require('./whatsapp');
 const { checkSSL, checkDomain, extractHostname, extractRootDomain } = require('./expiry');
 const { sendEmail, downEmailHtml, recoveredEmailHtml, sslEmailHtml } = require('./email');
 
-// Track which servers have had a DOWN alert sent (reset on recovery)
-const alertSentForDown = {};
+// Prevent concurrent checkAll runs (avoids duplicate alerts on overlap)
+let checkAllRunning = false;
 const SSL_MILESTONES = [30, 15, 7];   // alert at these days remaining
 const DOMAIN_MILESTONES = [30, 15, 7];
 
@@ -40,6 +40,11 @@ function getEligibleRecipients(recipients, serverId) {
 }
 
 async function checkAll() {
+    if (checkAllRunning) {
+        console.log('[Monitor] checkAll already running, skipping this tick');
+        return;
+    }
+    checkAllRunning = true;
     try {
         const servers = await Server.find({ active: true });
         const recipients = await Recipient.find({ active: true }).populate('servers');
@@ -47,54 +52,43 @@ async function checkAll() {
         for (const server of servers) {
             const result = await checkUrl(server.url);
             const prevStatus = server.status;
-
-            server.lastChecked = new Date();
-            server.responseTime = result.time;
-            server.httpCode = result.code;
+            const wasAlertSent = server.downAlertSent;
 
             console.log(`[Monitor] ${server.name} → HTTP ${result.code || 0} | ${result.up ? 'UP' : 'DOWN'} | ${result.time}ms`);
 
-            if (!result.up) {
-                server.status = 'down';
-                const isNewDown = prevStatus !== 'down';
-                if (isNewDown) server.lastDownAt = new Date();
-
-                const sid = server._id.toString();
-                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} alertSentForDown:${!!alertSentForDown[sid]}`);
-
-                if (isNewDown && !alertSentForDown[sid]) {
-                    // First time this site went down — send email + WhatsApp ONCE
-                    const eligible = getEligibleRecipients(recipients, server._id);
-                    console.log(`[Monitor] ${server.name} → DOWN alert sending to ${eligible.length} recipients`);
-                    await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`, true);
-                    alertSentForDown[sid] = true;
-                } else {
-                    // Site still down — save alert to DB only (no email/WhatsApp)
-                    console.log(`[Monitor] ${server.name} → still down, saving to DB only (no repeated notification)`);
-                    await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
-                }
-            } else {
-                server.status = 'up';
-                console.log(`[Monitor] ${server.name} prevStatus: ${prevStatus}`);
-                const sid = server._id.toString();
-                if (prevStatus === 'down') {
-                    server.lastUpAt = new Date();
-                    const eligible = getEligibleRecipients(recipients, server._id);
-                    // Site recovered — send recovery email + WhatsApp ONCE
-                    await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`, true);
-                    delete alertSentForDown[sid];
-                }
-            }
-
-            // Use findByIdAndUpdate with $set to avoid version conflict with checkExpiry
             const setFields = {
                 lastChecked: new Date(),
                 responseTime: result.time,
                 httpCode: result.code,
                 status: result.up ? 'up' : 'down',
             };
-            if (!result.up && prevStatus !== 'down') setFields.lastDownAt = new Date();
-            if (result.up && prevStatus === 'down') setFields.lastUpAt = new Date();
+
+            if (!result.up) {
+                const isNewDown = prevStatus !== 'down';
+                if (isNewDown) setFields.lastDownAt = new Date();
+
+                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} downAlertSent:${wasAlertSent}`);
+
+                if (isNewDown && !wasAlertSent) {
+                    // First time down — send alert ONCE, persist flag to DB
+                    const eligible = getEligibleRecipients(recipients, server._id);
+                    console.log(`[Monitor] ${server.name} → DOWN alert to ${eligible.length} recipients`);
+                    await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
+                    setFields.downAlertSent = true;
+                } else {
+                    // Still down — save to DB only, no repeated notification
+                    console.log(`[Monitor] ${server.name} → still down, no repeated alert`);
+                    await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
+                }
+            } else {
+                if (prevStatus === 'down') {
+                    setFields.lastUpAt = new Date();
+                    setFields.downAlertSent = false;  // reset flag on recovery
+                    const eligible = getEligibleRecipients(recipients, server._id);
+                    // Recovered — send recovery alert ONCE
+                    await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
+                }
+            }
 
             await Server.findByIdAndUpdate(server._id, {
                 $set: setFields,
@@ -103,6 +97,8 @@ async function checkAll() {
         }
     } catch (err) {
         console.error('[Monitor] checkAll error:', err.message);
+    } finally {
+        checkAllRunning = false;
     }
 }
 
