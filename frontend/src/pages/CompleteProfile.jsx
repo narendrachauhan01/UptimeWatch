@@ -54,7 +54,7 @@ export default function CompleteProfile({ user, onUserUpdate }) {
       <div className="cp-card">
         <div className="cp-logo"><UWLogo size={40} /></div>
         <h1 className="cp-title">Complete Your Profile</h1>
-        <p className="cp-sub">Hi <strong>{user?.name}</strong>, just a few more details before you choose your plan.</p>
+        <p className="cp-sub">Hi <strong>{user?.name}</strong>, a few more details to complete your account setup.</p>
 
         <form onSubmit={handleSubmit} className="cp-form">
           <div className="cp-field">

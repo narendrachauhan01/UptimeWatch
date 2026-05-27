@@ -5,17 +5,6 @@ import { useLocation, Link } from 'react-router-dom';
 import { sendRegisterOtp, verifyRegisterOtp, googleAuth } from '../api';
 import { getGoogleClientId } from '../googleConfig';
 import UWLogo from '../components/UWLogo';
-import COUNTRIES from '../constants/countries';
-
-const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
-  'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
-  'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
-  'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana',
-  'Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
-  'Andaman & Nicobar Islands','Chandigarh','Dadra & Nagar Haveli and Daman & Diu',
-  'Delhi (NCT)','Jammu & Kashmir','Ladakh','Lakshadweep','Puducherry',
-];
 
 
 const EyeOpen = () => <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
@@ -69,7 +58,7 @@ export default function Register({ onRegister }) {
 
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState(defaultPlan);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', country: '', state: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [otp, setOtp] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -107,8 +96,6 @@ export default function Register({ onRegister }) {
   const sendOtp = async (e) => {
     e?.preventDefault(); setError('');
     if (!form.name || !form.email || !form.password) { setError('Name, email and password are required'); return; }
-    if (!form.country) { setError('Please select your country'); return; }
-    if (!form.state) { setError('Please select / enter your state'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
@@ -230,18 +217,11 @@ export default function Register({ onRegister }) {
 
               <form onSubmit={sendOtp} className="reg-form">
 
-                {/* 2-col: Name + Phone */}
-                <div className="reg-row-2">
-                  <div className="reg-field">
-                    <label className="reg-label">Full Name <span className="reg-req">*</span></label>
-                    <input className="reg-input" type="text" placeholder="Your full name"
-                      value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoFocus />
-                  </div>
-                  <div className="reg-field">
-                    <label className="reg-label">Mobile Number</label>
-                    <input className="reg-input" type="tel" placeholder="+91 9876543210"
-                      value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                  </div>
+                {/* Full Name */}
+                <div className="reg-field">
+                  <label className="reg-label">Full Name <span className="reg-req">*</span></label>
+                  <input className="reg-input" type="text" placeholder="Your full name"
+                    value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoFocus />
                 </div>
 
                 {/* Email */}
@@ -249,31 +229,6 @@ export default function Register({ onRegister }) {
                   <label className="reg-label">Email Address <span className="reg-req">*</span></label>
                   <input className="reg-input" type="email" placeholder="you@example.com"
                     value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                </div>
-
-                {/* 2-col: Country + State */}
-                <div className="reg-row-2">
-                  <div className="reg-field">
-                    <label className="reg-label">Country <span className="reg-req">*</span></label>
-                    <select className="reg-input reg-select" value={form.country}
-                      onChange={e => setForm({ ...form, country: e.target.value, state: '' })}>
-                      <option value="">Select country</option>
-                      {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="reg-field">
-                    <label className="reg-label">State / Province <span className="reg-req">*</span></label>
-                    {form.country === 'India' ? (
-                      <select className="reg-input reg-select" value={form.state}
-                        onChange={e => setForm({ ...form, state: e.target.value })}>
-                        <option value="">Select state</option>
-                        {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    ) : (
-                      <input className="reg-input" type="text" placeholder="Enter your state / province"
-                        value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
-                    )}
-                  </div>
                 </div>
 
                 {/* Password */}
