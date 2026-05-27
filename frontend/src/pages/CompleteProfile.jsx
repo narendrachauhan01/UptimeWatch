@@ -14,9 +14,15 @@ const INDIAN_STATES = [
   'Delhi (NCT)','Jammu & Kashmir','Ladakh','Lakshadweep','Puducherry',
 ];
 
+const PURPOSES = [
+  { key: 'learning',  label: '📚 Learning',  desc: 'Personal learning & experiments' },
+  { key: 'personal',  label: '👤 Personal',  desc: 'Personal projects & websites' },
+  { key: 'business',  label: '💼 Business',  desc: 'Professional & business use' },
+];
+
 export default function CompleteProfile({ user, onUserUpdate }) {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ phone: '', state: '', country: '' });
+  const [form, setForm] = useState({ phone: '', state: '', country: '', purpose: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,6 +33,7 @@ export default function CompleteProfile({ user, onUserUpdate }) {
     if (digits.length !== 10) { setError('Enter a valid 10-digit mobile number'); return; }
     if (!form.country) { setError('Please select your country'); return; }
     if (!form.state) { setError('Please select / enter your state'); return; }
+    if (!form.purpose) { setError('Please select your account purpose'); return; }
     setError(''); setLoading(true);
     try {
       const res = await updateProfile(form);
@@ -94,6 +101,23 @@ export default function CompleteProfile({ user, onUserUpdate }) {
                 onChange={e => setForm({ ...form, state: e.target.value })}
               />
             )}
+          </div>
+
+          <div className="cp-field">
+            <label className="cp-label">Account Purpose <span className="reg-req">*</span></label>
+            <div className="cp-purpose-group">
+              {PURPOSES.map(p => (
+                <button
+                  key={p.key}
+                  type="button"
+                  className={`cp-purpose-btn ${form.purpose === p.key ? 'cp-purpose-active' : ''}`}
+                  onClick={() => setForm({ ...form, purpose: p.key })}
+                >
+                  <span className="cp-purpose-label">{p.label}</span>
+                  <span className="cp-purpose-desc">{p.desc}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {error && <div className="login-error-box">{error}</div>}
