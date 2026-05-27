@@ -89,10 +89,10 @@ export default function PaymentPage({ user, onUserUpdate }) {
     const plan = params.get('plan') || 'verification';
 
     const [planData, setPlanData] = useState(null);
-    const [paying,        setPaying]        = useState(false);
-    const [cancelling,    setCancelling]    = useState(false);
-    const [success,       setSuccess]       = useState(false);
-    const [error,         setError]         = useState('');
+    const [paying,   setPaying]  = useState(false);
+    const [success,  setSuccess] = useState(false);
+    const [error,    setError]   = useState('');
+    const paymentDone = React.useRef(false);
 
     const isSelect       = plan === 'select';
     const isVerification = plan === 'verification';
@@ -133,8 +133,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
     const isNewUnverified = user && user.plan === 'free_trial' && !user.trialVerified;
 
     const handleCancel = async () => {
-        if (!isNewUnverified) return;
-        setCancelling(true);
+        if (!isNewUnverified || paymentDone.current) return;
         try { await deleteMyAccount(); } catch (_) {}
         localStorage.removeItem('sm_token');
         localStorage.removeItem('sm_user');
@@ -194,6 +193,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
                         localStorage.removeItem('sm_intended_plan');
                         onUserUpdate?.(res.data.user);
                     }
+                    paymentDone.current = true;
                     setSuccess(true);
                 } catch (e) {
                     setError(e.response?.data?.error || 'Payment verification failed. Contact support with your payment ID.');
@@ -308,16 +308,6 @@ export default function PaymentPage({ user, onUserUpdate }) {
                                 <>💳 Pay ₹{amount} Securely</>
                             )}
                         </button>
-
-                        {isNewUnverified && (
-                            <button
-                                className="rzp-cancel-btn"
-                                onClick={handleCancel}
-                                disabled={paying || cancelling}
-                            >
-                                {cancelling ? 'Cancelling...' : 'Cancel & Delete Account'}
-                            </button>
-                        )}
 
                         <div className="rzp-secure-row">
                             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
