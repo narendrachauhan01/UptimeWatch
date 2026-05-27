@@ -18,6 +18,10 @@ function userPayload(u) {
         id: u._id,
         name: u.name,
         email: u.email,
+        phone: u.phone || null,
+        state: u.state || null,
+        country: u.country || null,
+        isGoogleUser: !!u.googleId,
         plan: u.plan,
         trialEndsAt: u.trialEndsAt,
         planEndsAt: u.planEndsAt,
@@ -208,6 +212,23 @@ router.post('/reset-password', async (req, res) => {
         await user.save();
         delete userResetTokens[token];
         res.json({ success: true, message: 'Password reset successfully' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ── update profile (phone, state, country) ───────────────────────────────────
+router.put('/profile', auth, async (req, res) => {
+    try {
+        if (req.isAdmin) return res.status(400).json({ error: 'Use admin settings' });
+        const { phone, state, country } = req.body;
+        const user = await User.findByIdAndUpdate(
+            req.userId,
+            { phone: phone || null, state: state || null, country: country || null },
+            { new: true }
+        );
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ user: userPayload(user) });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

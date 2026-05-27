@@ -20,6 +20,7 @@ import Account from './pages/Account';
 import AdminPanel from './pages/AdminPanel';
 import VerifyAccount from './pages/VerifyAccount';
 import PaymentPage from './pages/PaymentPage';
+import CompleteProfile from './pages/CompleteProfile';
 import TermsOfService from './pages/TermsOfService';
 import { API_URL, getNotifications, markNotificationsRead } from './api';
 import Toast from './components/Toast';
@@ -213,8 +214,8 @@ function AppInner() {
     else { setIsAdmin(true); setUser(null); }
     setAuthed(true);
     if (isNewUser && userData) {
-      navigate('/pay?plan=select');
-      showToast('Welcome to UptimeForge! Choose your plan to get started.');
+      navigate('/complete-profile');
+      showToast('Welcome to UptimeForge! Complete your profile to get started.');
     } else {
       navigate('/dashboard');
       showToast('Login successful! Welcome back.');
@@ -319,6 +320,21 @@ function AppInner() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Login onLogin={handleLogin} />} />
         </Routes>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </>
+    );
+  }
+
+  // ── Profile completion gate for Google users without phone/state ──
+  const needsProfile = authed && !isAdmin && user && user.isGoogleUser && !user.phone && !user.state;
+  if (needsProfile && location.pathname !== '/complete-profile') {
+    navigate('/complete-profile');
+    return null;
+  }
+  if (authed && location.pathname === '/complete-profile') {
+    return (
+      <>
+        <CompleteProfile user={user} onUserUpdate={handleUserUpdate} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </>
     );
