@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { adminGetUsers, adminUpdateUser, adminDeleteUser, adminGetSettings, adminUpdateSettings, adminGetPayments, adminDeletePayment, adminApprovePayment, adminRejectPayment, getAdminProfile, updateAdminProfile } from '../api';
 
 const PLAN_OPTIONS = ['free_trial', 'bronze', 'silver', 'gold'];
@@ -33,7 +34,9 @@ function fmt(date) {
 }
 
 export default function AdminPanel({ initialTab = 'overview' }) {
-    const [tab, setTab]             = useState(initialTab);
+    const location = useLocation();
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    const [tab, setTab] = useState(urlTab || initialTab);
     const [users, setUsers]         = useState([]);
     const [loading, setLoading]     = useState(true);
     const [editId, setEditId]       = useState(null);
