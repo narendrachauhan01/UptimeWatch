@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getServers, checkNow } from '../api';
+import { getServers, checkNow, deleteServer } from '../api';
 
 function NewDropdown({ onNavigate }) {
   const [open, setOpen] = useState(false);
@@ -208,6 +208,16 @@ export default function Dashboard() {
               <div className="mon-bar-wrap">
                 <UptimeBar history={s.historyBar||[]} />
               </div>
+              <button
+                className="mon-del-btn"
+                onClick={e => {
+                  e.stopPropagation();
+                  if (window.confirm(`Delete "${s.name}"?`)) {
+                    deleteServer(s._id).then(load);
+                  }
+                }}
+                title="Delete monitor"
+              >🗑</button>
             </div>
           ))}
         </div>

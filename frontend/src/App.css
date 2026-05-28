@@ -4973,3 +4973,6 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 /* Monitoring list dot blink */
 .mon-dot-up   { animation: pulse-green 1.8s ease-in-out infinite; }
 .mon-dot-down { animation: pulse-red   1s   ease-in-out infinite; }
+.mon-del-btn { padding:5px 8px; background:#fef2f2; border:1.5px solid #fecdd3; border-radius:7px; color:#dc2626; cursor:pointer; font-size:13px; flex-shrink:0; opacity:0; transition:opacity 0.15s; }
+.mon-row:hover .mon-del-btn { opacity:1; }
+@media(max-width:640px) { .mon-del-btn { opacity:1; } }
