@@ -41,6 +41,7 @@ app.use('/api/email-config', require('./routes/emailConfig'));
 app.use('/api/metrics',      require('./routes/metrics'));
 app.use('/api/ping',         require('./routes/ping'));
 app.use('/api/ping-targets', require('./routes/pingTargets'));
+app.use('/api/integrations',  require('./routes/integrations'));
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {

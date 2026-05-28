@@ -6,12 +6,68 @@ const PingTarget = require('../models/PingTarget');
 const Recipient = require('../models/Recipient');
 const Alert = require('../models/Alert');
 const Settings = require('../models/Settings');
+const Integration = require('../models/Integration');
 const wa = require('./whatsapp');
 const { checkSSL, checkDomain, extractHostname, extractRootDomain } = require('./expiry');
 const { sendEmail, downEmailHtml, recoveredEmailHtml, sslEmailHtml } = require('./email');
 
 // Prevent concurrent checkAll runs (avoids duplicate alerts on overlap)
 let checkAllRunning = false;
+
+// Fire user-configured integrations (Slack, Discord, Webhook, etc.)
+async function fireIntegrations(server, type, userId) {
+    if (!userId) return;
+    try {
+        const integrations = await Integration.find({ userId, active: true });
+        for (const intg of integrations) {
+            // Check if this event type matches
+            if (intg.events === 'down' && type !== 'down') continue;
+
+            const payload = {
+                event: type,
+                site: server.name,
+                url: server.url,
+                status: type === 'down' ? 'DOWN' : 'UP',
+                time: new Date().toISOString(),
+            };
+            const text = type === 'down'
+                ? `🚨 *${server.name}* is DOWN — ${server.url}`
+                : `✅ *${server.name}* is back UP — ${server.url}`;
+
+            try {
+                if (intg.type === 'slack' || intg.type === 'discord' || intg.type === 'webhook') {
+                    const url = intg.config?.url;
+                    if (!url) continue;
+                    const body = intg.type === 'slack'
+                        ? JSON.stringify({ text })
+                        : intg.type === 'discord'
+                        ? JSON.stringify({ content: text })
+                        : JSON.stringify(payload);
+
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (intg.config?.secret) headers['X-UptimeForge-Secret'] = intg.config.secret;
+
+                    const mod = url.startsWith('https') ? https : http;
+                    const parsed = new URL(url);
+                    const req = mod.request({ hostname: parsed.hostname, path: parsed.pathname + parsed.search, method: 'POST', headers }, () => {});
+                    req.on('error', () => {});
+                    req.write(body);
+                    req.end();
+                }
+                if (intg.type === 'telegram') {
+                    const { botToken, chatId } = intg.config || {};
+                    if (!botToken || !chatId) continue;
+                    const tUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                    const body = JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' });
+                    const req = https.request(tUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' } }, () => {});
+                    req.on('error', () => {});
+                    req.write(body);
+                    req.end();
+                }
+            } catch (_) {}
+        }
+    } catch (_) {}
+}
 
 // Get check interval (seconds) for a given plan from settings
 async function getPlanInterval(plan, settings) {
@@ -125,6 +181,7 @@ async function checkAll() {
                     const eligible = getEligibleRecipients(recipients, server._id, server.userId);
                     console.log(`[Monitor] ${server.name} → DOWN alert to ${eligible.length} recipients`);
                     await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
+                    await fireIntegrations(server, 'down', server.userId?._id || server.userId);
                     setFields.downAlertSent = true;
                 } else {
                     // Still down — save to DB only, no repeated notification
@@ -138,6 +195,7 @@ async function checkAll() {
                     const eligible = getEligibleRecipients(recipients, server._id, server.userId);
                     // Recovered — send recovery alert ONCE
                     await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
+                    await fireIntegrations(server, 'up', server.userId?._id || server.userId);
                 }
             }
 

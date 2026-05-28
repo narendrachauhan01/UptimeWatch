@@ -114,31 +114,48 @@ const INTEGRATIONS = [
               options:[{value:'all',label:'Up events, Down events, SSL & Domain expiry'},{value:'down',label:'Down events only'},{value:'down_ssl',label:'Down events + SSL & Domain expiry'}] },
         ],
     },
-    { key:'slack',    iconEl:<IcoSlack />,    name:'Slack',    color:'#4a154b', desc:'Send alerts to your Slack channel via incoming webhook.', status:'soon', fields:[] },
-    { key:'telegram', iconEl:<IcoTelegram />, name:'Telegram', color:'#0088cc', desc:'Get instant alerts via Telegram bot messages.', status:'soon', fields:[] },
-    { key:'discord',  iconEl:<IcoDiscord />,  name:'Discord',  color:'#5865F2', desc:'Post status updates to your Discord server.', status:'soon', fields:[] },
-    { key:'email',    iconEl:<IcoGmail />,    name:'Email',    color:'#7c3aed', desc:'Email alerts — configured in Admin Panel → Email Settings.', status:'configured', fields:[] },
+    { key:'slack',    iconEl:<IcoSlack />,    name:'Slack',    color:'#7c3aed', desc:'Send alerts to your Slack channel via incoming webhook.', status:'active',
+      fields:[{key:'url', label:'Slack Webhook URL', placeholder:'https://hooks.slack.com/services/...', hint:'Create from Slack → Apps → Incoming Webhooks'},
+              {key:'events',label:'Events',type:'select',default:'all',options:[{value:'all',label:'All events'},{value:'down',label:'Down only'}]}]},
+    { key:'telegram', iconEl:<IcoTelegram />, name:'Telegram', color:'#7c3aed', desc:'Get instant alerts via Telegram bot messages.', status:'active',
+      fields:[{key:'botToken',label:'Bot Token',placeholder:'1234567890:ABCdef...',hint:'Create bot via @BotFather on Telegram'},
+              {key:'chatId', label:'Chat ID',  placeholder:'-1001234567890', hint:'Your chat or group ID'},
+              {key:'events',label:'Events',type:'select',default:'all',options:[{value:'all',label:'All events'},{value:'down',label:'Down only'}]}]},
+    { key:'discord',  iconEl:<IcoDiscord />,  name:'Discord',  color:'#7c3aed', desc:'Post status updates to your Discord server.', status:'active',
+      fields:[{key:'url',label:'Discord Webhook URL',placeholder:'https://discord.com/api/webhooks/...',hint:'Create from Discord Channel → Edit → Integrations → Webhooks'},
+              {key:'events',label:'Events',type:'select',default:'all',options:[{value:'all',label:'All events'},{value:'down',label:'Down only'}]}]},
+    { key:'email',    iconEl:<IcoGmail />,    name:'Email',    color:'#7c3aed', desc:'Email alerts are sent automatically. Configure SMTP in Admin Panel.', status:'configured', fields:[] },
 ];
 
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function Integrations() {
     const [activeModal, setActiveModal] = useState(null);
-    const [saved, setSaved] = useState({});
+    const [saved, setSaved] = useState({}); // {type: true/false}
     const [toast, setToast] = useState('');
 
     const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(''), 3000); };
 
+    // Load existing integrations on mount
+    useEffect(() => {
+        axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() })
+            .then(r => {
+                const map = {};
+                r.data.forEach(i => { map[i.type] = true; });
+                setSaved(map);
+            }).catch(() => {});
+    }, []);
+
     const handleSave = async (key, form) => {
-        // Save to backend settings or localStorage for now
-        try {
-            await axios.post(`${API_URL}/api/integrations/${key}`, form, { headers: authHeaders() });
-            setSaved(prev => ({...prev, [key]: true}));
-            showToast(`✅ ${key} integration saved!`);
-        } catch (e) {
-            // fallback: just mark as saved locally
-            setSaved(prev => ({...prev, [key]: true}));
-            showToast(`✅ ${key} integration configured!`);
-        }
+        await axios.post(`${API_URL}/api/integrations/${key}`, { config: form, events: form.events || 'all' }, { headers: authHeaders() });
+        setSaved(prev => ({...prev, [key]: true}));
+        showToast(`✅ ${key.charAt(0).toUpperCase()+key.slice(1)} integration saved!`);
+    };
+
+    const handleDelete = async (key) => {
+        if (!window.confirm(`Remove ${key} integration?`)) return;
+        await axios.delete(`${API_URL}/api/integrations/${key}`, { headers: authHeaders() });
+        setSaved(prev => ({...prev, [key]: false}));
+        showToast(`${key} integration removed`);
     };
 
     const active = INTEGRATIONS.filter(i => i.status === 'active' || i.status === 'configured');
@@ -162,20 +179,24 @@ export default function Integrations() {
             {active.map(intg => (
                 <div key={intg.key} style={{ background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:14, padding:'16px 20px', marginBottom:10, display:'flex', alignItems:'center', gap:14 }}>
                     <div style={{ width:46, height:46, borderRadius:12, background:'#f8fafc', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
-                        {intg.icon}
+                        {intg.iconEl||intg.icon}
                     </div>
                     <div style={{ flex:1 }}>
                         <div style={{ fontWeight:700, fontSize:15, color:'#1e1b4b', marginBottom:2 }}>{intg.name}</div>
                         <div style={{ fontSize:13, color:'#64748b' }}>{intg.desc}</div>
                     </div>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        {(saved[intg.key]) && <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'3px 10px', borderRadius:20 }}>✓ Active</span>}
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        {saved[intg.key] && <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'3px 10px', borderRadius:20 }}>✓ Active</span>}
                         {intg.status === 'configured' && <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'3px 10px', borderRadius:20 }}>✓ Active</span>}
                         {intg.status === 'active' && intg.fields.length > 0 && (
                             <button onClick={() => setActiveModal(intg.key)}
-                                style={{ padding:'8px 18px', background:`linear-gradient(135deg,${intg.color},${intg.color}cc)`, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                                style={{ padding:'8px 16px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>
                                 {saved[intg.key] ? '✏️ Edit' : '+ Add'}
                             </button>
+                        )}
+                        {saved[intg.key] && intg.status === 'active' && (
+                            <button onClick={() => handleDelete(intg.key)}
+                                style={{ padding:'8px 10px', background:'#fef2f2', border:'1.5px solid #fecdd3', borderRadius:9, fontSize:13, color:'#dc2626', cursor:'pointer' }}>🗑</button>
                         )}
                     </div>
                 </div>
@@ -187,7 +208,7 @@ export default function Integrations() {
             {coming.map(intg => (
                 <div key={intg.key} style={{ background:'#f8fafc', border:'1.5px solid #f1f5f9', borderRadius:14, padding:'16px 20px', marginBottom:10, display:'flex', alignItems:'center', gap:14, opacity:0.75 }}>
                     <div style={{ width:46, height:46, borderRadius:12, background:'#f1f5f9', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
-                        {intg.icon}
+                        {intg.iconEl||intg.icon}
                     </div>
                     <div style={{ flex:1 }}>
                         <div style={{ fontWeight:700, fontSize:15, color:'#1e1b4b', marginBottom:2 }}>{intg.name}</div>
