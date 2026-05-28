@@ -60,6 +60,7 @@ export default function Recipients() {
   const [editServers, setEditServers] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [formServers, setFormServers] = useState([]); // selected sites for new recipient (empty = all)
 
   const load = () => getRecipients().then(r => {
     setRecipients(r.data.recipients ?? r.data);
@@ -86,8 +87,9 @@ export default function Recipients() {
     const email = form.channels.includes('email') ? form.email.trim() || null : null;
     setSaving(true);
     try {
-      await addRecipient({ name: form.name.trim(), phone, email, servers: [] });
+      await addRecipient({ name: form.name.trim(), phone, email, servers: formServers });
       setForm(empty);
+      setFormServers([]);
       load();
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to add recipient');
@@ -226,6 +228,37 @@ export default function Recipients() {
                   <span className="field-hint">Alert email address</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Site selection for new recipient */}
+          {servers.length > 0 && (
+            <div style={{ marginBottom:16 }}>
+              <label style={{ fontSize:13, fontWeight:600, color:'#374151', display:'block', marginBottom:8 }}>
+                🌐 Notify for sites
+                <span style={{ marginLeft:8, fontSize:11, color:'#94a3b8', fontWeight:400 }}>
+                  {formServers.length === 0 ? '(All sites — default)' : `${formServers.length} selected`}
+                </span>
+              </label>
+              <div className="rcp-site-chips">
+                {servers.map(s => (
+                  <button key={s._id} type="button"
+                    className={`rcp-site-chip ${formServers.includes(s._id) ? 'selected' : ''}`}
+                    onClick={() => setFormServers(prev => prev.includes(s._id) ? prev.filter(x=>x!==s._id) : [...prev, s._id])}>
+                    <span className={`chip-dot ${s.status||'unknown'}`} />
+                    {s.name}
+                    {formServers.includes(s._id) && <span style={{marginLeft:3,fontSize:10}}>✓</span>}
+                  </button>
+                ))}
+                {formServers.length > 0 && (
+                  <button type="button" className="rcp-chip-clear" onClick={() => setFormServers([])}>
+                    ✕ All sites
+                  </button>
+                )}
+              </div>
+              <span style={{ fontSize:11, color:'#94a3b8', marginTop:4, display:'block' }}>
+                Leave empty to receive alerts for all sites
+              </span>
             </div>
           )}
 

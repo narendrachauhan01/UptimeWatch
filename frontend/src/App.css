@@ -4757,3 +4757,11 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .rcp-pause  { color:#64748b; border-color:#e2e8f0; }
 .rcp-resume { color:#10b981; border-color:#bbf7d0; background:#f0fdf4; }
 .rcp-del    { color:#dc2626; border-color:#fecdd3; background:#fef2f2; }
+
+/* Recipients — site chips in add form */
+.rcp-site-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+.rcp-site-chip { padding:5px 12px; border-radius:20px; border:1.5px solid #e2e8f0; background:#f8fafc; color:#475569; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s; }
+.rcp-site-chip:hover { border-color:#7c3aed; color:#7c3aed; }
+.rcp-site-chip.selected { background:#f5f3ff; border-color:#7c3aed; color:#7c3aed; }
+.rcp-chip-clear { padding:5px 12px; border-radius:20px; border:1.5px dashed #e2e8f0; background:transparent; color:#94a3b8; font-size:12px; cursor:pointer; }
+.rcp-chip-clear:hover { border-color:#ef4444; color:#ef4444; }
