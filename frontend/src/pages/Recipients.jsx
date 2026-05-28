@@ -19,6 +19,7 @@ function ChannelToggle({ value, onChange }) {
 
 export default function Recipients() {
   const [recipients, setRecipients] = useState([]);
+  const [recipientLimit, setRecipientLimit] = useState(null);
   const [servers, setServers] = useState([]);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState('');
@@ -30,7 +31,10 @@ export default function Recipients() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
-  const load = () => getRecipients().then(r => setRecipients(r.data));
+  const load = () => getRecipients().then(r => {
+    setRecipients(r.data.recipients ?? r.data);
+    if (r.data.limit !== undefined) setRecipientLimit(r.data.limit);
+  });
 
   useEffect(() => { load(); getServers().then(r => setServers(r.data)); }, []);
 
@@ -130,6 +134,26 @@ export default function Recipients() {
         </div>
       </div>
 
+      {/* Recipient usage bar */}
+      {recipientLimit !== null && (
+        <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 18px', marginBottom:20, display:'flex', alignItems:'center', gap:16 }}>
+          <div style={{ flex:1 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+              <span style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Recipients used</span>
+              <span style={{ fontSize:13, fontWeight:700, color: recipients.length >= recipientLimit ? '#ef4444' : '#7c3aed' }}>
+                {recipients.length} / {recipientLimit}
+              </span>
+            </div>
+            <div style={{ height:6, background:'#e2e8f0', borderRadius:10, overflow:'hidden' }}>
+              <div style={{ width:`${Math.min((recipients.length/recipientLimit)*100,100)}%`, height:'100%', background: recipients.length >= recipientLimit ? '#ef4444' : '#7c3aed', borderRadius:10, transition:'width 0.4s' }} />
+            </div>
+          </div>
+          {recipients.length >= recipientLimit && (
+            <span style={{ fontSize:12, color:'#ef4444', fontWeight:600, whiteSpace:'nowrap' }}>Limit reached — upgrade to add more</span>
+          )}
+        </div>
+      )}
+
       {/* Add Form */}
       <div className="add-recipient-card">
         <div className="add-card-title">➕ Add New Recipient</div>
@@ -176,8 +200,8 @@ export default function Recipients() {
           )}
 
           <div style={{ marginTop: 8 }}>
-            <button type="submit" className="btn-add" disabled={saving}>
-              {saving ? 'Adding...' : 'Add Recipient'}
+            <button type="submit" className="btn-add" disabled={saving || (recipientLimit !== null && recipients.length >= recipientLimit)}>
+              {saving ? 'Adding...' : recipientLimit !== null && recipients.length >= recipientLimit ? `Limit reached (${recipientLimit}/${recipientLimit})` : 'Add Recipient'}
             </button>
           </div>
           {error && <div className="form-error">⚠️ {error}</div>}

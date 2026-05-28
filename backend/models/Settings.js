@@ -52,29 +52,33 @@ const DEFAULT_FEATURES = {
 const settingsSchema = new mongoose.Schema({
     trialDays:         { type: Number, default: 5 },
     verificationFee:   { type: Number, default: 2 },
-    freeTrialInterval: { type: Number, default: 300 }, // seconds — 5 min for free trial
-    freeTrialFeatures: { type: [String], default: () => DEFAULT_FEATURES.free_trial },
+    freeTrialInterval:         { type: Number, default: 300 },
+    freeTrialRecipientLimit:   { type: Number, default: 2 },
+    freeTrialFeatures:         { type: [String], default: () => DEFAULT_FEATURES.free_trial },
     plans: {
         bronze: {
-            price:    { type: Number, default: 499 },
-            sites:    { type: Number, default: 5 },
-            interval: { type: Number, default: 120 }, // 2 min
-            label:    { type: String, default: 'Bronze' },
-            features: { type: [String], default: () => DEFAULT_FEATURES.bronze },
+            price:           { type: Number, default: 499 },
+            sites:           { type: Number, default: 5 },
+            interval:        { type: Number, default: 120 },
+            recipientLimit:  { type: Number, default: 10 },
+            label:           { type: String, default: 'Bronze' },
+            features:        { type: [String], default: () => DEFAULT_FEATURES.bronze },
         },
         silver: {
-            price:    { type: Number, default: 999 },
-            sites:    { type: Number, default: 15 },
-            interval: { type: Number, default: 60 },  // 1 min
-            label:    { type: String, default: 'Silver' },
-            features: { type: [String], default: () => DEFAULT_FEATURES.silver },
+            price:           { type: Number, default: 999 },
+            sites:           { type: Number, default: 15 },
+            interval:        { type: Number, default: 60 },
+            recipientLimit:  { type: Number, default: 20 },
+            label:           { type: String, default: 'Silver' },
+            features:        { type: [String], default: () => DEFAULT_FEATURES.silver },
         },
         gold: {
-            price:    { type: Number, default: 1499 },
-            sites:    { type: Number, default: 30 },
-            interval: { type: Number, default: 30 },  // 30 sec
-            label:    { type: String, default: 'Gold' },
-            features: { type: [String], default: () => DEFAULT_FEATURES.gold },
+            price:           { type: Number, default: 1499 },
+            sites:           { type: Number, default: 30 },
+            interval:        { type: Number, default: 30 },
+            recipientLimit:  { type: Number, default: 30 },
+            label:           { type: String, default: 'Gold' },
+            features:        { type: [String], default: () => DEFAULT_FEATURES.gold },
         },
     },
 }, { timestamps: true });
@@ -95,15 +99,16 @@ settingsSchema.statics.get = async function () {
     if (needsMigration(s.freeTrialFeatures)) {
         s.freeTrialFeatures = DEFAULT_FEATURES.free_trial; dirty = true;
     }
-    if (!s.freeTrialInterval) { s.freeTrialInterval = 300; dirty = true; }
-    const DEFAULT_INTERVALS = { bronze: 120, silver: 60, gold: 30 };
+    if (!s.freeTrialInterval)       { s.freeTrialInterval = 300;       dirty = true; }
+    if (!s.freeTrialRecipientLimit) { s.freeTrialRecipientLimit = 2;   dirty = true; }
+    const DEFAULT_INTERVALS   = { bronze: 120, silver: 60,  gold: 30 };
+    const DEFAULT_REC_LIMITS  = { bronze: 10,  silver: 20,  gold: 30 };
     for (const k of ['bronze', 'silver', 'gold']) {
         if (needsMigration(s.plans[k].features)) {
             s.plans[k].features = DEFAULT_FEATURES[k]; dirty = true;
         }
-        if (!s.plans[k].interval) {
-            s.plans[k].interval = DEFAULT_INTERVALS[k]; dirty = true;
-        }
+        if (!s.plans[k].interval)       { s.plans[k].interval = DEFAULT_INTERVALS[k];  dirty = true; }
+        if (!s.plans[k].recipientLimit) { s.plans[k].recipientLimit = DEFAULT_REC_LIMITS[k]; dirty = true; }
     }
     if (dirty) { s.markModified('plans'); await s.save(); }
     return s;
@@ -112,9 +117,10 @@ settingsSchema.statics.get = async function () {
 settingsSchema.statics.update = async function (data) {
     let s = await this.findOne();
     if (!s) s = new this({});
-    if (data.trialDays !== undefined) s.trialDays = data.trialDays;
-    if (data.verificationFee !== undefined) s.verificationFee = data.verificationFee;
-    if (data.freeTrialInterval !== undefined) s.freeTrialInterval = data.freeTrialInterval;
+    if (data.trialDays !== undefined)             s.trialDays = data.trialDays;
+    if (data.verificationFee !== undefined)       s.verificationFee = data.verificationFee;
+    if (data.freeTrialInterval !== undefined)     s.freeTrialInterval = data.freeTrialInterval;
+    if (data.freeTrialRecipientLimit !== undefined) s.freeTrialRecipientLimit = data.freeTrialRecipientLimit;
     if (data.freeTrialFeatures !== undefined) {
         const f = sanitizeFeatures(data.freeTrialFeatures);
         if (f) s.freeTrialFeatures = f;
@@ -122,10 +128,11 @@ settingsSchema.statics.update = async function (data) {
     if (data.plans) {
         for (const key of ['bronze', 'silver', 'gold']) {
             if (data.plans[key]) {
-                if (data.plans[key].price    !== undefined) s.plans[key].price    = data.plans[key].price;
-                if (data.plans[key].sites    !== undefined) s.plans[key].sites    = data.plans[key].sites;
-                if (data.plans[key].interval !== undefined) s.plans[key].interval = data.plans[key].interval;
-                if (data.plans[key].label    !== undefined) s.plans[key].label    = data.plans[key].label;
+                if (data.plans[key].price           !== undefined) s.plans[key].price          = data.plans[key].price;
+                if (data.plans[key].sites           !== undefined) s.plans[key].sites          = data.plans[key].sites;
+                if (data.plans[key].interval        !== undefined) s.plans[key].interval       = data.plans[key].interval;
+                if (data.plans[key].recipientLimit  !== undefined) s.plans[key].recipientLimit = data.plans[key].recipientLimit;
+                if (data.plans[key].label           !== undefined) s.plans[key].label          = data.plans[key].label;
                 if (data.plans[key].features !== undefined) {
                     const f = sanitizeFeatures(data.plans[key].features);
                     if (f) s.plans[key].features = f;

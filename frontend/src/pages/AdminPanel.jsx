@@ -71,11 +71,12 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 trialDays: d.trialDays,
                 verificationFee: d.verificationFee ?? 2,
                 freeTrialInterval: d.freeTrialInterval ?? 300,
+                freeTrialRecipientLimit: d.freeTrialRecipientLimit ?? 2,
                 freeTrialFeatures: (d.freeTrialFeatures || []).join('\n'),
                 plans: {
-                    bronze: { price: d.plans.bronze.price, sites: d.plans.bronze.sites, interval: d.plans.bronze.interval ?? 120, features: (d.plans.bronze.features || []).join('\n') },
-                    silver: { price: d.plans.silver.price, sites: d.plans.silver.sites, interval: d.plans.silver.interval ?? 60,  features: (d.plans.silver.features || []).join('\n') },
-                    gold:   { price: d.plans.gold.price,   sites: d.plans.gold.sites,   interval: d.plans.gold.interval   ?? 30,  features: (d.plans.gold.features   || []).join('\n') },
+                    bronze: { price: d.plans.bronze.price, sites: d.plans.bronze.sites, interval: d.plans.bronze.interval ?? 120, recipientLimit: d.plans.bronze.recipientLimit ?? 10, features: (d.plans.bronze.features || []).join('\n') },
+                    silver: { price: d.plans.silver.price, sites: d.plans.silver.sites, interval: d.plans.silver.interval ?? 60,  recipientLimit: d.plans.silver.recipientLimit ?? 20, features: (d.plans.silver.features || []).join('\n') },
+                    gold:   { price: d.plans.gold.price,   sites: d.plans.gold.sites,   interval: d.plans.gold.interval   ?? 30,  recipientLimit: d.plans.gold.recipientLimit   ?? 30, features: (d.plans.gold.features   || []).join('\n') },
                 },
             });
         } catch (e) { showToast('Failed to load settings'); }
@@ -103,24 +104,28 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 trialDays: settingsForm.trialDays,
                 verificationFee: settingsForm.verificationFee,
                 freeTrialInterval: Number(settingsForm.freeTrialInterval),
+                freeTrialRecipientLimit: Number(settingsForm.freeTrialRecipientLimit),
                 freeTrialFeatures: settingsForm.freeTrialFeatures.split('\n').map(s => s.trim()).filter(Boolean),
                 plans: {
                     bronze: {
                         price: settingsForm.plans.bronze.price,
                         sites: settingsForm.plans.bronze.sites,
                         interval: Number(settingsForm.plans.bronze.interval),
+                        recipientLimit: Number(settingsForm.plans.bronze.recipientLimit),
                         features: settingsForm.plans.bronze.features.split('\n').map(s => s.trim()).filter(Boolean),
                     },
                     silver: {
                         price: settingsForm.plans.silver.price,
                         sites: settingsForm.plans.silver.sites,
                         interval: Number(settingsForm.plans.silver.interval),
+                        recipientLimit: Number(settingsForm.plans.silver.recipientLimit),
                         features: settingsForm.plans.silver.features.split('\n').map(s => s.trim()).filter(Boolean),
                     },
                     gold: {
                         price: settingsForm.plans.gold.price,
                         sites: settingsForm.plans.gold.sites,
                         interval: Number(settingsForm.plans.gold.interval),
+                        recipientLimit: Number(settingsForm.plans.gold.recipientLimit),
                         features: settingsForm.plans.gold.features.split('\n').map(s => s.trim()).filter(Boolean),
                     },
                 },
@@ -709,6 +714,13 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 </span>
                             </div>
                         </div>
+                        <div style={{ marginTop: 16 }}>
+                            <label style={{ fontWeight: 600, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>Max Recipients</label>
+                            <input type="number" min="1" className="ap-settings-input" style={{ width: 120 }}
+                                value={settingsForm.freeTrialRecipientLimit}
+                                onChange={e => setSettingsForm({ ...settingsForm, freeTrialRecipientLimit: Number(e.target.value) })}
+                            />
+                        </div>
                     </div>
 
                     <div className="ap-card" style={{ marginTop: 16 }}>
@@ -758,6 +770,13 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                         <span style={{ fontSize:11, color:'#94a3b8', marginTop:3, display:'block' }}>
                                             {Math.floor(settingsForm.plans[p].interval / 60) > 0 ? `${Math.floor(settingsForm.plans[p].interval / 60)} min` : ''}{settingsForm.plans[p].interval % 60 > 0 ? ` ${settingsForm.plans[p].interval % 60} sec` : ''} per check
                                         </span>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Max Recipients</label>
+                                        <input type="number" min="1" className="ap-settings-input"
+                                            value={settingsForm.plans[p].recipientLimit}
+                                            onChange={e => setPlanField(p, 'recipientLimit', e.target.value)}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Features (one per line · format: type:text)</label>
