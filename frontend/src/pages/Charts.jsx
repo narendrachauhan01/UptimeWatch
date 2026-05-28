@@ -26,7 +26,9 @@ export default function Charts() {
 
   useEffect(() => {
     if (!selectedId) return;
-    axios.get(`${API_URL}/api/servers/${selectedId}/history`)
+    const token = localStorage.getItem('sm_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    axios.get(`${API_URL}/api/servers/${selectedId}/history`, { headers })
       .then(r => setHistory(r.data?.history || []));
   }, [selectedId]);
 
