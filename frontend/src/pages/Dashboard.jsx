@@ -1,6 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getServers, checkNow } from '../api';
+
+function NewDropdown({ onNavigate }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  const go = (path) => { setOpen(false); onNavigate(path); };
+  return (
+    <div style={{ position:'relative' }} ref={ref}>
+      <div style={{ display:'flex', borderRadius:10, overflow:'hidden', boxShadow:'0 2px 12px rgba(124,58,237,0.25)' }}>
+        <button onClick={() => go('/servers')} style={{ padding:'9px 18px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', border:'none', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+          + New
+        </button>
+        <button onClick={() => setOpen(o=>!o)} style={{ padding:'9px 10px', background:'linear-gradient(135deg,#6d28d9,#5b21b6)', color:'#fff', border:'none', borderLeft:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center' }}>
+          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: open?'rotate(180deg)':'none', transition:'0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      {open && (
+        <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'#1e1b4b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, minWidth:180, boxShadow:'0 12px 32px rgba(0,0,0,0.3)', overflow:'hidden', zIndex:999 }}>
+          {[
+            { icon:'🖥️', label:'Single monitor', path:'/servers' },
+            { icon:'📋', label:'Manage all sites', path:'/servers' },
+          ].map(item => (
+            <button key={item.label} onClick={() => go(item.path)}
+              style={{ width:'100%', padding:'12px 16px', background:'transparent', border:'none', color:'rgba(255,255,255,0.85)', fontSize:14, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:10, textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <span>{item.icon}</span>{item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -107,7 +145,7 @@ export default function Dashboard() {
             <button className={`mon-btn-check ${checking?'checking':''}`} onClick={handleCheckNow} disabled={checking}>
               {checking ? '⏳ Checking...' : '↺ Check Now'}
             </button>
-            <Link to="/servers" className="mon-btn-add">+ Add Site</Link>
+            <NewDropdown onNavigate={navigate} />
           </div>
         </div>
 
