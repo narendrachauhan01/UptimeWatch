@@ -236,8 +236,8 @@ export default function SiteDetail() {
                         )}
 
                         {chartData.length > 1 ? (
-                            <div style={{width:'100%', height:200}}>
-                            <ResponsiveContainer width="100%" height={200}>
+                            <div className="sit-chart-wrap">
+                            <ResponsiveContainer width="99%" height={200}>
                             <AreaChart
                                 data={chartData}
                                 margin={{top:10,right:10,left:0,bottom:0}}
