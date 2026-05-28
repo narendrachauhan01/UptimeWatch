@@ -129,7 +129,7 @@ export default function AddMonitor() {
                     {/* Recipients */}
                     <div className="am-section">
                         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
-                            <div className="am-section-label" style={{marginBottom:0}}>Who will we notify?</div>
+                            <div className="am-section-label" style={{marginBottom:0}}>How will we notify you?</div>
                             {recipientLimit && (
                                 <span style={{fontSize:12, color: recipientLimit.count >= recipientLimit.limit ? '#ef4444' : '#7c3aed', fontWeight:700, background: recipientLimit.count >= recipientLimit.limit ? '#fee2e2' : '#f5f3ff', padding:'3px 10px', borderRadius:20}}>
                                     {recipientLimit.count} / {recipientLimit.limit} recipients used
