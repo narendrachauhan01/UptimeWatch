@@ -137,21 +137,13 @@ export default function AddMonitor() {
                             )}
                         </div>
                         <div className="am-recip-box">
-                            {/* All toggle */}
-                            <label className="am-recip-all">
-                                <input type="checkbox" checked={allRecipients} onChange={e => { setAllRecipients(e.target.checked); if(e.target.checked) setSelectedRecipients([]); }} />
-                                <div>
-                                    <div style={{fontWeight:700,fontSize:14,color:'#1e1b4b'}}>All recipients</div>
-                                    <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Every active recipient will get alerts for this monitor</div>
-                                </div>
-                            </label>
+                            {/* Tick recipients to assign — unselected = all by default */}
+                            <div style={{padding:'10px 16px 6px', fontSize:12, color:'#94a3b8', borderBottom:'1px solid #f1f5f9'}}>
+                                Tick recipients to assign. Leave all unticked = every recipient gets alerts.
+                            </div>
 
                             {/* Individual recipients — scrollable */}
-                            <div className="am-recip-list" style={{
-                                opacity: allRecipients ? 0.35 : 1,
-                                pointerEvents: allRecipients ? 'none' : 'auto',
-                                maxHeight: 320, overflowY: 'auto',
-                            }}>
+                            <div className="am-recip-list" style={{ maxHeight: 320, overflowY: 'auto' }}>
                                 {recipients.length === 0 && !showAddRecip ? (
                                     <div style={{fontSize:13,color:'#94a3b8',padding:'16px 18px',textAlign:'center'}}>
                                         No recipients yet
@@ -202,6 +194,14 @@ export default function AddMonitor() {
                                                             style={{padding:'5px 10px',background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:7,fontSize:12,color:'#0369a1',cursor:'pointer',fontWeight:700}}>
                                                             🌐 {recipSites.length===0?'All':recipSites.length} {sitesExpanded?'▲':'▼'}
                                                         </button>
+                                                        <button type="button" title="Delete recipient"
+                                                            onClick={async()=>{
+                                                                if(!window.confirm(`Delete ${r.name}?`)) return;
+                                                                await axios.delete(`${API_URL}/api/recipients/${r._id}`,{headers:authHeaders()});
+                                                                setRecipients(prev=>prev.filter(x=>x._id!==r._id));
+                                                                setSelectedRecipients(prev=>prev.filter(x=>x!==r._id));
+                                                            }}
+                                                            style={{padding:'5px 8px',background:'#fef2f2',border:'1.5px solid #fecdd3',borderRadius:7,fontSize:13,color:'#dc2626',cursor:'pointer'}}>🗑</button>
                                                     </div>
                                                 </div>
                                             )}
@@ -251,7 +251,7 @@ export default function AddMonitor() {
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''});}} style={{marginTop:10,padding:'5px 12px',background:'none',border:'none',color:'#94a3b8',fontSize:12,cursor:'pointer'}}>Cancel</button>
+                                                <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''}); }} style={{marginTop:10,padding:'7px 18px',background:'#f1f5f9',border:'1.5px solid #e2e8f0',borderRadius:8,color:'#475569',fontSize:13,fontWeight:600,cursor:'pointer'}}>✕ Cancel</button>
                                             </div>
                                         ) : (
                                             /* Step 2: fill in details */
@@ -289,7 +289,7 @@ export default function AddMonitor() {
                                                         setNewRecip({name:'',email:'',phone:'',channel:''});
                                                         setShowAddRecip(false);
                                                     }} style={{padding:'8px 20px',background:'#7c3aed',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>Add Recipient</button>
-                                                    <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''}); }} style={{padding:'8px 14px',background:'#f1f5f9',border:'none',borderRadius:8,fontSize:13,cursor:'pointer',color:'#64748b'}}>Cancel</button>
+                                                    <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''}); }} style={{padding:'8px 18px',background:'#f1f5f9',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:13,cursor:'pointer',color:'#475569',fontWeight:600}}>✕ Cancel</button>
                                                 </div>
                                             </div>
                                         )}
@@ -302,8 +302,11 @@ export default function AddMonitor() {
                                 )}
                             </div>
                         </div>
-                        {!allRecipients && selectedRecipients.length === 0 && recipients.length > 0 && (
-                            <div style={{fontSize:12,color:'#f59e0b',marginTop:6}}>⚠️ No recipient selected — tick "All recipients" or select at least one</div>
+                        {selectedRecipients.length > 0 && (
+                            <div style={{fontSize:12,color:'#7c3aed',marginTop:6,fontWeight:600}}>✓ {selectedRecipients.length} recipient{selectedRecipients.length>1?'s':''} selected</div>
+                        )}
+                        {selectedRecipients.length === 0 && recipients.length > 0 && (
+                            <div style={{fontSize:12,color:'#94a3b8',marginTop:6}}>No selection = all recipients will get alerts</div>
                         )}
                     </div>
 
