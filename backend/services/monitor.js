@@ -260,8 +260,13 @@ function tcpPing(host, port) {
 }
 
 async function pingCheck(host, port) {
+    // If port explicitly set, only try that port
+    if (port && port !== 80 && port !== 443) {
+        return await tcpPing(host, port);
+    }
+    // Default: try 443 then 80
     let r = await tcpPing(host, port || 443);
-    if (!r.alive) r = await tcpPing(host, 80);
+    if (!r.alive && (!port || port === 443)) r = await tcpPing(host, 80);
     return r;
 }
 

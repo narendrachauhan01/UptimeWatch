@@ -64,9 +64,9 @@ export default function PingMonitor() {
     };
 
     // Live ping
-    const doPing = async (host) => {
+    const doPing = async (host, port) => {
         try {
-            const res = await axios.post(`${API_URL}/api/ping`, { target: host }, api());
+            const res = await axios.post(`${API_URL}/api/ping`, { target: host, port }, api());
             const row = { ...res.data, seq: Date.now() };
             setLiveResults(prev => [row, ...prev].slice(0, MAX_RESULTS));
         } catch {
@@ -79,8 +79,8 @@ export default function PingMonitor() {
         setLiveTarget(t);
         setLiveResults([]);
         setLiveRunning(true);
-        await doPing(t.host);
-        timerRef.current = setInterval(() => doPing(t.host), liveInterval * 1000);
+        await doPing(t.host, t.port);
+        timerRef.current = setInterval(() => doPing(t.host, t.port), liveInterval * 1000);
     };
 
     const stopLive = () => {

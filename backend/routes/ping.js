@@ -18,10 +18,13 @@ function tcpPing(host, port = 80) {
     });
 }
 
-// Try HTTPS first (443), fallback to HTTP (80)
-async function pingHost(hostname) {
-    let result = await tcpPing(hostname, 443);
-    if (!result.alive) result = await tcpPing(hostname, 80);
+// Try specified port, fallback logic only if no port given
+async function pingHost(hostname, port) {
+    if (port && port !== 80 && port !== 443) {
+        return await tcpPing(hostname, port);
+    }
+    let result = await tcpPing(hostname, port || 443);
+    if (!result.alive && (!port || port === 443)) result = await tcpPing(hostname, 80);
     return result;
 }
 
@@ -36,13 +39,13 @@ function extractHost(input) {
 
 // POST /api/ping — single ping check (auth optional, rate-limit by IP is enough)
 router.post('/', async (req, res) => {
-    const { target } = req.body;
+    const { target, port } = req.body;
     if (!target) return res.status(400).json({ error: 'target required' });
     const hostname = extractHost(target);
     if (!hostname) return res.status(400).json({ error: 'Invalid target' });
     try {
-        const result = await pingHost(hostname);
-        res.json({ hostname, ...result, time: new Date().toISOString() });
+        const result = await pingHost(hostname, port ? Number(port) : null);
+        res.json({ hostname, port: port || null, ...result, time: new Date().toISOString() });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
