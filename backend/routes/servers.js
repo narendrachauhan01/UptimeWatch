@@ -46,7 +46,15 @@ router.post('/', auth, async (req, res) => {
             }
         }
         const data = { ...req.body };
-        if (!req.isAdmin) data.userId = req.userId;
+        if (!req.isAdmin) {
+            data.userId = req.userId;
+            // Force plan-based interval — user cannot override
+            const settings = await Settings.get();
+            const plan = req.user.plan || 'free_trial';
+            data.checkInterval = plan === 'free_trial'
+                ? (settings.freeTrialInterval || 300)
+                : (settings.plans?.[plan]?.interval || 60);
+        }
         const server = await Server.create(data);
         notify(req, `Site "${server.name}" added successfully`, 'site_added');
         res.json(server);
@@ -56,7 +64,16 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
     try {
         const filter = { _id: req.params.id, ...userFilter(req) };
-        const server = await Server.findOneAndUpdate(filter, req.body, { returnDocument: 'after' });
+        const updateData = { ...req.body };
+        if (!req.isAdmin) {
+            // Re-apply plan interval on every update — user cannot change it
+            const settings = await Settings.get();
+            const plan = req.user.plan || 'free_trial';
+            updateData.checkInterval = plan === 'free_trial'
+                ? (settings.freeTrialInterval || 300)
+                : (settings.plans?.[plan]?.interval || 60);
+        }
+        const server = await Server.findOneAndUpdate(filter, updateData, { returnDocument: 'after' });
         if (!server) return res.status(404).json({ error: 'Server not found' });
         notify(req, `Site "${server.name}" updated successfully`, 'site_updated');
         res.json(server);
