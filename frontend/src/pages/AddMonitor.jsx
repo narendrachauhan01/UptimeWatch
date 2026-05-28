@@ -16,8 +16,9 @@ export default function AddMonitor() {
     const [planInterval, setPlanInterval] = useState(null);
     const [plan, setPlan] = useState('');
     const [recipients, setRecipients] = useState([]);
+    const [recipientLimit, setRecipientLimit] = useState(null);
     const [selectedRecipients, setSelectedRecipients] = useState([]);
-    const [allRecipients, setAllRecipients] = useState(true);
+    const [allRecipients, setAllRecipients] = useState(false); // default: no pre-selection
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('sm_user') || '{}');
@@ -30,6 +31,7 @@ export default function AddMonitor() {
         }).catch(() => {});
         getRecipients().then(r => {
             const data = r.data.recipients ?? r.data;
+            if (r.data.limit !== undefined) setRecipientLimit({ limit: r.data.limit, count: r.data.count });
             setRecipients(data);
         }).catch(() => {});
     }, []);
@@ -110,37 +112,53 @@ export default function AddMonitor() {
 
                     {/* Recipients */}
                     <div className="am-section">
-                        <div className="am-section-label">Alert recipients</div>
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+                            <div className="am-section-label" style={{marginBottom:0}}>Who will we notify?</div>
+                            {recipientLimit && (
+                                <span style={{fontSize:12, color: recipientLimit.count >= recipientLimit.limit ? '#ef4444' : '#7c3aed', fontWeight:700, background: recipientLimit.count >= recipientLimit.limit ? '#fee2e2' : '#f5f3ff', padding:'3px 10px', borderRadius:20}}>
+                                    {recipientLimit.count} / {recipientLimit.limit} recipients used
+                                </span>
+                            )}
+                        </div>
                         <div className="am-recip-box">
                             {/* All toggle */}
                             <label className="am-recip-all">
-                                <input type="checkbox" checked={allRecipients} onChange={e => { setAllRecipients(e.target.checked); setSelectedRecipients([]); }} />
+                                <input type="checkbox" checked={allRecipients} onChange={e => { setAllRecipients(e.target.checked); if(e.target.checked) setSelectedRecipients([]); }} />
                                 <div>
                                     <div style={{fontWeight:700,fontSize:14,color:'#1e1b4b'}}>All recipients</div>
-                                    <div style={{fontSize:12,color:'#64748b',marginTop:2}}>All your active recipients will get alerts for this monitor</div>
+                                    <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Every active recipient will get alerts for this monitor</div>
                                 </div>
                             </label>
 
-                            {/* Individual recipients */}
-                            {!allRecipients && (
-                                <div className="am-recip-list">
-                                    {recipients.length === 0 ? (
-                                        <div style={{fontSize:13,color:'#94a3b8',padding:'10px 0'}}>No recipients yet — add some in Recipients page</div>
-                                    ) : recipients.map(r => (
-                                        <label key={r._id} className="am-recip-item">
-                                            <input type="checkbox"
-                                                checked={selectedRecipients.includes(r._id)}
-                                                onChange={() => toggleRecipient(r._id)} />
-                                            <div className="am-recip-avatar">{(r.name||'?')[0].toUpperCase()}</div>
-                                            <div>
-                                                <div style={{fontWeight:600,fontSize:14,color:'#1e1b4b'}}>{r.name}</div>
-                                                <div style={{fontSize:12,color:'#94a3b8'}}>{r.email || r.phone || ''}</div>
+                            {/* Individual recipients — always visible */}
+                            <div className="am-recip-list" style={{opacity: allRecipients ? 0.4 : 1, pointerEvents: allRecipients ? 'none' : 'auto'}}>
+                                {recipients.length === 0 ? (
+                                    <div style={{fontSize:13,color:'#94a3b8',padding:'12px 18px'}}>
+                                        No recipients yet — <a href="/recipients" style={{color:'#7c3aed'}}>add recipients</a>
+                                    </div>
+                                ) : recipients.map(r => (
+                                    <label key={r._id} className="am-recip-item">
+                                        <input type="checkbox"
+                                            checked={selectedRecipients.includes(r._id)}
+                                            onChange={() => toggleRecipient(r._id)} />
+                                        <div className="am-recip-avatar">{(r.name||'?')[0].toUpperCase()}</div>
+                                        <div style={{flex:1}}>
+                                            <div style={{fontWeight:600,fontSize:14,color:'#1e1b4b'}}>{r.name}</div>
+                                            <div style={{fontSize:12,color:'#94a3b8'}}>
+                                                {[r.email, r.phone].filter(Boolean).join(' · ') || '—'}
                                             </div>
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
+                                        </div>
+                                        <div style={{fontSize:11, color:'#94a3b8', display:'flex', gap:4}}>
+                                            {r.email && <span style={{background:'#f1f5f9',padding:'2px 6px',borderRadius:4}}>✉️ Email</span>}
+                                            {r.phone && <span style={{background:'#f1f5f9',padding:'2px 6px',borderRadius:4}}>💬 WA</span>}
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
+                        {!allRecipients && selectedRecipients.length === 0 && recipients.length > 0 && (
+                            <div style={{fontSize:12,color:'#f59e0b',marginTop:6}}>⚠️ No recipient selected — tick "All recipients" or select at least one</div>
+                        )}
                     </div>
 
                     {/* Monitor interval */}
