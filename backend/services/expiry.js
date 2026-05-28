@@ -3,7 +3,13 @@ const https = require('https');
 
 function checkSSL(hostname) {
     return new Promise((resolve) => {
-        const options = { host: hostname, port: 443, rejectUnauthorized: false, timeout: 10000 };
+        const options = {
+            host: hostname,
+            port: 443,
+            servername: hostname,          // SNI — required for Cloudflare & SNI-based hosts
+            rejectUnauthorized: false,
+            timeout: 10000,
+        };
         const socket = tls.connect(options, () => {
             try {
                 const cert = socket.getPeerCertificate();
@@ -11,7 +17,7 @@ function checkSSL(hostname) {
                 if (!cert || !cert.valid_to) return resolve(null);
                 const expiry = new Date(cert.valid_to);
                 const daysLeft = Math.floor((expiry - Date.now()) / (1000 * 60 * 60 * 24));
-                const issuer = cert.issuer?.O || null;
+                const issuer = cert.issuer?.O || cert.issuer?.CN || null;
                 resolve({ expiry, daysLeft, issuer });
             } catch (_) { resolve(null); }
         });
