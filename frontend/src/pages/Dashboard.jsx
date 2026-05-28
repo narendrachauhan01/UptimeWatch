@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getServers, checkNow, getExpiry, getAlerts, API_URL } from '../api';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { getServers, checkNow } from '../api';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [servers, setServers] = useState([]);
   const [checking, setChecking] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [siteChecking, setSiteChecking] = useState(false);
-  const [siteResult, setSiteResult] = useState(null);
-  const [siteHistory, setSiteHistory] = useState([]);
-  const [siteIncidents, setSiteIncidents] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('dash-view') || 'grid');
 
   const load = () => getServers().then(r => { setServers(r.data); setLastUpdated(new Date()); });
 
@@ -46,38 +40,7 @@ export default function Dashboard() {
     setTimeout(() => { load(); setChecking(false); }, 3000);
   };
 
-  const openSite = async (s) => {
-    setSelected(s);
-    setSiteResult(null);
-    setSiteHistory([]);
-    setSiteIncidents([]);
-    setSiteChecking(true);
-    try {
-      const token = localStorage.getItem('sm_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const [expiryRes, histRes, alertRes] = await Promise.allSettled([
-        getExpiry(s._id),
-        axios.get(`${API_URL}/api/servers/${s._id}/history`, { headers }),
-        getAlerts(),
-      ]);
-      if (expiryRes.status === 'fulfilled') setSiteResult({ ssl: expiryRes.value.data.ssl, domain: expiryRes.value.data.domain });
-      if (histRes.status === 'fulfilled') {
-        const hist = histRes.value.data?.history || [];
-        setSiteHistory(hist.slice(-60).map(h => ({
-          time: new Date(h.time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
-          ms: h.responseTime || 0,
-        })));
-      }
-      if (alertRes.status === 'fulfilled') {
-        const incidents = alertRes.value.data.filter(a => a.server === s._id || a.server?._id === s._id).slice(0,5);
-        setSiteIncidents(incidents);
-      }
-      load();
-    } catch (e) { setSiteResult({ error: 'Check failed' }); }
-    setSiteChecking(false);
-  };
-
-  const closeSite = () => { setSelected(null); setSiteResult(null); setSiteHistory([]); setSiteIncidents([]); };
+  const openSite = (s) => navigate(`/site/${s._id}`);
 
   const downloadCSV = () => {
     const headers = ['Name', 'URL', 'Status', 'Response Time (ms)', 'Last Checked', 'SSL Days Left', 'SSL Expiry', 'Domain Days Left', 'Domain Expiry'];
@@ -136,7 +99,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mon-header">
           <div>
-            <h1 className="mon-title">Monitoring <span className="mon-dot">.</span></h1>
+            <h1 className="mon-title">Monitors <span className="mon-dot">.</span></h1>
             {lastUpdated && <p className="mon-sub">Updated {lastUpdated.toLocaleTimeString('en-IN')}</p>}
           </div>
           <div style={{ display:'flex', gap:8 }}>
@@ -267,9 +230,9 @@ export default function Dashboard() {
     </div>{/* end mon-layout */}
 
       {/* Site Detail Modal */}
-      {selected && (
-        <div className="sd-overlay" onClick={closeSite}>
-          <div className="sd-modal" onClick={e => e.stopPropagation()}>
+      {false && (
+        <div className="sd-overlay">
+          <div className="sd-modal">
 
             {/* Header */}
             <div className="sd-header">

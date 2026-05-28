@@ -15,6 +15,7 @@ import Resources from './pages/Resources';
 import PlanSettings from './pages/PlanSettings';
 import FeatureAccess from './pages/FeatureAccess';
 import PingMonitor from './pages/PingMonitor';
+import SiteDetail from './pages/SiteDetail';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 import Register from './pages/Register';
@@ -453,6 +454,7 @@ function AppInner() {
             {isAdmin && <Route path="/admin-profile" element={<AdminPanel initialTab="profile" />} />}
             {isAdmin && <Route path="/plan-settings" element={<PlanSettings />} />}
             {isAdmin && <Route path="/feature-access" element={<FeatureAccess />} />}
+            <Route path="/site/:id" element={<SiteDetail />} />
             <Route path="/ping" element={!user || user.plan !== 'free_trial' || freeAccess.pingMonitor ? <PingMonitor /> : <UpgradeGate user={user} feature="Ping Monitor"><PingMonitor /></UpgradeGate>} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="*" element={<Dashboard />} />
