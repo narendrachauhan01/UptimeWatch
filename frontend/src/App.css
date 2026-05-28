@@ -2352,7 +2352,7 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .lp-step-desc { font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6; }
 
 /* Pricing */
-.lp-pricing { background:#13102a; }
+.lp-pricing { background:#1e1b4b; }
 .lp-plans {
   display:grid; grid-template-columns:repeat(4,1fr); gap:24px;
   align-items:stretch;
