@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { addServer, getPlans, getRecipients, API_URL } from '../api';
+import { addServer, getPlans, getRecipients, getServers, API_URL } from '../api';
 
 const authHeaders = () => {
     const t = localStorage.getItem('sm_token');
@@ -20,7 +20,14 @@ export default function AddMonitor() {
     const [recipients, setRecipients] = useState([]);
     const [recipientLimit, setRecipientLimit] = useState(null);
     const [selectedRecipients, setSelectedRecipients] = useState([]);
-    const [allRecipients, setAllRecipients] = useState(false); // default: no pre-selection
+    const [allRecipients, setAllRecipients] = useState(false);
+    const [editRecipId, setEditRecipId] = useState(null);
+    const [editRecipForm, setEditRecipForm] = useState({ name:'', email:'', phone:'' });
+    const [showAddRecip, setShowAddRecip] = useState(false);
+    const [newRecip, setNewRecip] = useState({ name:'', email:'', phone:'' });
+    const [expandedSites, setExpandedSites] = useState(null); // recipient id whose sites are expanded
+    const [servers, setServers] = useState([]);
+    const [recipSiteMap, setRecipSiteMap] = useState({}); // {recipId: [siteIds]}
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('sm_user') || '{}');
@@ -35,7 +42,12 @@ export default function AddMonitor() {
             const data = r.data.recipients ?? r.data;
             if (r.data.limit !== undefined) setRecipientLimit({ limit: r.data.limit, count: r.data.count });
             setRecipients(data);
+            // Init site map from existing recipient server assignments
+            const map = {};
+            data.forEach(rec => { map[rec._id] = (rec.servers || []).map(s => s._id || s); });
+            setRecipSiteMap(map);
         }).catch(() => {});
+        getServers().then(r => setServers(r.data)).catch(() => {});
     }, []);
 
     const intervalLabel = planInterval
@@ -58,13 +70,15 @@ export default function AddMonitor() {
             const serverRes = await addServer(form);
             const serverId = serverRes.data._id;
 
-            // If specific recipients selected, assign this server to them
+            // Assign server to selected recipients + apply their site maps
             if (!allRecipients && selectedRecipients.length > 0) {
                 await Promise.all(selectedRecipients.map(rid => {
                     const rec = recipients.find(r => r._id === rid);
                     if (!rec) return Promise.resolve();
-                    const servers = [...(rec.servers?.map(s => s._id || s) || []), serverId];
-                    return axios.put(`${API_URL}/api/recipients/${rid}`, { servers }, { headers: authHeaders() });
+                    const existingSites = recipSiteMap[rid] || [];
+                    // If recipient has specific sites, add new server to their list
+                    const newSites = existingSites.length > 0 ? [...existingSites, serverId] : [];
+                    return axios.put(`${API_URL}/api/recipients/${rid}`, { servers: newSites }, { headers: authHeaders() });
                 }));
             }
 
@@ -134,37 +148,109 @@ export default function AddMonitor() {
 
                             {/* Individual recipients — scrollable */}
                             <div className="am-recip-list" style={{
-                                opacity: allRecipients ? 0.4 : 1,
+                                opacity: allRecipients ? 0.35 : 1,
                                 pointerEvents: allRecipients ? 'none' : 'auto',
-                                maxHeight: 260,
-                                overflowY: 'auto',
+                                maxHeight: 320, overflowY: 'auto',
                             }}>
-                                {recipients.length === 0 ? (
+                                {recipients.length === 0 && !showAddRecip ? (
                                     <div style={{fontSize:13,color:'#94a3b8',padding:'16px 18px',textAlign:'center'}}>
-                                        No recipients yet — <a href="/recipients" style={{color:'#7c3aed'}}>add recipients</a>
+                                        No recipients yet
                                     </div>
                                 ) : recipients.map(r => {
                                     const avatarColor = `hsl(${(r.name||'').charCodeAt(0)*37 % 360},55%,48%)`;
                                     const isSelected = selectedRecipients.includes(r._id);
+                                    const sitesExpanded = expandedSites === r._id;
+                                    const recipSites = recipSiteMap[r._id] || [];
                                     return (
-                                        <label key={r._id} className={`am-recip-item ${isSelected ? 'am-recip-selected' : ''}`}>
-                                            <input type="checkbox" checked={isSelected} onChange={() => toggleRecipient(r._id)} />
-                                            <div className="am-recip-avatar" style={{background: avatarColor}}>
-                                                {(r.name||'?')[0].toUpperCase()}
-                                            </div>
-                                            <div style={{flex:1, minWidth:0}}>
-                                                <div style={{fontWeight:600,fontSize:14,color:'#1e1b4b'}}>{r.name}</div>
-                                                <div style={{fontSize:12,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                                    {r.email || r.phone || '—'}
+                                        <div key={r._id}>
+                                            {/* Recipient row */}
+                                            {editRecipId === r._id ? (
+                                                <div style={{padding:'12px 16px', background:'#f8fafc', borderBottom:'1px solid #f1f5f9'}}>
+                                                    <div style={{display:'flex',gap:8,marginBottom:8}}>
+                                                        <input value={editRecipForm.name} onChange={e=>setEditRecipForm({...editRecipForm,name:e.target.value})} placeholder="Name" style={{flex:1,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13}} />
+                                                        <input value={editRecipForm.email} onChange={e=>setEditRecipForm({...editRecipForm,email:e.target.value})} placeholder="Email" style={{flex:2,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13}} />
+                                                    </div>
+                                                    <div style={{display:'flex',gap:8}}>
+                                                        <button type="button" onClick={async()=>{
+                                                            await axios.put(`${API_URL}/api/recipients/${r._id}`,{name:editRecipForm.name,email:editRecipForm.email||null},{headers:authHeaders()});
+                                                            setEditRecipId(null);
+                                                            const res = await getRecipients();
+                                                            setRecipients(res.data.recipients??res.data);
+                                                        }} style={{padding:'6px 16px',background:'#7c3aed',color:'#fff',border:'none',borderRadius:7,fontSize:12,fontWeight:700,cursor:'pointer'}}>Save</button>
+                                                        <button type="button" onClick={()=>setEditRecipId(null)} style={{padding:'6px 14px',background:'#f1f5f9',border:'none',borderRadius:7,fontSize:12,cursor:'pointer',color:'#64748b'}}>Cancel</button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div style={{display:'flex',gap:4,flexShrink:0}}>
-                                                {r.email && <span style={{fontSize:11,background:'#f1f5f9',color:'#64748b',padding:'2px 7px',borderRadius:5,fontWeight:600}}>✉️ Email</span>}
-                                                {r.phone && <span style={{fontSize:11,background:'#f0fdf4',color:'#16a34a',padding:'2px 7px',borderRadius:5,fontWeight:600}}>💬 WA</span>}
-                                            </div>
-                                        </label>
+                                            ) : (
+                                                <div className={`am-recip-item ${isSelected?'am-recip-selected':''}`} style={{cursor:'default'}}>
+                                                    <input type="checkbox" checked={isSelected} onChange={()=>toggleRecipient(r._id)} style={{cursor:'pointer'}} />
+                                                    <div className="am-recip-avatar" style={{background:avatarColor}}>{(r.name||'?')[0].toUpperCase()}</div>
+                                                    <div style={{flex:1,minWidth:0}}>
+                                                        <div style={{fontWeight:600,fontSize:13,color:'#1e1b4b'}}>{r.name}</div>
+                                                        <div style={{fontSize:11,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.email||r.phone||'—'}</div>
+                                                    </div>
+                                                    <div style={{display:'flex',gap:4,alignItems:'center',flexShrink:0}}>
+                                                        {r.email && <span style={{fontSize:10,background:'#f1f5f9',color:'#64748b',padding:'2px 6px',borderRadius:4,fontWeight:600}}>✉️ Email</span>}
+                                                        {r.phone && <span style={{fontSize:10,background:'#f0fdf4',color:'#16a34a',padding:'2px 6px',borderRadius:4,fontWeight:600}}>💬 WA</span>}
+                                                        <button type="button" title="Edit recipient" onClick={()=>{setEditRecipId(r._id);setEditRecipForm({name:r.name,email:r.email||'',phone:r.phone||''});}}
+                                                            style={{padding:'3px 8px',background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:6,fontSize:11,color:'#7c3aed',cursor:'pointer',fontWeight:600}}>✏️</button>
+                                                        <button type="button" title="Sites" onClick={()=>setExpandedSites(sitesExpanded?null:r._id)}
+                                                            style={{padding:'3px 8px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:6,fontSize:11,color:'#0369a1',cursor:'pointer',fontWeight:600}}>
+                                                            🌐 {recipSites.length===0?'All':recipSites.length} {sitesExpanded?'▲':'▼'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* Site selector for this recipient */}
+                                            {sitesExpanded && (
+                                                <div style={{padding:'10px 16px 12px',background:'#f8fafc',borderBottom:'1px solid #f1f5f9'}}>
+                                                    <div style={{fontSize:11,color:'#64748b',marginBottom:8,fontWeight:600}}>Select sites for {r.name} (empty = all sites):</div>
+                                                    <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
+                                                        {servers.map(s=>{
+                                                            const sel = recipSites.includes(s._id);
+                                                            return (
+                                                                <button key={s._id} type="button"
+                                                                    onClick={()=>setRecipSiteMap(prev=>({...prev,[r._id]:sel?recipSites.filter(x=>x!==s._id):[...recipSites,s._id]}))}
+                                                                    style={{padding:'3px 10px',borderRadius:20,border:`1.5px solid ${sel?'#7c3aed':'#e2e8f0'}`,background:sel?'#f5f3ff':'#fff',color:sel?'#7c3aed':'#64748b',fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                                                                    <span style={{width:6,height:6,borderRadius:'50%',background:s.status==='up'?'#10b981':s.status==='down'?'#ef4444':'#f59e0b',flexShrink:0}} />
+                                                                    {s.name} {sel&&'✓'}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {recipSites.length>0 && <button type="button" onClick={()=>setRecipSiteMap(prev=>({...prev,[r._id]:[]}))} style={{padding:'3px 10px',borderRadius:20,border:'1px dashed #e2e8f0',background:'transparent',color:'#94a3b8',fontSize:11,cursor:'pointer'}}>✕ All sites</button>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
+
+                                {/* Add recipient inline */}
+                                {showAddRecip ? (
+                                    <div style={{padding:'12px 16px',background:'#f0fdf4',borderTop:'1px solid #dcfce7'}}>
+                                        <div style={{fontSize:12,fontWeight:700,color:'#16a34a',marginBottom:8}}>➕ New Recipient</div>
+                                        <div style={{display:'flex',gap:8,marginBottom:8}}>
+                                            <input value={newRecip.name} onChange={e=>setNewRecip({...newRecip,name:e.target.value})} placeholder="Full Name *" style={{flex:1,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13}} />
+                                            <input value={newRecip.email} onChange={e=>setNewRecip({...newRecip,email:e.target.value})} placeholder="Email" style={{flex:2,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13}} />
+                                        </div>
+                                        <div style={{display:'flex',gap:8}}>
+                                            <button type="button" onClick={async()=>{
+                                                if(!newRecip.name.trim()) return;
+                                                const res = await axios.post(`${API_URL}/api/recipients`,{name:newRecip.name.trim(),email:newRecip.email||null,servers:[]},{headers:authHeaders()});
+                                                const rec = res.data;
+                                                setRecipients(prev=>[...prev,rec]);
+                                                setRecipSiteMap(prev=>({...prev,[rec._id]:[]}));
+                                                setNewRecip({name:'',email:'',phone:''});
+                                                setShowAddRecip(false);
+                                            }} style={{padding:'6px 16px',background:'#10b981',color:'#fff',border:'none',borderRadius:7,fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
+                                            <button type="button" onClick={()=>setShowAddRecip(false)} style={{padding:'6px 14px',background:'#f1f5f9',border:'none',borderRadius:7,fontSize:12,cursor:'pointer',color:'#64748b'}}>Cancel</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button type="button" onClick={()=>setShowAddRecip(true)}
+                                        style={{width:'100%',padding:'10px',background:'transparent',border:'none',color:'#7c3aed',fontSize:13,fontWeight:600,cursor:'pointer',textAlign:'left',paddingLeft:18,borderTop:'1px solid #f1f5f9'}}>
+                                        ➕ Add new recipient
+                                    </button>
+                                )}
                             </div>
                         </div>
                         {!allRecipients && selectedRecipients.length === 0 && recipients.length > 0 && (
