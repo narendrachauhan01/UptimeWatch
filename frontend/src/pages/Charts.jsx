@@ -321,8 +321,8 @@ export default function Charts() {
               </table>
             </div>
 
-            {/* Mobile cards */}
-            <div className="uptime-mobile">
+            {/* Mobile cards — 3 visible, rest scroll */}
+            <div className="uptime-mobile" style={{ maxHeight: 'calc(3 * 180px)', overflowY: 'auto', paddingRight: 2 }}>
               {filteredUptimeData.map(s => {
                 const uc = uptimeColor(s.uptime);
                 const rc = rtColor(s.avgRt);
