@@ -178,14 +178,14 @@ function ConfirmModal({ plan, gradient, onConfirm, onCancel }) {
                 </div>
                 <h3 style={{ margin:'0 0 8px', fontSize:18, fontWeight:800, color:'#1e1b4b' }}>Upgrade to {PLAN_LABEL[plan]}?</h3>
                 <p style={{ margin:'0 0 24px', fontSize:14, color:'#64748b', lineHeight:1.6 }}>
-                    You'll be taken to the payment page to complete your upgrade.
+                    Ready to upgrade? Clicking <strong style={{color:'#1e1b4b'}}>Yes, Proceed</strong> will take you to the payment page to complete your plan upgrade.
                 </p>
                 <div style={{ display:'flex', gap:12 }}>
                     <button onClick={onCancel} style={{ flex:1, padding:'11px', borderRadius:10, border:'1.5px solid #e2e8f0', background:'#f8fafc', color:'#475569', fontWeight:700, fontSize:14, cursor:'pointer' }}>
                         Cancel
                     </button>
                     <button onClick={onConfirm} style={{ flex:1, padding:'11px', borderRadius:10, border:'none', background:gradient, color:'#fff', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-                        Yes, Upgrade →
+                        Yes, Proceed →
                     </button>
                 </div>
             </div>
