@@ -60,11 +60,17 @@ async function checkAll() {
         const recipients = await Recipient.find({ active: true }).populate('servers');
 
         for (const server of servers) {
-            // Respect plan-based interval — skip if not due yet
-            const plan     = server.userId?.plan || 'free_trial';
-            const interval = await getPlanInterval(plan, settings);
-            const lastChecked = server.lastChecked ? new Date(server.lastChecked).getTime() : 0;
-            if (lastChecked && (Date.now() - lastChecked) < interval * 1000) continue;
+            // Plan-based interval check — only for user-owned servers
+            if (server.userId) {
+                const plan      = server.userId.plan || 'free_trial';
+                const interval  = await getPlanInterval(plan, settings);
+                const lastChecked = server.lastChecked ? new Date(server.lastChecked).getTime() : 0;
+                if (lastChecked && (Date.now() - lastChecked) < interval * 1000) {
+                    // not due yet — skip
+                    continue;
+                }
+            }
+            // Admin-owned servers (userId=null) are always checked every 30s
 
             const result = await checkUrl(server.url);
             const prevStatus = server.status;
