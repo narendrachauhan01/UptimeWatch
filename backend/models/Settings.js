@@ -55,7 +55,7 @@ const settingsSchema = new mongoose.Schema({
         gold: {
             price:    { type: Number, default: 1499 },
             sites:    { type: Number, default: 30 },
-            interval: { type: Number, default: 60 },  // 1 min
+            interval: { type: Number, default: 30 },  // 30 sec
             label:    { type: String, default: 'Gold' },
             features: { type: [String], default: () => DEFAULT_FEATURES.gold },
         },
@@ -71,15 +71,21 @@ function sanitizeFeatures(arr) {
 settingsSchema.statics.get = async function () {
     let s = await this.findOne();
     if (!s) s = await this.create({});
-    // Backfill missing feature arrays on docs created before this field existed
+    // Backfill missing fields on docs created before these fields existed
     let dirty = false;
     if (!s.freeTrialFeatures || s.freeTrialFeatures.length === 0) {
         s.freeTrialFeatures = DEFAULT_FEATURES.free_trial;
         dirty = true;
     }
+    if (!s.freeTrialInterval) { s.freeTrialInterval = 300; dirty = true; }
+    const DEFAULT_INTERVALS = { bronze: 120, silver: 60, gold: 30 };
     for (const k of ['bronze', 'silver', 'gold']) {
         if (!s.plans[k].features || s.plans[k].features.length === 0) {
             s.plans[k].features = DEFAULT_FEATURES[k];
+            dirty = true;
+        }
+        if (!s.plans[k].interval) {
+            s.plans[k].interval = DEFAULT_INTERVALS[k];
             dirty = true;
         }
     }

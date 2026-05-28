@@ -75,7 +75,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 plans: {
                     bronze: { price: d.plans.bronze.price, sites: d.plans.bronze.sites, interval: d.plans.bronze.interval ?? 120, features: (d.plans.bronze.features || []).join('\n') },
                     silver: { price: d.plans.silver.price, sites: d.plans.silver.sites, interval: d.plans.silver.interval ?? 60,  features: (d.plans.silver.features || []).join('\n') },
-                    gold:   { price: d.plans.gold.price,   sites: d.plans.gold.sites,   interval: d.plans.gold.interval   ?? 60,  features: (d.plans.gold.features   || []).join('\n') },
+                    gold:   { price: d.plans.gold.price,   sites: d.plans.gold.sites,   interval: d.plans.gold.interval   ?? 30,  features: (d.plans.gold.features   || []).join('\n') },
                 },
             });
         } catch (e) { showToast('Failed to load settings'); }
