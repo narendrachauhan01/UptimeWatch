@@ -2352,7 +2352,7 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .lp-step-desc { font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6; }
 
 /* Pricing */
-.lp-pricing { background:#f1f5f9; }
+.lp-pricing { background:#13102a; }
 .lp-plans {
   display:grid; grid-template-columns:repeat(4,1fr); gap:24px;
   align-items:stretch;
@@ -4239,8 +4239,8 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .lp-how3-arrow { position: absolute; right: -18px; top: 50%; transform: translateY(-50%); font-size: 22px; color: #7c3aed; z-index: 1; }
 
 /* Pricing note */
-.lp-pricing-note { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-top: 28px; padding: 16px 24px; background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; }
-.lp-pricing-note span { font-size: 13px; color: #64748b; font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif; }
+.lp-pricing-note { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-top: 28px; padding: 16px 24px; background: rgba(255,255,255,0.04); border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); }
+.lp-pricing-note span { font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif; }
 
 /* CTA emoji */
 .lp-cta-emoji { font-size: 48px; margin-bottom: 12px; }
