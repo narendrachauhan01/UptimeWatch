@@ -4,16 +4,24 @@ import { getRecipients, addRecipient, deleteRecipient, updateRecipient, getServe
 const empty = { name: '', phone: '', email: '', channels: [] };
 
 function ChannelToggle({ value, onChange }) {
-  const toggle = (ch) => onChange(value.includes(ch) ? value.filter(c => c !== ch) : [...value, ch]);
+  const val = value.includes('whatsapp') && value.includes('email') ? 'both'
+    : value.includes('whatsapp') ? 'whatsapp'
+    : value.includes('email') ? 'email' : '';
+  const handleChange = (e) => {
+    const v = e.target.value;
+    if (v === 'both')      onChange(['whatsapp', 'email']);
+    else if (v === 'whatsapp') onChange(['whatsapp']);
+    else if (v === 'email')    onChange(['email']);
+    else                       onChange([]);
+  };
   return (
-    <div className="channel-toggle-row">
-      <button type="button" className={`channel-btn ${value.includes('whatsapp') ? 'selected' : ''}`} onClick={() => toggle('whatsapp')}>
-        <span className="channel-icon">💬</span> WhatsApp
-      </button>
-      <button type="button" className={`channel-btn ${value.includes('email') ? 'selected' : ''}`} onClick={() => toggle('email')}>
-        <span className="channel-icon">✉️</span> Email
-      </button>
-    </div>
+    <select value={val} onChange={handleChange}
+      style={{ width:'100%', padding:'9px 12px', border:'1.5px solid #e2e8f0', borderRadius:8, fontSize:14, color:'#374151', background:'#fff', cursor:'pointer', outline:'none' }}>
+      <option value="">— Select alert method —</option>
+      <option value="email">✉️ Email only</option>
+      <option value="whatsapp">💬 WhatsApp only</option>
+      <option value="both">✉️ + 💬 Email & WhatsApp</option>
+    </select>
   );
 }
 
