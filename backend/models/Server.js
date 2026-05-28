@@ -20,6 +20,7 @@ const serverSchema = new mongoose.Schema({
     sslExpiry: { type: Date },
     sslDaysLeft: { type: Number },
     domainExpiry: { type: Date },
+    uptime24h:     { type: Number, default: null }, // percentage, updated by monitor
     downAlertSent: { type: Boolean, default: false },
     userId: { type: require('mongoose').Schema.Types.ObjectId, ref: 'User', default: null },
     // Advanced settings

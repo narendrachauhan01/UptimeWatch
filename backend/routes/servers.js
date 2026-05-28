@@ -19,8 +19,15 @@ async function notify(req, message, type) {
 
 router.get('/', auth, async (req, res) => {
     try {
-        // Exclude history array — can be 40k+ records, loaded separately per site
         const servers = await Server.find(userFilter(req)).select('-history').sort('-createdAt').lean();
+        // Attach last 48 history entries for uptime bar (only what's needed for display)
+        const ids = servers.map(s => s._id);
+        const withHistory = await Server.find({ _id: { $in: ids } })
+            .select({ history: { $slice: -48 } })
+            .lean();
+        const histMap = {};
+        withHistory.forEach(s => { histMap[s._id.toString()] = s.history || []; });
+        servers.forEach(s => { s.historyBar = histMap[s._id.toString()] || []; });
         res.json(servers);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });

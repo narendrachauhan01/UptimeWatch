@@ -102,16 +102,15 @@ export default function Dashboard() {
     URL.revokeObjectURL(url);
   };
 
-  // Uptime bar: last 30 history entries as colored segments
+  // Uptime bar: last 48 historyBar entries as colored segments
   const UptimeBar = ({ history = [] }) => {
-    const last30 = history.slice(-30);
-    if (last30.length === 0) return <div className="mon-bar-empty">—</div>;
-    const upPct = Math.round((last30.filter(h=>h.status==='up').length/last30.length)*100);
+    if (history.length === 0) return <div className="mon-bar-empty" style={{fontSize:12,color:'#94a3b8'}}>—</div>;
+    const upPct = Math.round((history.filter(h=>h.status==='up').length/history.length)*100);
     return (
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:3 }}>
-        <div style={{ display:'flex', gap:1.5 }}>
-          {last30.map((h,i) => (
-            <div key={i} style={{ width:6, height:22, borderRadius:2, background: h.status==='up' ? '#10b981' : h.status==='down' ? '#ef4444' : '#e2e8f0', opacity:0.85 }} title={`${new Date(h.time).toLocaleTimeString('en-IN')} — ${h.status}`} />
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4 }}>
+        <div style={{ display:'flex', gap:1 }}>
+          {history.map((h,i) => (
+            <div key={i} style={{ width:4, height:24, borderRadius:2, background: h.status==='up' ? '#10b981' : h.status==='down' ? '#ef4444' : '#d1d5db' }} title={`${new Date(h.time).toLocaleTimeString('en-IN')} — ${h.status}`} />
           ))}
         </div>
         <span style={{ fontSize:11, fontWeight:700, color: upPct===100?'#10b981':upPct>=95?'#f59e0b':'#ef4444' }}>{upPct}%</span>
@@ -119,8 +118,8 @@ export default function Dashboard() {
     );
   };
 
-  // Overall uptime from all sites
-  const allHistory = servers.flatMap(s => s.history || []);
+  // Overall uptime from all sites (using historyBar)
+  const allHistory = servers.flatMap(s => s.historyBar || []);
   const overallUptime = allHistory.length ? Math.round((allHistory.filter(h=>h.status==='up').length/allHistory.length)*100*10)/10 : 100;
   const avgResponse = servers.filter(s=>s.responseTime).length ? Math.round(servers.filter(s=>s.responseTime).reduce((a,s)=>a+s.responseTime,0)/servers.filter(s=>s.responseTime).length) : 0;
 
@@ -197,7 +196,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="mon-bar-wrap">
-                <UptimeBar history={s.history||[]} />
+                <UptimeBar history={s.historyBar||[]} />
               </div>
             </div>
           ))}
