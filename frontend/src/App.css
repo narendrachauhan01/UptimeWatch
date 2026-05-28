@@ -4765,3 +4765,8 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .rcp-site-chip.selected { background:#f5f3ff; border-color:#7c3aed; color:#7c3aed; }
 .rcp-chip-clear { padding:5px 12px; border-radius:20px; border:1.5px dashed #e2e8f0; background:transparent; color:#94a3b8; font-size:12px; cursor:pointer; }
 .rcp-chip-clear:hover { border-color:#ef4444; color:#ef4444; }
+
+.am-recip-selected { background:#faf5ff !important; }
+.am-recip-list::-webkit-scrollbar { width:4px; }
+.am-recip-list::-webkit-scrollbar-track { background:#f1f5f9; }
+.am-recip-list::-webkit-scrollbar-thumb { background:#ddd6fe; border-radius:4px; }

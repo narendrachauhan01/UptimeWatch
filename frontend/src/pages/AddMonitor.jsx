@@ -132,30 +132,39 @@ export default function AddMonitor() {
                                 </div>
                             </label>
 
-                            {/* Individual recipients — always visible */}
-                            <div className="am-recip-list" style={{opacity: allRecipients ? 0.4 : 1, pointerEvents: allRecipients ? 'none' : 'auto'}}>
+                            {/* Individual recipients — scrollable */}
+                            <div className="am-recip-list" style={{
+                                opacity: allRecipients ? 0.4 : 1,
+                                pointerEvents: allRecipients ? 'none' : 'auto',
+                                maxHeight: 260,
+                                overflowY: 'auto',
+                            }}>
                                 {recipients.length === 0 ? (
-                                    <div style={{fontSize:13,color:'#94a3b8',padding:'12px 18px'}}>
+                                    <div style={{fontSize:13,color:'#94a3b8',padding:'16px 18px',textAlign:'center'}}>
                                         No recipients yet — <a href="/recipients" style={{color:'#7c3aed'}}>add recipients</a>
                                     </div>
-                                ) : recipients.map(r => (
-                                    <label key={r._id} className="am-recip-item">
-                                        <input type="checkbox"
-                                            checked={selectedRecipients.includes(r._id)}
-                                            onChange={() => toggleRecipient(r._id)} />
-                                        <div className="am-recip-avatar">{(r.name||'?')[0].toUpperCase()}</div>
-                                        <div style={{flex:1}}>
-                                            <div style={{fontWeight:600,fontSize:14,color:'#1e1b4b'}}>{r.name}</div>
-                                            <div style={{fontSize:12,color:'#94a3b8'}}>
-                                                {[r.email, r.phone].filter(Boolean).join(' · ') || '—'}
+                                ) : recipients.map(r => {
+                                    const avatarColor = `hsl(${(r.name||'').charCodeAt(0)*37 % 360},55%,48%)`;
+                                    const isSelected = selectedRecipients.includes(r._id);
+                                    return (
+                                        <label key={r._id} className={`am-recip-item ${isSelected ? 'am-recip-selected' : ''}`}>
+                                            <input type="checkbox" checked={isSelected} onChange={() => toggleRecipient(r._id)} />
+                                            <div className="am-recip-avatar" style={{background: avatarColor}}>
+                                                {(r.name||'?')[0].toUpperCase()}
                                             </div>
-                                        </div>
-                                        <div style={{fontSize:11, color:'#94a3b8', display:'flex', gap:4}}>
-                                            {r.email && <span style={{background:'#f1f5f9',padding:'2px 6px',borderRadius:4}}>✉️ Email</span>}
-                                            {r.phone && <span style={{background:'#f1f5f9',padding:'2px 6px',borderRadius:4}}>💬 WA</span>}
-                                        </div>
-                                    </label>
-                                ))}
+                                            <div style={{flex:1, minWidth:0}}>
+                                                <div style={{fontWeight:600,fontSize:14,color:'#1e1b4b'}}>{r.name}</div>
+                                                <div style={{fontSize:12,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                                                    {r.email || r.phone || '—'}
+                                                </div>
+                                            </div>
+                                            <div style={{display:'flex',gap:4,flexShrink:0}}>
+                                                {r.email && <span style={{fontSize:11,background:'#f1f5f9',color:'#64748b',padding:'2px 7px',borderRadius:5,fontWeight:600}}>✉️ Email</span>}
+                                                {r.phone && <span style={{fontSize:11,background:'#f0fdf4',color:'#16a34a',padding:'2px 7px',borderRadius:5,fontWeight:600}}>💬 WA</span>}
+                                            </div>
+                                        </label>
+                                    );
+                                })}
                             </div>
                         </div>
                         {!allRecipients && selectedRecipients.length === 0 && recipients.length > 0 && (
