@@ -157,7 +157,7 @@ export default function SiteDetail() {
             {/* ── Site header ── */}
             <div className="sit-header">
                 <div className="sit-header-left">
-                    <span className="sit-status-circle" style={{ background: statusColor, boxShadow:`0 0 10px ${statusColor}` }} />
+                    <span className={`sit-status-circle ${server.status==='up'?'blink-up':server.status==='down'?'blink-down':''}`} style={{ background: statusColor }} />
                     <div>
                         <h1 className="sit-name">{server.name}</h1>
                         <a href={server.url} target="_blank" rel="noreferrer" className="sit-url">{server.url} ↗</a>
