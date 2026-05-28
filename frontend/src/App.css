@@ -2044,23 +2044,23 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
   position: absolute; top: 0; left: 0; right: 0; height: 3px;
   background: linear-gradient(90deg,#7c3aed,#a78bfa);
 }
-.acct-plan-card-header { padding: 24px 20px 20px; color: #fff; text-align: center; }
-.acct-plan-card-emoji { font-size: 32px; margin-bottom: 6px; }
-.acct-plan-card-name { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
-.acct-plan-card-price { font-size: 30px; font-weight: 900; margin: 8px 0 4px; }
-.acct-plan-card-price span { font-size: 14px; font-weight: 500; opacity: 0.85; }
-.acct-plan-card-sites { font-size: 12px; opacity: 0.85; background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 10px; border-radius: 20px; margin-top: 4px; }
-.acct-plan-card-body { padding: 18px 20px 20px; }
-.acct-plan-features { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 9px; }
-.acct-plan-features li { font-size: 13px; color: #475569; display: flex; align-items: center; gap: 8px; }
-.acct-feat-check { color: #10b981; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.acct-plan-card-header { padding: 16px 16px 14px; color: #fff; text-align: center; }
+.acct-plan-card-emoji { font-size: 24px; margin-bottom: 4px; }
+.acct-plan-card-name { font-size: 15px; font-weight: 800; letter-spacing: 0.5px; }
+.acct-plan-card-price { font-size: 24px; font-weight: 900; margin: 5px 0 3px; }
+.acct-plan-card-price span { font-size: 12px; font-weight: 500; opacity: 0.85; }
+.acct-plan-card-sites { font-size: 11px; opacity: 0.85; background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 8px; border-radius: 20px; margin-top: 3px; }
+.acct-plan-card-body { padding: 12px 14px 14px; }
+.acct-plan-features { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+.acct-plan-features li { font-size: 12px; color: #475569; display: flex; align-items: center; gap: 6px; }
+.acct-feat-check { color: #10b981; font-weight: 800; font-size: 12px; flex-shrink: 0; }
 .acct-current-label {
-  color: #7c3aed; font-weight: 700; font-size: 13px; text-align: center;
-  background: #f5f3ff; padding: 10px; border-radius: 10px; border: 1.5px solid #ddd6fe;
+  color: #7c3aed; font-weight: 700; font-size: 12px; text-align: center;
+  background: #f5f3ff; padding: 8px; border-radius: 8px; border: 1.5px solid #ddd6fe;
 }
 .acct-upgrade-btn {
-  width: 100%; padding: 12px; border: none; border-radius: 12px;
-  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+  width: 100%; padding: 9px; border: none; border-radius: 10px;
+  color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
 }
 .acct-upgrade-btn:hover { opacity: 0.92; transform: translateY(-1px); }
