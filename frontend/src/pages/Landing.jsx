@@ -19,35 +19,60 @@ export default function Landing() {
     getPlans().then(r => setPlanData(r.data)).catch(() => {});
   }, []);
 
+  const PLAN_FEATURES = {
+    free_trial: [
+      { label: '2 sites monitored',          type: 'ok' },
+      { label: '5 min check interval',        type: 'limited' },
+      { label: 'Email alerts',                type: 'ok' },
+      { label: 'WhatsApp alerts',             type: 'soon' },
+      { label: 'SSL expiry monitoring',       type: 'no' },
+      { label: 'Domain expiry monitoring',    type: 'no' },
+      { label: 'Performance charts',          type: 'no' },
+      { label: 'Multi-recipient alerts',      type: 'no' },
+      { label: 'Alert history logs',          type: 'ok' },
+    ],
+    bronze: [
+      { label: `${planData?.plans?.bronze?.sites ?? 5} sites monitored`, type: 'ok' },
+      { label: '2 min check interval',        type: 'limited' },
+      { label: 'Email alerts',                type: 'ok' },
+      { label: 'WhatsApp alerts',             type: 'soon' },
+      { label: 'SSL expiry monitoring',       type: 'ok' },
+      { label: 'Domain expiry monitoring',    type: 'ok' },
+      { label: 'Performance charts',          type: 'ok' },
+      { label: 'Multi-recipient alerts',      type: 'no' },
+      { label: 'Alert history logs',          type: 'ok' },
+    ],
+    silver: [
+      { label: `${planData?.plans?.silver?.sites ?? 15} sites monitored`, type: 'ok' },
+      { label: '1 min check interval',        type: 'ok' },
+      { label: 'Email alerts',                type: 'ok' },
+      { label: 'WhatsApp alerts',             type: 'soon' },
+      { label: 'SSL expiry monitoring',       type: 'ok' },
+      { label: 'Domain expiry monitoring',    type: 'ok' },
+      { label: 'Performance charts',          type: 'ok' },
+      { label: 'Multi-recipient alerts',      type: 'ok' },
+      { label: 'Alert history logs',          type: 'ok' },
+    ],
+    gold: [
+      { label: `${planData?.plans?.gold?.sites ?? 30} sites monitored`,  type: 'ok' },
+      { label: '30 sec check interval',       type: 'ok' },
+      { label: 'Email alerts',                type: 'ok' },
+      { label: 'WhatsApp alerts',             type: 'soon' },
+      { label: 'SSL expiry monitoring',       type: 'ok' },
+      { label: 'Domain expiry monitoring',    type: 'ok' },
+      { label: 'Performance charts',          type: 'ok' },
+      { label: 'Multi-recipient alerts',      type: 'ok' },
+      { label: 'Alert history logs',          type: 'ok' },
+      { label: 'Server resource monitoring',  type: 'ok' },
+      { label: 'Priority support',            type: 'ok' },
+    ],
+  };
+
   const plans = [
-    {
-      key: 'free_trial', ...PLAN_META.free_trial,
-      price: `₹${planData?.verificationFee ?? 2}`,
-      note: '5-day trial · one-time verification',
-      features: planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures
-        : ['2 sites monitored', 'WhatsApp & Email alerts', 'SSL & Domain tracking — Not included', '5 min check interval'],
-    },
-    {
-      key: 'bronze', ...PLAN_META.bronze,
-      price: `₹${planData?.plans?.bronze?.price ?? 499}`,
-      note: `${planData?.plans?.bronze?.sites ?? 5} sites monitored`,
-      features: planData?.plans?.bronze?.features?.length ? planData.plans.bronze.features
-        : ['5 sites monitored', 'WhatsApp & Email alerts', 'SSL & Domain tracking', 'Performance charts'],
-    },
-    {
-      key: 'silver', ...PLAN_META.silver,
-      price: `₹${planData?.plans?.silver?.price ?? 999}`,
-      note: `${planData?.plans?.silver?.sites ?? 15} sites monitored`,
-      features: planData?.plans?.silver?.features?.length ? planData.plans.silver.features
-        : ['15 sites monitored', 'WhatsApp & Email alerts', 'SSL & Domain tracking', 'Full analytics', 'Server monitoring'],
-    },
-    {
-      key: 'gold', ...PLAN_META.gold,
-      price: `₹${planData?.plans?.gold?.price ?? 1499}`,
-      note: `${planData?.plans?.gold?.sites ?? 30} sites monitored`,
-      features: planData?.plans?.gold?.features?.length ? planData.plans.gold.features
-        : ['30 sites monitored', 'WhatsApp & Email alerts', 'SSL & Domain tracking', 'Advanced analytics', 'Priority support'],
-    },
+    { key: 'free_trial', ...PLAN_META.free_trial, price: `₹${planData?.verificationFee ?? 2}`, note: '5-day trial · one-time verification' },
+    { key: 'bronze', ...PLAN_META.bronze, price: `₹${planData?.plans?.bronze?.price ?? 499}`, note: `${planData?.plans?.bronze?.sites ?? 5} sites` },
+    { key: 'silver', ...PLAN_META.silver, price: `₹${planData?.plans?.silver?.price ?? 999}`, note: `${planData?.plans?.silver?.sites ?? 15} sites` },
+    { key: 'gold',   ...PLAN_META.gold,   price: `₹${planData?.plans?.gold?.price ?? 1499}`,  note: `${planData?.plans?.gold?.sites ?? 30} sites` },
   ];
 
   const handlePlan = (key) => {
@@ -263,18 +288,16 @@ export default function Landing() {
                 </div>
                 <div className="lp-plan-body">
                   <ul className="lp-plan-list">
-                    {p.features.map(f => {
-                      const notIncluded = f.includes('Not included');
-                      return (
-                        <li key={f} style={{ opacity: notIncluded ? 0.5 : 1 }}>
-                          {notIncluded
-                            ? <svg width="15" height="15" fill="none" stroke="#ef4444" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            : <svg width="15" height="15" fill="none" stroke="#7c3aed" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                          }
-                          {f.replace(' — Not included', '')}
-                        </li>
-                      );
-                    })}
+                    {(PLAN_FEATURES[p.key] || []).map(({ label, type }) => (
+                      <li key={label} style={{ opacity: type === 'no' ? 0.45 : 1, color: type === 'no' ? '#94a3b8' : '#334155' }}>
+                        {type === 'ok'      && <svg width="14" height="14" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
+                        {type === 'no'      && <svg width="14" height="14" fill="none" stroke="#ef4444" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                        {type === 'limited' && <span style={{ fontSize:13 }}>😐</span>}
+                        {type === 'soon'    && <span style={{ fontSize:12 }}>🔜</span>}
+                        <span>{label}</span>
+                        {type === 'soon' && <span style={{ fontSize:9, background:'rgba(255,255,255,0.3)', color:'#fff', borderRadius:4, padding:'1px 5px', marginLeft:4, fontWeight:700 }}>Soon</span>}
+                      </li>
+                    ))}
                   </ul>
                   <button className="lp-plan-btn" style={{ background: p.gradient }} onClick={() => handlePlan(p.key)}>
                     {p.cta}
