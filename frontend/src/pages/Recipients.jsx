@@ -190,25 +190,37 @@ export default function Recipients() {
       <div className="add-recipient-card">
         <div className="add-card-title">➕ Add New Recipient</div>
         <form onSubmit={handleSubmit}>
-          <div className="add-form-row" style={{ marginBottom: 16 }}>
-            <div className="add-field">
-              <label>Full Name</label>
-              <input type="text" placeholder="Enter full name" value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="add-field">
-              <label>Alert via</label>
-              <ChannelToggle value={form.channels}
-                onChange={v => setForm({ ...form, channels: v, phone: '', email: '' })} />
-              <span className="field-hint">Select how this person receives alerts</span>
-            </div>
+
+          {/* Step 1: Alert via */}
+          <div style={{ marginBottom: 16 }}>
+            <label className="rcp-form-label">Alert via</label>
+            <ChannelToggle value={form.channels}
+              onChange={v => setForm({ ...form, channels: v, phone: '', email: '' })} />
           </div>
 
+          {/* Step 2: Show fields based on selection */}
           {form.channels.length > 0 && (
-            <div className="add-form-row" style={{ marginBottom: 16 }}>
+            <div className="rcp-fields-grid">
+              {/* Full Name — always shown */}
+              <div className="rcp-form-field">
+                <label className="rcp-form-label">Full Name <span style={{color:'#ef4444'}}>*</span></label>
+                <input className="rcp-form-input" type="text" placeholder="e.g. Narendra Singh"
+                  value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoFocus />
+              </div>
+
+              {/* Email */}
+              {form.channels.includes('email') && (
+                <div className="rcp-form-field">
+                  <label className="rcp-form-label">Email Address <span style={{color:'#ef4444'}}>*</span></label>
+                  <input className="rcp-form-input" type="email" placeholder="name@example.com"
+                    value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                </div>
+              )}
+
+              {/* WhatsApp */}
               {form.channels.includes('whatsapp') && (
-                <div className="add-field">
-                  <label>WhatsApp Number</label>
+                <div className="rcp-form-field">
+                  <label className="rcp-form-label">WhatsApp Number <span style={{color:'#ef4444'}}>*</span></label>
                   <div className="phone-input-wrap">
                     <span className="phone-prefix">🇮🇳 +91</span>
                     <input type="tel" placeholder="98765 43210"
@@ -216,16 +228,6 @@ export default function Recipients() {
                       onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })}
                       maxLength={10} />
                   </div>
-                  <span className="field-hint">10-digit mobile number</span>
-                </div>
-              )}
-              {form.channels.includes('email') && (
-                <div className="add-field">
-                  <label>Email Address</label>
-                  <input type="email" placeholder="name@example.com"
-                    value={form.email}
-                    onChange={e => setForm({ ...form, email: e.target.value })} />
-                  <span className="field-hint">Alert email address</span>
                 </div>
               )}
             </div>

@@ -4770,3 +4770,10 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
 .am-recip-list::-webkit-scrollbar { width:4px; }
 .am-recip-list::-webkit-scrollbar-track { background:#f1f5f9; }
 .am-recip-list::-webkit-scrollbar-thumb { background:#ddd6fe; border-radius:4px; }
+
+/* Recipients — add form redesign */
+.rcp-form-label { font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:7px; }
+.rcp-form-input { width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; transition:border-color 0.15s; box-sizing:border-box; }
+.rcp-form-input:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.08); }
+.rcp-fields-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px; margin-bottom:16px; }
+.rcp-form-field { display:flex; flex-direction:column; }
