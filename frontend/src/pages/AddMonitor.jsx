@@ -308,6 +308,19 @@ export default function AddMonitor() {
                                             </div>
                                         )}
                                     </div>
+                                ) : recipientLimit && recipients.length >= recipientLimit.limit ? (
+                                    <div style={{padding:'12px 16px', borderTop:'1px solid #f1f5f9', background:'#fef9ec', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:8}}>
+                                            <span style={{fontSize:16}}>⚠️</span>
+                                            <div>
+                                                <div style={{fontSize:13, fontWeight:700, color:'#92400e'}}>Recipient limit reached ({recipientLimit.count}/{recipientLimit.limit})</div>
+                                                <div style={{fontSize:12, color:'#b45309', marginTop:1}}>Upgrade your plan to add more recipients</div>
+                                            </div>
+                                        </div>
+                                        <a href="/account" style={{padding:'6px 14px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', borderRadius:8, fontSize:12, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap'}}>
+                                            Upgrade →
+                                        </a>
+                                    </div>
                                 ) : (
                                     <button type="button" onClick={()=>setShowAddRecip(true)}
                                         style={{width:'100%',padding:'10px',background:'transparent',border:'none',color:'#7c3aed',fontSize:13,fontWeight:600,cursor:'pointer',textAlign:'left',paddingLeft:18,borderTop:'1px solid #f1f5f9'}}>
