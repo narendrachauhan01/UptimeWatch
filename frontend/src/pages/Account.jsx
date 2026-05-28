@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPlans, getMyPaymentRequests, getServers, changePassword } from '../api';
 
+function parseFeatures(arr) {
+  if (!arr || !arr.length) return [];
+  return arr.map(f => {
+    const idx = f.indexOf(':');
+    if (idx === -1) return { type: 'ok', label: f };
+    return { type: f.slice(0, idx), label: f.slice(idx + 1) };
+  });
+}
+
 const PLAN_GRADIENTS = {
     free_trial: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
     bronze: 'linear-gradient(135deg,#b45309,#d97706)',
@@ -278,51 +287,10 @@ export default function Account({ user, onUserUpdate }) {
             {tab === 'plan' && (
                 <div className="acct-plans-row">
                     {[
-                        { pk: 'free_trial', emoji: '🆓', features: [
-                            { label: '2 sites monitored',            type: 'ok' },
-                            { label: '5 min check interval',         type: 'limited' },
-                            { label: 'Email alerts',                 type: 'ok' },
-                            { label: 'WhatsApp alerts',              type: 'soon' },
-                            { label: 'Multi-recipient alerts',       type: 'ok' },
-                            { label: 'SSL expiry monitoring',        type: 'no' },
-                            { label: 'Domain expiry monitoring',     type: 'no' },
-                            { label: 'Performance charts',           type: 'no' },
-                            { label: 'Alert history logs',           type: 'ok' },
-                        ]},
-                        { pk: 'bronze', emoji: '🥉', features: [
-                            { label: '5 sites monitored',            type: 'ok' },
-                            { label: '2 min check interval',         type: 'limited' },
-                            { label: 'Email alerts',                 type: 'ok' },
-                            { label: 'WhatsApp alerts',              type: 'soon' },
-                            { label: 'Multi-recipient alerts',       type: 'ok' },
-                            { label: 'SSL expiry monitoring',        type: 'ok' },
-                            { label: 'Domain expiry monitoring',     type: 'ok' },
-                            { label: 'Performance charts',           type: 'ok' },
-                            { label: 'Alert history logs',           type: 'ok' },
-                        ]},
-                        { pk: 'silver', emoji: '🥈', features: [
-                            { label: '15 sites monitored',           type: 'ok' },
-                            { label: '1 min check interval',         type: 'ok' },
-                            { label: 'Email alerts',                 type: 'ok' },
-                            { label: 'WhatsApp alerts',              type: 'soon' },
-                            { label: 'Multi-recipient alerts',       type: 'ok' },
-                            { label: 'SSL expiry monitoring',        type: 'ok' },
-                            { label: 'Domain expiry monitoring',     type: 'ok' },
-                            { label: 'Performance charts',           type: 'ok' },
-                            { label: 'Alert history logs',           type: 'ok' },
-                        ]},
-                        { pk: 'gold', emoji: '🥇', features: [
-                            { label: '30 sites monitored',           type: 'ok' },
-                            { label: '30 sec check interval',        type: 'ok' },
-                            { label: 'Email alerts',                 type: 'ok' },
-                            { label: 'WhatsApp alerts',              type: 'soon' },
-                            { label: 'Multi-recipient alerts',       type: 'ok' },
-                            { label: 'SSL expiry monitoring',        type: 'ok' },
-                            { label: 'Domain expiry monitoring',     type: 'ok' },
-                            { label: 'Performance charts',           type: 'ok' },
-                            { label: 'Alert history logs',           type: 'ok' },
-                            { label: 'Priority support',             type: 'ok' },
-                        ]},
+                        { pk: 'free_trial', emoji: '🆓', features: parseFeatures(plans?.free_trial?.features || planData?.freeTrialFeatures) },
+                        { pk: 'bronze',     emoji: '🥉', features: parseFeatures(plans?.bronze?.features) },
+                        { pk: 'silver',     emoji: '🥈', features: parseFeatures(plans?.silver?.features) },
+                        { pk: 'gold',       emoji: '🥇', features: parseFeatures(plans?.gold?.features) },
                     ].map(({ pk, emoji, features }) => {
                         const cfg   = plans[pk] || {};
                         const price = pk === 'free_trial' ? 'Free' : (cfg.price || (pk === 'bronze' ? 499 : pk === 'silver' ? 999 : 1499));

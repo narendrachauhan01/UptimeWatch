@@ -3,6 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import UWLogo from '../components/UWLogo';
 import { getPlans } from '../api';
 
+// Parse "type:label" feature strings from admin settings
+function parseFeatures(arr) {
+  if (!arr || !arr.length) return [];
+  return arr.map(f => {
+    const idx = f.indexOf(':');
+    if (idx === -1) return { type: 'ok', label: f };
+    return { type: f.slice(0, idx), label: f.slice(idx + 1) };
+  });
+}
+
 const PLAN_META = {
   free_trial: { name: 'Free Trial', emoji: '🆓', period: 'one-time', gradient: 'linear-gradient(135deg,#6366f1,#7c3aed)', cta: 'Start Free Trial', popular: false },
   bronze:     { name: 'Bronze',     emoji: '🥉', period: '/month',   gradient: 'linear-gradient(135deg,#b45309,#d97706)', cta: 'Get Bronze',       popular: false },
@@ -19,52 +29,12 @@ export default function Landing() {
     getPlans().then(r => setPlanData(r.data)).catch(() => {});
   }, []);
 
+  // Features come from admin settings — parsed from "type:label" format
   const PLAN_FEATURES = {
-    free_trial: [
-      { label: '2 sites monitored',          type: 'ok' },
-      { label: '5 min check interval',        type: 'limited' },
-      { label: 'Email alerts',                type: 'ok' },
-      { label: 'WhatsApp alerts',             type: 'soon' },
-      { label: 'Multi-recipient alerts',      type: 'ok' },
-      { label: 'SSL expiry monitoring',       type: 'no' },
-      { label: 'Domain expiry monitoring',    type: 'no' },
-      { label: 'Performance charts',          type: 'no' },
-      { label: 'Alert history logs',          type: 'ok' },
-    ],
-    bronze: [
-      { label: `${planData?.plans?.bronze?.sites ?? 5} sites monitored`, type: 'ok' },
-      { label: '2 min check interval',        type: 'limited' },
-      { label: 'Email alerts',                type: 'ok' },
-      { label: 'WhatsApp alerts',             type: 'soon' },
-      { label: 'Multi-recipient alerts',      type: 'ok' },
-      { label: 'SSL expiry monitoring',       type: 'ok' },
-      { label: 'Domain expiry monitoring',    type: 'ok' },
-      { label: 'Performance charts',          type: 'ok' },
-      { label: 'Alert history logs',          type: 'ok' },
-    ],
-    silver: [
-      { label: `${planData?.plans?.silver?.sites ?? 15} sites monitored`, type: 'ok' },
-      { label: '1 min check interval',        type: 'ok' },
-      { label: 'Email alerts',                type: 'ok' },
-      { label: 'WhatsApp alerts',             type: 'soon' },
-      { label: 'Multi-recipient alerts',      type: 'ok' },
-      { label: 'SSL expiry monitoring',       type: 'ok' },
-      { label: 'Domain expiry monitoring',    type: 'ok' },
-      { label: 'Performance charts',          type: 'ok' },
-      { label: 'Alert history logs',          type: 'ok' },
-    ],
-    gold: [
-      { label: `${planData?.plans?.gold?.sites ?? 30} sites monitored`,  type: 'ok' },
-      { label: '30 sec check interval',       type: 'ok' },
-      { label: 'Email alerts',                type: 'ok' },
-      { label: 'WhatsApp alerts',             type: 'soon' },
-      { label: 'Multi-recipient alerts',      type: 'ok' },
-      { label: 'SSL expiry monitoring',       type: 'ok' },
-      { label: 'Domain expiry monitoring',    type: 'ok' },
-      { label: 'Performance charts',          type: 'ok' },
-      { label: 'Alert history logs',          type: 'ok' },
-      { label: 'Priority support',            type: 'ok' },
-    ],
+    free_trial: parseFeatures(planData?.freeTrialFeatures),
+    bronze:     parseFeatures(planData?.plans?.bronze?.features),
+    silver:     parseFeatures(planData?.plans?.silver?.features),
+    gold:       parseFeatures(planData?.plans?.gold?.features),
   };
 
   const plans = [

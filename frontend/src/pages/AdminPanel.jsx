@@ -713,7 +713,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
 
                     <div className="ap-card" style={{ marginTop: 16 }}>
                         <div className="ap-card-title">Free Trial — Feature List</div>
-                        <p className="ap-card-sub">One bullet per line. Shown on landing, pricing & payment pages for the ₹2 verification plan.</p>
+                        <p className="ap-card-sub">One feature per line. Format: <strong>type:Feature text</strong> — types: <code>ok</code> ✓ | <code>no</code> ✕ | <code>limited</code> 😐 | <code>soon</code> 🔜</p>
                         <textarea
                             className="ap-settings-input"
                             style={{ marginTop: 12, width: '100%', minHeight: 130, fontFamily: 'inherit', lineHeight: 1.6, resize: 'vertical' }}
@@ -760,11 +760,11 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                         </span>
                                     </div>
                                     <div className="form-group">
-                                        <label>Features (one per line)</label>
+                                        <label>Features (one per line · format: type:text)</label>
                                         <textarea
                                             className="ap-settings-input"
-                                            style={{ minHeight: 130, fontFamily: 'inherit', lineHeight: 1.6, resize: 'vertical' }}
-                                            placeholder={'5 sites monitored\nEmail + WhatsApp alerts\nSSL & Domain tracking\nPerformance charts\nMulti-recipient alerts'}
+                                            style={{ minHeight: 130, fontFamily: 'monospace', fontSize:12, lineHeight: 1.6, resize: 'vertical' }}
+                                            placeholder={'ok:5 sites monitored\nlimited:2 min check interval\nok:Email alerts\nsoon:WhatsApp alerts\nno:SSL expiry monitoring'}
                                             value={settingsForm.plans[p].features}
                                             onChange={e => setPlanField(p, 'features', e.target.value)}
                                         />

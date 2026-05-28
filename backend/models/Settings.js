@@ -3,33 +3,49 @@ const mongoose = require('mongoose');
 // Singleton document — only one settings record per app
 const DEFAULT_FEATURES = {
     free_trial: [
-        '2 sites monitored',
-        '5 min check interval',
-        'Email + WhatsApp alerts',
-        'SSL & Domain tracking — Not included',
-        '5-day full access',
+        'ok:2 sites monitored',
+        'limited:5 min check interval',
+        'ok:Email alerts',
+        'soon:WhatsApp alerts',
+        'ok:Multi-recipient alerts',
+        'no:SSL expiry monitoring',
+        'no:Domain expiry monitoring',
+        'no:Performance charts',
+        'ok:Alert history logs',
     ],
     bronze: [
-        '5 sites monitored',
-        '2 min check interval',
-        'Email + WhatsApp alerts',
-        'SSL & Domain tracking',
-        'Performance charts',
+        'ok:5 sites monitored',
+        'limited:2 min check interval',
+        'ok:Email alerts',
+        'soon:WhatsApp alerts',
+        'ok:Multi-recipient alerts',
+        'ok:SSL expiry monitoring',
+        'ok:Domain expiry monitoring',
+        'ok:Performance charts',
+        'ok:Alert history logs',
     ],
     silver: [
-        '15 sites monitored',
-        '1 min check interval',
-        'Email + WhatsApp alerts',
-        'SSL & Domain tracking',
-        'Full analytics & charts',
+        'ok:15 sites monitored',
+        'ok:1 min check interval',
+        'ok:Email alerts',
+        'soon:WhatsApp alerts',
+        'ok:Multi-recipient alerts',
+        'ok:SSL expiry monitoring',
+        'ok:Domain expiry monitoring',
+        'ok:Performance charts',
+        'ok:Alert history logs',
     ],
     gold: [
-        '30 sites monitored',
-        '30 sec check interval',
-        'Email + WhatsApp alerts',
-        'SSL & Domain tracking',
-        'Advanced analytics',
-        'Priority support',
+        'ok:30 sites monitored',
+        'ok:30 sec check interval',
+        'ok:Email alerts',
+        'soon:WhatsApp alerts',
+        'ok:Multi-recipient alerts',
+        'ok:SSL expiry monitoring',
+        'ok:Domain expiry monitoring',
+        'ok:Performance charts',
+        'ok:Alert history logs',
+        'ok:Priority support',
     ],
 };
 
@@ -74,20 +90,19 @@ settingsSchema.statics.get = async function () {
     if (!s) s = await this.create({});
     // Backfill missing fields on docs created before these fields existed
     let dirty = false;
-    if (!s.freeTrialFeatures || s.freeTrialFeatures.length === 0) {
-        s.freeTrialFeatures = DEFAULT_FEATURES.free_trial;
-        dirty = true;
+    // Backfill or migrate features to type-prefixed format (ok:/no:/limited:/soon:)
+    const needsMigration = (arr) => !arr || arr.length === 0 || !arr[0].includes(':');
+    if (needsMigration(s.freeTrialFeatures)) {
+        s.freeTrialFeatures = DEFAULT_FEATURES.free_trial; dirty = true;
     }
     if (!s.freeTrialInterval) { s.freeTrialInterval = 300; dirty = true; }
     const DEFAULT_INTERVALS = { bronze: 120, silver: 60, gold: 30 };
     for (const k of ['bronze', 'silver', 'gold']) {
-        if (!s.plans[k].features || s.plans[k].features.length === 0) {
-            s.plans[k].features = DEFAULT_FEATURES[k];
-            dirty = true;
+        if (needsMigration(s.plans[k].features)) {
+            s.plans[k].features = DEFAULT_FEATURES[k]; dirty = true;
         }
         if (!s.plans[k].interval) {
-            s.plans[k].interval = DEFAULT_INTERVALS[k];
-            dirty = true;
+            s.plans[k].interval = DEFAULT_INTERVALS[k]; dirty = true;
         }
     }
     if (dirty) { s.markModified('plans'); await s.save(); }
