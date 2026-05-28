@@ -24,7 +24,7 @@ export default function AddMonitor() {
     const [editRecipId, setEditRecipId] = useState(null);
     const [editRecipForm, setEditRecipForm] = useState({ name:'', email:'', phone:'' });
     const [showAddRecip, setShowAddRecip] = useState(false);
-    const [newRecip, setNewRecip] = useState({ name:'', email:'', phone:'' });
+    const [newRecip, setNewRecip] = useState({ name:'', email:'', phone:'', channel:'' });
     const [expandedSites, setExpandedSites] = useState(null); // recipient id whose sites are expanded
     const [servers, setServers] = useState([]);
     const [recipSiteMap, setRecipSiteMap] = useState({}); // {recipId: [siteIds]}
@@ -231,31 +231,68 @@ export default function AddMonitor() {
 
                                 {/* Add recipient inline */}
                                 {showAddRecip ? (
-                                    <div style={{padding:'14px 16px',background:'#f0fdf4',borderTop:'1px solid #dcfce7'}}>
-                                        <div style={{fontSize:12,fontWeight:700,color:'#16a34a',marginBottom:10}}>➕ New Recipient</div>
-                                        <div style={{display:'flex',gap:8,marginBottom:8,flexWrap:'wrap'}}>
-                                            <input value={newRecip.name} onChange={e=>setNewRecip({...newRecip,name:e.target.value})} placeholder="Full Name *" style={{flex:'2 1 120px',padding:'8px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13,outline:'none'}} />
-                                            <input value={newRecip.email} onChange={e=>setNewRecip({...newRecip,email:e.target.value})} placeholder="Email address" style={{flex:'3 1 160px',padding:'8px 10px',border:'1.5px solid #e2e8f0',borderRadius:7,fontSize:13,outline:'none'}} />
-                                        </div>
-                                        <div style={{display:'flex',gap:8,marginBottom:10}}>
-                                            <div style={{display:'flex',flex:1,alignItems:'center',border:'1.5px solid #e2e8f0',borderRadius:7,overflow:'hidden',background:'#fff'}}>
-                                                <span style={{padding:'0 10px',color:'#64748b',fontSize:13,fontWeight:600,background:'#f8fafc',borderRight:'1px solid #e2e8f0',height:'100%',display:'flex',alignItems:'center'}}>💬 +91</span>
-                                                <input value={newRecip.phone} onChange={e=>setNewRecip({...newRecip,phone:e.target.value.replace(/\D/g,'').slice(0,10)})} placeholder="WhatsApp number (optional)" maxLength={10} style={{flex:1,padding:'8px 10px',border:'none',fontSize:13,outline:'none'}} />
+                                    <div style={{padding:'16px',background:'#fafafa',borderTop:'1px solid #f1f5f9'}}>
+                                        <div style={{fontSize:13,fontWeight:700,color:'#1e1b4b',marginBottom:12}}>➕ Add New Recipient</div>
+
+                                        {/* Step 1: choose channel */}
+                                        {!newRecip.channel ? (
+                                            <div>
+                                                <div style={{fontSize:12,color:'#64748b',marginBottom:8}}>How would you like to receive alerts?</div>
+                                                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                                    {[
+                                                        {ch:'email',    icon:'✉️', label:'Email',             color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe'},
+                                                        {ch:'whatsapp', icon:'💬', label:'WhatsApp',           color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0'},
+                                                        {ch:'both',     icon:'🔔', label:'Email & WhatsApp',   color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd'},
+                                                    ].map(o => (
+                                                        <button key={o.ch} type="button"
+                                                            onClick={()=>setNewRecip({...newRecip,channel:o.ch})}
+                                                            style={{padding:'10px 18px',borderRadius:10,border:`1.5px solid ${o.border}`,background:o.bg,color:o.color,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
+                                                            {o.icon} {o.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''});}} style={{marginTop:10,padding:'5px 12px',background:'none',border:'none',color:'#94a3b8',fontSize:12,cursor:'pointer'}}>Cancel</button>
                                             </div>
-                                        </div>
-                                        <div style={{display:'flex',gap:8}}>
-                                            <button type="button" onClick={async()=>{
-                                                if(!newRecip.name.trim()) return;
-                                                const phone = newRecip.phone.length===10 ? '91'+newRecip.phone : null;
-                                                const res = await axios.post(`${API_URL}/api/recipients`,{name:newRecip.name.trim(),email:newRecip.email||null,phone,servers:[]},{headers:authHeaders()});
-                                                const rec = res.data;
-                                                setRecipients(prev=>[...prev,rec]);
-                                                setRecipSiteMap(prev=>({...prev,[rec._id]:[]}));
-                                                setNewRecip({name:'',email:'',phone:''});
-                                                setShowAddRecip(false);
-                                            }} style={{padding:'7px 18px',background:'#10b981',color:'#fff',border:'none',borderRadius:7,fontSize:13,fontWeight:700,cursor:'pointer'}}>Add</button>
-                                            <button type="button" onClick={()=>setShowAddRecip(false)} style={{padding:'7px 14px',background:'#f1f5f9',border:'none',borderRadius:7,fontSize:13,cursor:'pointer',color:'#64748b'}}>Cancel</button>
-                                        </div>
+                                        ) : (
+                                            /* Step 2: fill in details */
+                                            <div>
+                                                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                                                    <span style={{fontSize:12,color:'#64748b'}}>
+                                                        {newRecip.channel==='email'?'✉️ Email':newRecip.channel==='whatsapp'?'💬 WhatsApp':'🔔 Email & WhatsApp'}
+                                                    </span>
+                                                    <button type="button" onClick={()=>setNewRecip({...newRecip,channel:''})} style={{fontSize:11,color:'#7c3aed',background:'none',border:'none',cursor:'pointer'}}>← Change</button>
+                                                </div>
+                                                <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap'}}>
+                                                    <input value={newRecip.name} onChange={e=>setNewRecip({...newRecip,name:e.target.value})} placeholder="Full Name *" autoFocus
+                                                        style={{flex:'2 1 120px',padding:'9px 12px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:13,outline:'none'}} />
+                                                    {(newRecip.channel==='email'||newRecip.channel==='both') && (
+                                                        <input value={newRecip.email} onChange={e=>setNewRecip({...newRecip,email:e.target.value})} placeholder="Email address *" type="email"
+                                                            style={{flex:'3 1 160px',padding:'9px 12px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:13,outline:'none'}} />
+                                                    )}
+                                                    {(newRecip.channel==='whatsapp'||newRecip.channel==='both') && (
+                                                        <div style={{flex:'2 1 130px',display:'flex',alignItems:'center',border:'1.5px solid #e2e8f0',borderRadius:8,overflow:'hidden',background:'#fff'}}>
+                                                            <span style={{padding:'0 10px',fontSize:12,color:'#64748b',background:'#f8fafc',borderRight:'1px solid #e2e8f0',height:'100%',display:'flex',alignItems:'center',whiteSpace:'nowrap'}}>💬 +91</span>
+                                                            <input value={newRecip.phone} onChange={e=>setNewRecip({...newRecip,phone:e.target.value.replace(/\D/g,'').slice(0,10)})} placeholder="WhatsApp number *" maxLength={10}
+                                                                style={{flex:1,padding:'9px 10px',border:'none',fontSize:13,outline:'none'}} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{display:'flex',gap:8}}>
+                                                    <button type="button" onClick={async()=>{
+                                                        if(!newRecip.name.trim()) return;
+                                                        const phone = newRecip.phone.length===10 ? '91'+newRecip.phone : null;
+                                                        const email = newRecip.email||null;
+                                                        const res = await axios.post(`${API_URL}/api/recipients`,{name:newRecip.name.trim(),email,phone,servers:[]},{headers:authHeaders()});
+                                                        const rec = res.data;
+                                                        setRecipients(prev=>[...prev,rec]);
+                                                        setRecipSiteMap(prev=>({...prev,[rec._id]:[]}));
+                                                        setNewRecip({name:'',email:'',phone:'',channel:''});
+                                                        setShowAddRecip(false);
+                                                    }} style={{padding:'8px 20px',background:'#7c3aed',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>Add Recipient</button>
+                                                    <button type="button" onClick={()=>{setShowAddRecip(false);setNewRecip({name:'',email:'',phone:'',channel:''}); }} style={{padding:'8px 14px',background:'#f1f5f9',border:'none',borderRadius:8,fontSize:13,cursor:'pointer',color:'#64748b'}}>Cancel</button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <button type="button" onClick={()=>setShowAddRecip(true)}
