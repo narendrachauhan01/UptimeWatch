@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPlans, getMyPaymentRequests, getServers, changePassword } from '../api';
 
 const PLAN_GRADIENTS = {
+    free_trial: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
     bronze: 'linear-gradient(135deg,#b45309,#d97706)',
     silver: 'linear-gradient(135deg,#475569,#64748b)',
     gold:   'linear-gradient(135deg,#ca8a04,#eab308)',
@@ -277,13 +278,14 @@ export default function Account({ user, onUserUpdate }) {
             {tab === 'plan' && (
                 <div className="acct-plans-row">
                     {[
+                        { pk: 'free_trial', emoji: '🆓', features: ['2 sites monitored', '60s check interval', 'Email alerts', 'SSL & Domain tracking', '5-day trial period'] },
                         { pk: 'bronze', emoji: '🥉', features: ['5 sites monitored', '60s check interval', 'Email alerts', 'SSL & Domain tracking', 'Performance charts'] },
                         { pk: 'silver', emoji: '🥈', features: ['15 sites monitored', '60s check interval', 'Email alerts', 'SSL & Domain tracking', 'Performance charts', 'Priority support'] },
                         { pk: 'gold',   emoji: '🥇', features: ['30 sites monitored', '60s check interval', 'Email alerts', 'SSL & Domain tracking', 'Performance charts', 'Priority support', 'Server monitoring'] },
                     ].map(({ pk, emoji, features }) => {
                         const cfg   = plans[pk] || {};
-                        const price = cfg.price || (pk === 'bronze' ? 499 : pk === 'silver' ? 999 : 1499);
-                        const sites = cfg.sites || (pk === 'bronze' ? 5 : pk === 'silver' ? 15 : 30);
+                        const price = pk === 'free_trial' ? 'Free' : (cfg.price || (pk === 'bronze' ? 499 : pk === 'silver' ? 999 : 1499));
+                        const sites = cfg.sites || (pk === 'free_trial' ? 2 : pk === 'bronze' ? 5 : pk === 'silver' ? 15 : 30);
                         const isCurrent  = plan === pk;
                         const isPopular  = pk === 'silver';
                         const isUpgrade  = PLAN_RANK[pk] > PLAN_RANK[plan];
@@ -295,7 +297,7 @@ export default function Account({ user, onUserUpdate }) {
                                 <div className="acct-plan-card-header" style={{ background: PLAN_GRADIENTS[pk] }}>
                                     <div className="acct-plan-card-emoji">{emoji}</div>
                                     <div className="acct-plan-card-name">{PLAN_LABEL[pk]}</div>
-                                    <div className="acct-plan-card-price">₹{price}<span>/mo</span></div>
+                                    <div className="acct-plan-card-price">{pk === 'free_trial' ? 'Free' : <>₹{price}<span>/mo</span></>}</div>
                                     <div className="acct-plan-card-sites">{sites} sites included</div>
                                 </div>
                                 <div className="acct-plan-card-body">
