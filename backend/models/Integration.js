@@ -5,6 +5,7 @@ const integrationSchema = new mongoose.Schema({
     type:    { type: String, enum: ['slack','discord','telegram','webhook'], required: true },
     config:  { type: Object, default: {} },
     events:  { type: String, enum: ['all','down','down_ssl'], default: 'all' },
+    servers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Server' }], // empty = all servers
     active:  { type: Boolean, default: true },
 }, { timestamps: true });
 

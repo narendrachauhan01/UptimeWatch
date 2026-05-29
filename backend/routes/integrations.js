@@ -16,10 +16,10 @@ router.get('/', async (req, res) => {
 router.post('/:type', async (req, res) => {
     try {
         const { type } = req.params;
-        const { config, events, active } = req.body;
+        const { config, events, active, servers } = req.body;
         const doc = await Integration.findOneAndUpdate(
             { userId: req.userId, type },
-            { config, events: events || 'all', active: active !== false },
+            { config, events: events || 'all', servers: servers || [], active: active !== false },
             { upsert: true, new: true }
         );
         res.json(doc);

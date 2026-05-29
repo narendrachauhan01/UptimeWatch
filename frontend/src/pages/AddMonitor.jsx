@@ -31,8 +31,10 @@ export default function AddMonitor() {
     const [recipients, setRecipients] = useState([]);
     const [recipientLimit, setRecipientLimit] = useState(null);
     const [selectedRecipients, setSelectedRecipients] = useState([]);
-    const [allRecipients,   setAllRecipients]   = useState(false);
-    const [savedIntegrations, setSavedIntegrations] = useState([]);
+    const [allRecipients,      setAllRecipients]      = useState(false);
+    const [savedIntegrations,  setSavedIntegrations]  = useState([]);
+    const [integSiteExpanded,  setIntegSiteExpanded]  = useState(null); // integration _id
+    const [integSiteMap,       setIntegSiteMap]       = useState({}); // {intgId: [serverIds]}
     const [editRecipId, setEditRecipId] = useState(null);
     const [editRecipForm, setEditRecipForm] = useState({ name:'', email:'', phone:'' });
     const [showAddRecip, setShowAddRecip] = useState(false);
@@ -62,7 +64,12 @@ export default function AddMonitor() {
         getServers().then(r => setServers(r.data)).catch(() => {});
         // Fetch saved integrations (webhook etc.)
         axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() })
-            .then(r => setSavedIntegrations(r.data)).catch(() => {});
+            .then(r => {
+                setSavedIntegrations(r.data);
+                const map = {};
+                r.data.forEach(i => { map[i._id] = (i.servers || []).map(s => s._id || s); });
+                setIntegSiteMap(map);
+            }).catch(() => {});
     }, []);
 
     const intervalLabel = planInterval
@@ -343,19 +350,55 @@ export default function AddMonitor() {
                                 <div style={{ fontSize:12, fontWeight:600, color:'#374151', marginBottom:6 }}>🔗 Active Integrations</div>
                                 {savedIntegrations.map(intg => {
                                     const icons = { webhook:'🔗', slack:'', discord:'🎮', telegram:'✈️' };
+                                    const siteSel = integSiteMap[intg._id] || [];
+                                    const isExpanded = integSiteExpanded === intg._id;
+                                    const saveIntgSites = async (newSites) => {
+                                        await axios.post(`${API_URL}/api/integrations/${intg.type}`,
+                                            { config: intg.config, events: intg.events, servers: newSites },
+                                            { headers: authHeaders() });
+                                    };
                                     return (
-                                        <div key={intg._id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px', background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:10, marginBottom:6 }}>
-                                            <span style={{ fontSize:16 }}>{icons[intg.type]||'🔗'}</span>
-                                            <div style={{ flex:1 }}>
-                                                <div style={{ fontWeight:700, fontSize:13, color:'#1e1b4b', textTransform:'capitalize' }}>{intg.type}</div>
-                                                <div style={{ fontSize:11, color:'#94a3b8' }}>{intg.config?.url ? intg.config.url.slice(0,40)+'...' : 'Configured'}</div>
+                                        <div key={intg._id} style={{ marginBottom:6 }}>
+                                            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px', background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:10 }}>
+                                                <span style={{ fontSize:16 }}>{icons[intg.type]||'🔗'}</span>
+                                                <div style={{ flex:1 }}>
+                                                    <div style={{ fontWeight:700, fontSize:13, color:'#1e1b4b', textTransform:'capitalize' }}>{intg.type}</div>
+                                                    <div style={{ fontSize:11, color:'#94a3b8' }}>{intg.config?.url ? intg.config.url.slice(0,35)+'...' : 'Configured'}</div>
+                                                </div>
+                                                <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'2px 8px', borderRadius:20 }}>✓ Active</span>
+                                                <button type="button" onClick={()=>setIntegSiteExpanded(isExpanded?null:intg._id)}
+                                                    style={{ padding:'4px 10px', background:'#f0f9ff', border:'1.5px solid #bae6fd', borderRadius:7, fontSize:11, color:'#0369a1', cursor:'pointer', fontWeight:700 }}>
+                                                    🌐 {siteSel.length===0?'All':siteSel.length} {isExpanded?'▲':'▼'}
+                                                </button>
+                                                <button type="button" onClick={async()=>{
+                                                    if(!window.confirm(`Remove ${intg.type}?`)) return;
+                                                    await axios.delete(`${API_URL}/api/integrations/${intg.type}`, { headers:authHeaders() });
+                                                    setSavedIntegrations(p=>p.filter(x=>x._id!==intg._id));
+                                                }} style={{ padding:'4px 8px', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:6, color:'#dc2626', cursor:'pointer', fontSize:12 }}>🗑</button>
                                             </div>
-                                            <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'2px 8px', borderRadius:20 }}>✓ Active</span>
-                                            <button type="button" onClick={async()=>{
-                                                if(!window.confirm(`Remove ${intg.type} integration?`)) return;
-                                                await axios.delete(`${API_URL}/api/integrations/${intg.type}`, { headers:authHeaders() });
-                                                setSavedIntegrations(p => p.filter(x=>x._id!==intg._id));
-                                            }} style={{ padding:'3px 8px', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:6, color:'#dc2626', cursor:'pointer', fontSize:12 }}>🗑</button>
+                                            {isExpanded && (
+                                                <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'0 0 10px 10px', padding:'10px 14px', marginTop:-4 }}>
+                                                    <div style={{ fontSize:11, color:'#64748b', marginBottom:8 }}>Sites for {intg.type} (empty = all sites):</div>
+                                                    <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                                                        {servers.map(s => {
+                                                            const sel = siteSel.includes(s._id);
+                                                            return (
+                                                                <button key={s._id} type="button"
+                                                                    onClick={async()=>{
+                                                                        const newSites = sel ? siteSel.filter(x=>x!==s._id) : [...siteSel, s._id];
+                                                                        setIntegSiteMap(p=>({...p,[intg._id]:newSites}));
+                                                                        await saveIntgSites(newSites);
+                                                                    }}
+                                                                    style={{ padding:'3px 10px', borderRadius:20, border:`1.5px solid ${sel?'#7c3aed':'#e2e8f0'}`, background:sel?'#f5f3ff':'#fff', color:sel?'#7c3aed':'#64748b', fontSize:11, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+                                                                    <span style={{ width:6, height:6, borderRadius:'50%', background:s.status==='up'?'#10b981':s.status==='down'?'#ef4444':'#f59e0b', flexShrink:0 }}/>
+                                                                    {s.name} {sel&&'✓'}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {siteSel.length>0 && <button type="button" onClick={async()=>{setIntegSiteMap(p=>({...p,[intg._id]:[]})); await saveIntgSites([]);}} style={{ padding:'3px 10px', borderRadius:20, border:'1px dashed #e2e8f0', background:'transparent', color:'#94a3b8', fontSize:11, cursor:'pointer' }}>✕ All sites</button>}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}

@@ -20,8 +20,10 @@ async function fireIntegrations(server, type, userId) {
     try {
         const integrations = await Integration.find({ userId, active: true });
         for (const intg of integrations) {
-            // Check if this event type matches
+            // Check event type
             if (intg.events === 'down' && type !== 'down') continue;
+            // Check server filter — empty = all servers
+            if (intg.servers?.length > 0 && !intg.servers.some(s => s.toString() === server._id.toString())) continue;
 
             const payload = {
                 event: type,
