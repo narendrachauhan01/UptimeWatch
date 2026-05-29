@@ -332,6 +332,13 @@ export default function AddMonitor() {
                         <div style={{fontSize:12,color:'#94a3b8',marginTop:6}}>
                             Use the <strong>🌐 Sites</strong> button per recipient to assign specific sites. Leave empty = all sites.
                         </div>
+
+                        {/* Info note */}
+                        <div style={{ marginTop:10, background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:10, padding:'10px 14px', fontSize:12, color:'#6d28d9', lineHeight:1.7 }}>
+                            💡 <strong>Want Slack, Webhook, Telegram or more channels?</strong><br/>
+                            Go to <a href="/integrations" style={{color:'#7c3aed',fontWeight:700}}>Integrations</a> → create your integration → come back here to select recipients.<br/>
+                            Use <strong>🌐 Sites ▼</strong> per recipient: select specific sites = only those alerts · leave empty = all site alerts.
+                        </div>
                     </div>
 
                     {/* Monitor interval */}
