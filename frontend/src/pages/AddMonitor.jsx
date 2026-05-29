@@ -162,9 +162,10 @@ export default function AddMonitor() {
                             )}
                         </div>
                         <div className="am-recip-box">
-                            <div style={{padding:'10px 16px', background:'#f8fafc', borderBottom:'1px solid #f1f5f9'}}>
+                            <div style={{padding:'10px 16px', background:'#f8fafc', borderBottom:'1px solid #f1f5f9', display:'flex', alignItems:'center', gap:8 }}>
+                                <span style={{fontSize:14}}>✉️💬</span>
                                 <span style={{fontSize:12, color:'#64748b'}}>
-                                    🌐 <strong>Sites button</strong> — select which sites notify this recipient. Empty = all sites.
+                                    <strong style={{color:'#1e1b4b'}}>Email & WhatsApp recipients</strong> — Add by name + email/phone below. Use <strong>🌐 Sites</strong> to assign specific sites.
                                 </span>
                             </div>
 
@@ -346,7 +347,7 @@ export default function AddMonitor() {
                         {/* Saved Integrations (Webhook etc.) */}
                         {savedIntegrations.length > 0 && (
                             <div style={{ marginTop:10 }}>
-                                <div style={{ fontSize:12, fontWeight:600, color:'#374151', marginBottom:6 }}>🔗 Active Integrations</div>
+                                <div style={{ fontSize:12, fontWeight:700, color:'#1e1b4b', marginBottom:6 }}>🔗 Active Integrations <span style={{fontWeight:400, color:'#94a3b8'}}>(from Integrations page)</span></div>
                                 {savedIntegrations.map(intg => {
                                     const icons = { webhook:'🔗', slack:'', discord:'🎮', telegram:'✈️' };
                                     const siteSel = integSiteMap[intg._id] || [];
@@ -405,10 +406,35 @@ export default function AddMonitor() {
                         )}
 
                         {/* Info note */}
-                        <div style={{ marginTop:10, background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:10, padding:'10px 14px', fontSize:12, color:'#6d28d9', lineHeight:1.8 }}>
-                            💡 <strong>Want more channels?</strong><br/>
-                            • <strong>Email & WhatsApp</strong> — Add recipients above (name + email/phone)<br/>
-                            • <strong>Webhook, Slack, Telegram</strong> — Go to <a href="/integrations" style={{color:'#7c3aed',fontWeight:700}}>Integrations</a> → create → appears here automatically
+                        <div style={{ marginTop:12, borderRadius:12, overflow:'hidden', border:'1px solid #e2e8f0' }}>
+                            {/* Header */}
+                            <div style={{ background:'#1e1b4b', padding:'10px 16px' }}>
+                                <div style={{ fontSize:12, fontWeight:800, color:'#fff', letterSpacing:0.3 }}>📣 How alerts are sent</div>
+                            </div>
+                            {/* Row 1 — Email & WhatsApp */}
+                            <div style={{ background:'#f0fdf4', padding:'10px 16px', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'flex-start', gap:10 }}>
+                                <div style={{ fontSize:18, marginTop:1 }}>✉️💬</div>
+                                <div>
+                                    <div style={{ fontSize:12, fontWeight:700, color:'#15803d', marginBottom:2 }}>Email & WhatsApp</div>
+                                    <div style={{ fontSize:11, color:'#166534', lineHeight:1.6 }}>
+                                        Add recipients <strong>above</strong> using <strong>➕ Add new recipient</strong>.<br/>
+                                        Enter name + email / mobile number.
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Row 2 — Webhook, RocketChat etc */}
+                            <div style={{ background:'#fef9ec', padding:'10px 16px', display:'flex', alignItems:'flex-start', gap:10 }}>
+                                <div style={{ fontSize:18, marginTop:1 }}>🔗</div>
+                                <div style={{ flex:1 }}>
+                                    <div style={{ fontSize:12, fontWeight:700, color:'#92400e', marginBottom:4 }}>Webhook · Rocket.Chat · Slack · Telegram · Discord</div>
+                                    <div style={{ fontSize:11, color:'#78350f', lineHeight:1.6, marginBottom:6 }}>
+                                        Ye channels <strong>Integrations page</strong> se add karo — phir yahan automatically dikhenge.
+                                    </div>
+                                    <a href="/integrations" style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'5px 12px', background:'linear-gradient(135deg,#f5455c,#e11d48)', color:'#fff', borderRadius:7, fontSize:11, fontWeight:700, textDecoration:'none' }}>
+                                        Go to Integrations →
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
