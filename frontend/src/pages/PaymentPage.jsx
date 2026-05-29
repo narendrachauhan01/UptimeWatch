@@ -240,7 +240,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
             prefill:     orderData.prefill,
             theme:       { color: '#7c3aed' },
             modal: {
-                ondismiss: () => { setPaying(false); handleCancel(); },
+                ondismiss: () => { setPaying(false); }, // don't cancel account on modal close
             },
             handler: async (response) => {
                 try {
