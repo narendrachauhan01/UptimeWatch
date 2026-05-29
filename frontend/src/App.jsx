@@ -154,11 +154,19 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
 function TrialBanner({ user }) {
   if (!user || user.plan !== 'free_trial') return null;
   const days = user.trialDaysLeft ?? 0;
-  if (!user.isActive) {
+  if (!user.isActive && user.trialVerified) {
     return (
-      <div className="trial-banner trial-expired">
-        Your free trial has expired.{' '}
-        <Link to="/account" className="trial-banner-link">Upgrade now to continue</Link>
+      <div style={{ background:'linear-gradient(135deg,#dc2626,#b91c1c)', color:'#fff', padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:18 }}>🔒</span>
+          <div>
+            <div style={{ fontWeight:800, fontSize:14 }}>Plan Expired — View Only Mode</div>
+            <div style={{ fontSize:12, opacity:0.85 }}>You can view your data but cannot add, edit or delete. Upgrade to restore access.</div>
+          </div>
+        </div>
+        <Link to="/pay?plan=select" style={{ padding:'8px 20px', background:'#fff', color:'#dc2626', borderRadius:8, fontSize:13, fontWeight:800, textDecoration:'none', whiteSpace:'nowrap' }}>
+          🚀 Upgrade Plan
+        </Link>
       </div>
     );
   }
@@ -398,32 +406,8 @@ function AppInner() {
     );
   }
 
-  // ── Expired plan gate — show Access Denied ──
-  const allowedWhenExpired = ['/account', '/pay', '/pricing', '/complete-profile'];
-  const planExpired = authed && !isAdmin && user && user.plan === 'free_trial' && user.trialVerified === true && user.isActive === false;
-  if (planExpired && !allowedWhenExpired.includes(location.pathname)) {
-    return (
-      <div style={{ minHeight:'100vh', background:'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-        <div style={{ background:'#fff', borderRadius:24, border:'2px solid #fecdd3', padding:48, maxWidth:460, width:'100%', textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.08)' }}>
-          <div style={{ fontSize:60, marginBottom:16 }}>🔒</div>
-          <h2 style={{ fontSize:24, fontWeight:800, color:'#1e1b4b', margin:'0 0 8px' }}>Access Denied</h2>
-          <p style={{ fontSize:15, color:'#64748b', marginBottom:8 }}>Your <strong>Free Trial</strong> has expired.</p>
-          <p style={{ fontSize:13, color:'#94a3b8', marginBottom:32 }}>Upgrade your plan to continue monitoring your sites and receive alerts.</p>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <a href="/pay?plan=select" style={{ display:'block', padding:'13px 28px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', borderRadius:12, fontSize:15, fontWeight:700, textDecoration:'none' }}>
-              🚀 Upgrade Plan
-            </a>
-            <a href="/account" style={{ display:'block', padding:'11px 28px', background:'#f1f5f9', color:'#475569', borderRadius:12, fontSize:14, fontWeight:600, textDecoration:'none' }}>
-              My Account
-            </a>
-            <button onClick={handleLogout} style={{ padding:'11px 28px', background:'transparent', border:'1.5px solid #e2e8f0', color:'#94a3b8', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ── Expired plan — read-only mode (view only, no writes) ──
+  const planExpired = authed && !isAdmin && user && user.isActive === false && user.trialVerified === true;
 
   // ── Verification gate for unverified free-trial users ──
   const needsVerification = authed && !isAdmin && user && user.plan === 'free_trial' && user.trialVerified === false;
@@ -473,11 +457,11 @@ function AppInner() {
           <Routes>
             <Route path="/verify-account" element={<VerifyAccount user={user} />} />
             <Route path="/complete-profile" element={<CompleteProfile user={user} onComplete={handleUserUpdate} />} />
-            <Route path="/monitoring" element={<Dashboard />} />
+            <Route path="/monitoring" element={<Dashboard readOnly={planExpired} />} />
             <Route path="/dashboard" element={<Navigate to="/monitoring" replace />} />
             <Route path="/alerts" element={<Navigate to="/incidents" replace />} />
             <Route path="/charts" element={<Navigate to="/performance" replace />} />
-            <Route path="/servers" element={<Servers user={user} isAdmin={isAdmin} onNotify={loadNotifications} />} />
+            <Route path="/servers" element={<Servers user={user} isAdmin={isAdmin} onNotify={loadNotifications} readOnly={planExpired} />} />
             <Route path="/incidents" element={<Alerts />} />
             <Route path="/server-resources" element={isAdmin ? <Resources /> : <Dashboard />} />
             <Route path="/domain-ssl" element={!user || user.plan !== 'free_trial' || freeAccess.domainSsl ? <DomainSSL /> : <UpgradeGate user={user} feature="Domain & SSL Monitoring"><DomainSSL /></UpgradeGate>} />

@@ -39,7 +39,7 @@ function NewDropdown({ onNavigate }) {
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ readOnly = false }) {
   const navigate = useNavigate();
   const [servers, setServers] = useState([]);
   const [checking, setChecking] = useState(false);
@@ -150,10 +150,14 @@ export default function Dashboard() {
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <button className="mon-btn-csv" onClick={downloadCSV} disabled={servers.length===0}>↓ CSV</button>
-            <button className={`mon-btn-check ${checking?'checking':''}`} onClick={handleCheckNow} disabled={checking}>
-              {checking ? '⏳ Checking...' : '↺ Check Now'}
-            </button>
-            <NewDropdown onNavigate={navigate} />
+            {!readOnly && (
+              <>
+                <button className={`mon-btn-check ${checking?'checking':''}`} onClick={handleCheckNow} disabled={checking}>
+                  {checking ? '⏳ Checking...' : '↺ Check Now'}
+                </button>
+                <NewDropdown onNavigate={navigate} />
+              </>
+            )}
           </div>
         </div>
 
@@ -208,16 +212,18 @@ export default function Dashboard() {
               <div className="mon-bar-wrap">
                 <UptimeBar history={s.historyBar||[]} />
               </div>
-              <button
-                className="mon-del-btn"
-                onClick={e => {
-                  e.stopPropagation();
-                  if (window.confirm(`Delete "${s.name}"?`)) {
-                    deleteServer(s._id).then(load);
-                  }
-                }}
-                title="Delete monitor"
-              >🗑</button>
+              {!readOnly && (
+                <button
+                  className="mon-del-btn"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (window.confirm(`Delete "${s.name}"?`)) {
+                      deleteServer(s._id).then(load);
+                    }
+                  }}
+                  title="Delete monitor"
+                >🗑</button>
+              )}
             </div>
           ))}
         </div>
