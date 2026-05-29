@@ -41,9 +41,12 @@ userSchema.virtual('siteLimit').get(function () {
 userSchema.virtual('isActive').get(function () {
     if (this.isBlocked) return false;
     if (this.plan === 'free_trial') {
-        return this.trialEndsAt && new Date() < this.trialEndsAt;
+        // Active if trial not expired
+        return !!(this.trialEndsAt && new Date() < this.trialEndsAt);
     }
-    return this.planEndsAt && new Date() > new Date(0) && new Date() < this.planEndsAt;
+    // Paid plan — active if planEndsAt is in future, or not set yet (just assigned)
+    if (!this.planEndsAt) return true;
+    return new Date() < new Date(this.planEndsAt);
 });
 
 userSchema.virtual('trialDaysLeft').get(function () {
