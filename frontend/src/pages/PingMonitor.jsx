@@ -27,14 +27,24 @@ function PulseDot({ status, size = 12 }) {
 
 // ── Add/Edit Modal ────────────────────────────────────────────────────────────
 function TargetModal({ target, onClose, onSave }) {
-    const [form,       setForm]       = useState(target || { name:'', host:'', port:443 });
-    const [saving,     setSaving]     = useState(false);
-    const [recipients, setRecipients] = useState([]);
-    const [selected,   setSelected]   = useState([]); // selected recipient IDs
-    const [rSearch,    setRSearch]    = useState('');
-    const [loadingR,   setLoadingR]   = useState(true);
+    const [form,         setForm]         = useState(target || { name:'', host:'', port:443 });
+    const [saving,       setSaving]       = useState(false);
+    const [recipients,   setRecipients]   = useState([]);
+    const [selected,     setSelected]     = useState([]);
+    const [rSearch,      setRSearch]      = useState('');
+    const [loadingR,     setLoadingR]     = useState(true);
+    const [integrations, setIntegrations] = useState([]);
+    const [integSites,   setIntegSites]   = useState({});
+    const [integExpanded,setIntegExpanded]= useState(null);
 
     useEffect(() => {
+        axios.get(`${API_URL}/api/integrations`, { headers:authHeaders() })
+            .then(r => {
+                setIntegrations(r.data);
+                const m={};
+                r.data.forEach(i => { m[i._id] = (i.servers||[]).map(s=>s._id||s); });
+                setIntegSites(m);
+            }).catch(()=>{});
         axios.get(`${API_URL}/api/recipients`, { headers:authHeaders() })
             .then(r => {
                 const data = r.data.recipients ?? r.data;
@@ -150,6 +160,55 @@ function TargetModal({ target, onClose, onSave }) {
                         </div>
                     )}
                 </div>
+
+                {/* Integrations (Webhook etc.) */}
+                {integrations.length > 0 && (
+                    <div style={{ marginTop:14 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', marginBottom:8 }}>🔗 Active Integrations</div>
+                        {integrations.map(intg => {
+                            const siteSel = integSites[intg._id] || [];
+                            const isExp = integExpanded === intg._id;
+                            const icons = { webhook:'🔗', slack:'', discord:'🎮', telegram:'✈️' };
+                            return (
+                                <div key={intg._id} style={{ marginBottom:6 }}>
+                                    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.3)', borderRadius:9 }}>
+                                        <span>{icons[intg.type]||'🔗'}</span>
+                                        <div style={{ flex:1 }}>
+                                            <div style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', textTransform:'capitalize' }}>{intg.type}</div>
+                                            <div style={{ fontSize:10, color:'#94a3b8' }}>{intg.config?.url?.slice(0,35)||'Configured'}</div>
+                                        </div>
+                                        <span style={{ fontSize:10, fontWeight:700, background:'rgba(16,185,129,0.2)', color:'#34d399', padding:'2px 7px', borderRadius:20 }}>✓ Active</span>
+                                        <button type="button" onClick={()=>setIntegExpanded(isExp?null:intg._id)}
+                                            style={{ padding:'3px 8px', background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, color:'#a78bfa', fontSize:10, cursor:'pointer', fontWeight:700 }}>
+                                            🌐 {siteSel.length===0?'All':siteSel.length} {isExp?'▲':'▼'}
+                                        </button>
+                                    </div>
+                                    {isExp && (
+                                        <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 9px 9px', padding:'8px 12px' }}>
+                                            <div style={{ fontSize:10, color:'#94a3b8', marginBottom:6 }}>Select sites (empty = all):</div>
+                                            <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                                                {[].concat(window._pingServers||[]).map(s => {
+                                                    const sel = siteSel.includes(s._id);
+                                                    return (
+                                                        <button key={s._id} type="button"
+                                                            onClick={async()=>{
+                                                                const n = sel ? siteSel.filter(x=>x!==s._id) : [...siteSel, s._id];
+                                                                setIntegSites(p=>({...p,[intg._id]:n}));
+                                                                await axios.post(`${API_URL}/api/integrations/${intg.type}`,{config:intg.config,events:intg.events,servers:n},{headers:authHeaders()});
+                                                            }}
+                                                            style={{ padding:'2px 8px', borderRadius:20, border:`1px solid ${sel?'#a78bfa':'rgba(255,255,255,0.15)'}`, background:sel?'rgba(124,58,237,0.2)':'transparent', color:sel?'#a78bfa':'#94a3b8', fontSize:10, cursor:'pointer' }}>
+                                                            {s.name} {sel&&'✓'}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 <div style={{ display:'flex', gap:10, marginTop:16 }}>
                     <button onClick={onClose} style={{ flex:1, padding:'11px', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:10, background:'transparent', color:'#94a3b8', fontSize:14, fontWeight:600, cursor:'pointer' }}>Cancel</button>
