@@ -193,7 +193,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
 
     useEffect(() => {
         if (!success) return;
-        const t = setTimeout(() => navigate('/monitoring'), 4000);
+        const t = setTimeout(() => navigate('/monitoring'), 2000);
         return () => clearTimeout(t);
     }, [success, navigate]);
 
@@ -342,7 +342,10 @@ export default function PaymentPage({ user, onUserUpdate }) {
                         <p style={{ fontSize: 13, color: '#94a3b8' }}>
                             Receipt sent to <strong>{user?.email}</strong>
                         </p>
-                        <div className="pay-success-redirect">Redirecting to dashboard in 4s...</div>
+                        <div className="pay-success-redirect">Redirecting to dashboard in 2s...</div>
+                        <button onClick={() => navigate('/monitoring')} style={{ marginTop:16, padding:'10px 28px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+                            Go to Dashboard →
+                        </button>
                     </div>
                 ) : (
                     <div className="pay-body">
