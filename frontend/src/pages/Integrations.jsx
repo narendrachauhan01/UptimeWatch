@@ -263,6 +263,15 @@ export default function Integrations() {
     const [rcSelected,  setRcSelected]  = useState([]);
     const [rcSearch,    setRcSearch]    = useState('');
 
+    const deleteIntegration = async (type) => {
+        if (!window.confirm(`Remove ${type} integration?`)) return;
+        try {
+            await axios.delete(`${API_URL}/api/integrations/${type}`, { headers: authHeaders() });
+            setSaved(p => { const n={...p}; delete n[type]; return n; });
+            showToast(`✅ ${type} integration removed`);
+        } catch { showToast('❌ Failed to remove'); }
+    };
+
     const openRcModal = async () => {
         try {
             const r = await axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() });
@@ -383,8 +392,9 @@ export default function Integrations() {
                     <div style={{ fontWeight:700, fontSize:15, color:'#1e1b4b', marginBottom:2 }}>Webhook</div>
                     <div style={{ fontSize:13, color:'#64748b' }}>POST to any URL when a monitor status changes.</div>
                 </div>
-                <div style={{ display:'flex', gap:8 }}>
+                <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                     {saved.webhook && <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'3px 10px', borderRadius:20 }}>✓ Active</span>}
+                    {saved.webhook && <button onClick={()=>deleteIntegration('webhook')} style={{ padding:'8px 12px', background:'#fff0f1', color:'#e11d48', border:'1.5px solid #fecdd3', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>🗑</button>}
                     <button onClick={openWebhookModal} style={{ padding:'8px 18px', background:'linear-gradient(135deg,#f5455c,#e11d48)', color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>
                         {saved.webhook ? '✏️ Edit' : '+ Add'}
                     </button>
@@ -400,8 +410,9 @@ export default function Integrations() {
                     <div style={{ fontWeight:700, fontSize:15, color:'#1e1b4b', marginBottom:2 }}>Rocket.Chat</div>
                     <div style={{ fontSize:13, color:'#64748b' }}>Send alerts to your Rocket.Chat workspace via incoming webhook.</div>
                 </div>
-                <div style={{ display:'flex', gap:8 }}>
+                <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                     {saved.rocketchat && <span style={{ fontSize:11, fontWeight:700, background:'#dcfce7', color:'#16a34a', padding:'3px 10px', borderRadius:20 }}>✓ Active</span>}
+                    {saved.rocketchat && <button onClick={()=>deleteIntegration('rocketchat')} style={{ padding:'8px 12px', background:'#fff0f1', color:'#e11d48', border:'1.5px solid #fecdd3', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>🗑</button>}
                     <button onClick={openRcModal} style={{ padding:'8px 18px', background:'linear-gradient(135deg,#f5455c,#e11d48)', color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer' }}>
                         {saved.rocketchat ? '✏️ Edit' : '+ Add'}
                     </button>
