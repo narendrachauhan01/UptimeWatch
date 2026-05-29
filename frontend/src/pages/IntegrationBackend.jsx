@@ -32,36 +32,24 @@ const InfoBox = ({ steps }) => {
 };
 
 function EmailModal({ onClose }) {
-    const [form,    setForm]    = useState({ mailUser: '', mailPass: '', mailFrom: '' });
-    const [saving,  setSaving]  = useState(false);
     const [testing, setTesting] = useState(false);
     const [msg,     setMsg]     = useState('');
     const [status,  setStatus]  = useState(null);
+    const [testTo,  setTestTo]  = useState('');
 
     const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
 
     useEffect(() => {
         axios.get(`${API_URL}/api/email-config/status`, { headers: authHeaders() })
-            .then(r => { setStatus(r.data); setForm(f => ({ ...f, mailUser: r.data.mailUser || '', mailFrom: r.data.mailFrom || '' })); })
+            .then(r => { setStatus(r.data); setTestTo(r.data.mailUser || ''); })
             .catch(() => {});
     }, []);
-
-    const save = async (e) => {
-        e.preventDefault();
-        if (!form.mailUser || !form.mailPass) { showMsg('⚠️ Email and password required'); return; }
-        setSaving(true);
-        try {
-            await axios.put(`${API_URL}/api/email-config/update`, form, { headers: authHeaders() });
-            showMsg('✅ Email configured!');
-        } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Failed')); }
-        setSaving(false);
-    };
 
     const test = async () => {
         setTesting(true);
         try {
-            await axios.post(`${API_URL}/api/email-config/test`, { to: form.mailUser }, { headers: authHeaders() });
-            showMsg('✅ Test email sent!');
+            await axios.post(`${API_URL}/api/email-config/test`, { to: testTo || status?.mailUser }, { headers: authHeaders() });
+            showMsg('✅ Test email sent to ' + (testTo || status?.mailUser));
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Test failed')); }
         setTesting(false);
     };
@@ -81,41 +69,40 @@ function EmailModal({ onClose }) {
                     <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, margin:'6px 0 0' }}>Configure Gmail SMTP to send alert emails</p>
                 </div>
                 {msg && <div style={{ background:msg.startsWith('✅')?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)', borderRadius:8, padding:'8px 12px', fontSize:13, color:msg.startsWith('✅')?'#34d399':'#f87171', marginBottom:14 }}>{msg}</div>}
+
+                {/* Current email display */}
+                <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:12, padding:'14px 16px', marginBottom:16 }}>
+                    <div style={{ fontSize:11, color:'#94a3b8', fontWeight:600, textTransform:'uppercase', marginBottom:6 }}>Configured Email</div>
+                    <div style={{ fontSize:15, color:'#e2e8f0', fontWeight:700 }}>
+                        {status?.mailUser || <span style={{color:'#64748b'}}>Not configured</span>}
+                    </div>
+                    <div style={{ marginTop:6, display:'inline-flex', alignItems:'center', gap:6, fontSize:12, fontWeight:700,
+                        color: status?.configured ? '#34d399' : '#f87171' }}>
+                        {status?.configured ? '✅ SMTP Active' : '❌ Not configured'}
+                    </div>
+                </div>
+
                 <InfoBox steps={[
-                    'Go to <strong>myaccount.google.com</strong> → Security → 2-Step Verification (must be ON)',
-                    'Go to <strong>App Passwords</strong> → Select app: Mail → Select device: Other → type "UptimeForge" → Generate',
-                    'Copy the <strong>16-character password</strong> (e.g. xxxx xxxx xxxx xxxx)',
-                    'Paste Gmail address and App Password below. From Name is optional (e.g. UptimeForge &lt;you@gmail.com&gt;)',
-                    'Click <strong>Save</strong> → then <strong>Test</strong> to verify it works',
+                    'SSH into your server → edit <strong>backend/.env</strong> file',
+                    'Set <strong>MAIL_USER=your@gmail.com</strong>',
+                    'Set <strong>MAIL_PASS=xxxx xxxx xxxx xxxx</strong> (Gmail App Password)',
+                    'Set <strong>MAIL_FROM=UptimeForge &lt;your@gmail.com&gt;</strong>',
+                    'Restart server → <strong>pm2 restart uptimeforge</strong>',
+                    'To get App Password: myaccount.google.com → Security → App Passwords',
                 ]} />
-                <form onSubmit={save} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                    <div>
-                        <label style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', display:'block', marginBottom:6 }}>Gmail Address *</label>
-                        <input value={form.mailUser} onChange={e=>setForm({...form,mailUser:e.target.value})} placeholder="uptimeforge@gmail.com" type="email"
-                            style={{ width:'100%', padding:'10px 14px', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:9, fontSize:14, background:'#2d2466', color:'#e2e8f0', outline:'none', boxSizing:'border-box' }} />
-                    </div>
-                    <div>
-                        <label style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', display:'block', marginBottom:6 }}>App Password *</label>
-                        <input value={form.mailPass} onChange={e=>setForm({...form,mailPass:e.target.value})} placeholder="xxxx xxxx xxxx xxxx" type="password"
-                            style={{ width:'100%', padding:'10px 14px', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:9, fontSize:14, background:'#2d2466', color:'#e2e8f0', outline:'none', boxSizing:'border-box' }} />
-                        <div style={{ fontSize:11, color:'#94a3b8', marginTop:4 }}>Gmail → Account → Security → App Passwords</div>
-                    </div>
-                    <div>
-                        <label style={{ fontSize:12, fontWeight:700, color:'#e2e8f0', display:'block', marginBottom:6 }}>From Name (optional)</label>
-                        <input value={form.mailFrom} onChange={e=>setForm({...form,mailFrom:e.target.value})} placeholder="UptimeForge <uptimeforge@gmail.com>"
-                            style={{ width:'100%', padding:'10px 14px', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:9, fontSize:14, background:'#2d2466', color:'#e2e8f0', outline:'none', boxSizing:'border-box' }} />
-                    </div>
-                    <div style={{ display:'flex', gap:10, marginTop:6 }}>
-                        <button type="submit" disabled={saving}
-                            style={{ flex:2, padding:'11px', border:'none', borderRadius:10, background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', fontSize:14, fontWeight:700, cursor:'pointer', opacity:saving?0.7:1 }}>
-                            {saving ? 'Saving...' : '💾 Save'}
-                        </button>
-                        <button type="button" onClick={test} disabled={testing}
-                            style={{ flex:1, padding:'11px', border:'1.5px solid rgba(255,255,255,0.2)', borderRadius:10, background:'transparent', color:'#e2e8f0', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                            {testing ? '...' : '📨 Test'}
+
+                {/* Test */}
+                <div style={{ marginTop:4 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:'#94a3b8', marginBottom:8 }}>SEND TEST EMAIL</div>
+                    <div style={{ display:'flex', gap:8 }}>
+                        <input value={testTo} onChange={e=>setTestTo(e.target.value)} placeholder="test@example.com" type="email"
+                            style={{ flex:1, padding:'10px 12px', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:9, fontSize:13, background:'#2d2466', color:'#e2e8f0', outline:'none' }} />
+                        <button onClick={test} disabled={testing}
+                            style={{ padding:'10px 18px', background:'#10b981', border:'none', borderRadius:9, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer', opacity:testing?0.7:1 }}>
+                            {testing ? '...' : '📨 Send'}
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
