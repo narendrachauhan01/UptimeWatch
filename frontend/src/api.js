@@ -69,3 +69,4 @@ export const adminDeletePayment  = (id)       => api.delete(`/admin/payments/${i
 export const adminApprovePayment = (id, data) => api.put(`/admin/payments/${id}/approve`, data || {});
 export const adminRejectPayment  = (id, note) => api.put(`/admin/payments/${id}/reject`, { note: note || '' });
 export const adminRefundPayment  = (id)       => api.post(`/payment/${id}/refund`);
+export const adminRefundStatus   = (id)       => api.get(`/payment/${id}/refund-status`);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { adminGetUsers, adminUpdateUser, adminDeleteUser, adminGetSettings, adminUpdateSettings, adminGetPayments, adminDeletePayment, adminApprovePayment, adminRejectPayment, adminRefundPayment, getAdminProfile, updateAdminProfile, adminClearCache } from '../api';
+import { adminGetUsers, adminUpdateUser, adminDeleteUser, adminGetSettings, adminUpdateSettings, adminGetPayments, adminDeletePayment, adminApprovePayment, adminRejectPayment, adminRefundPayment, adminRefundStatus, getAdminProfile, updateAdminProfile, adminClearCache } from '../api';
 
 const PLAN_OPTIONS = ['free_trial', 'bronze', 'silver', 'gold'];
 const PLAN_COLORS  = { free_trial: '#64748b', bronze: '#b45309', silver: '#475569', gold: '#ca8a04' };
@@ -739,9 +739,22 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                                 {p.status==='refunded' ? <s>₹{p.amount}</s> : `₹${p.amount}`}
                                             </td>
                                             <td style={{ padding:'10px 14px' }}>
-                                                <span style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:statusColor.bg, color:statusColor.color }}>
-                                                    {p.status==='refunded'?'↩ Refunded': p.status?.charAt(0).toUpperCase()+p.status?.slice(1)}
-                                                </span>
+                                                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                                                    <span style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:statusColor.bg, color:statusColor.color }}>
+                                                        {p.status==='refunded'?'↩ Refunded': p.status?.charAt(0).toUpperCase()+p.status?.slice(1)}
+                                                    </span>
+                                                    {p.status==='refunded' && (
+                                                        <button onClick={async()=>{
+                                                            try {
+                                                                const r = await adminRefundStatus(p._id);
+                                                                const d = r.data;
+                                                                alert(`Refund Status\n\nStatus: ${d.label}\n${d.desc}\nAmount: ₹${d.amount}\nRefund ID: ${d.refundId}\nInitiated: ${d.createdAt}\nSpeed: ${d.speed || 'normal'}`);
+                                                            } catch(e) { alert('Error: ' + (e.response?.data?.error || e.message)); }
+                                                        }} style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:'#eff6ff', color:'#1d4ed8', border:'1px solid #bfdbfe', cursor:'pointer', width:'fit-content' }}>
+                                                            🔍 Check Status
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td style={{ padding:'10px 14px', fontFamily:'monospace', fontSize:11, color:'#64748b' }}>
                                                 {p.razorpay_payment_id || p.utr || '—'}

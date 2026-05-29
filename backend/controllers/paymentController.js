@@ -224,9 +224,10 @@ exports.refundPayment = async (req, res) => {
         }
 
         // Update payment record
-        pr.status    = 'refunded';
-        pr.adminNote = `Refunded by admin. Account locked. Razorpay refund ID: ${refund.id}`;
-        pr.reviewedAt = new Date();
+        pr.status             = 'refunded';
+        pr.razorpay_refund_id = refund.id;
+        pr.adminNote          = `Refunded by admin. Account locked. Razorpay refund ID: ${refund.id}`;
+        pr.reviewedAt         = new Date();
         await pr.save();
 
         console.log(`[Refund] User ${user?.email} plan ${prevPlan} refunded → account LOCKED`);
@@ -267,6 +268,40 @@ exports.refundPayment = async (req, res) => {
         res.json({ success: true, refundId: refund.id });
     } catch (e) {
         console.error('[Refund] Error:', e?.error?.description || e.message);
+        res.status(500).json({ error: e?.error?.description || e.message });
+    }
+};
+
+// GET /api/payment/:id/refund-status — Check refund status from Razorpay
+exports.refundStatus = async (req, res) => {
+    try {
+        const pr = await PaymentRequest.findById(req.params.id);
+        if (!pr) return res.status(404).json({ error: 'Payment not found' });
+        if (pr.status !== 'refunded') return res.status(400).json({ error: 'No refund for this payment' });
+        if (!pr.razorpay_refund_id) return res.status(400).json({ error: 'Refund ID not found' });
+
+        const rzp    = getRzp();
+        const refund = await rzp.refunds.fetch(pr.razorpay_refund_id);
+
+        const statusMap = {
+            'created':    { label: '⏳ Processing',     color: '#f59e0b', desc: 'Refund has been initiated' },
+            'processed':  { label: '✅ Credited',        color: '#16a34a', desc: 'Amount credited to customer account' },
+            'failed':     { label: '❌ Failed',          color: '#dc2626', desc: 'Refund failed — contact Razorpay' },
+            'pending':    { label: '⏳ Pending',         color: '#f59e0b', desc: 'Waiting to be processed' },
+        };
+        const info = statusMap[refund.status] || { label: refund.status, color: '#64748b', desc: '' };
+
+        res.json({
+            refundId:    refund.id,
+            status:      refund.status,
+            label:       info.label,
+            color:       info.color,
+            desc:        info.desc,
+            amount:      refund.amount / 100,
+            createdAt:   new Date(refund.created_at * 1000).toLocaleString('en-IN'),
+            speed:       refund.speed_processed || refund.speed_requested,
+        });
+    } catch (e) {
         res.status(500).json({ error: e?.error?.description || e.message });
     }
 };
