@@ -302,19 +302,7 @@ export default function Integrations() {
         if (!rcForm.url) { showToast('⚠️ Enter webhook URL first'); return; }
         setRcTesting(true);
         try {
-            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: rcForm.url, body: {
-                attachments: [{
-                    color: '#ef4444',
-                    title: '🚨 Test Site is DOWN',
-                    title_link: 'https://example.com',
-                    fields: [
-                        { title: 'Status', value: '🔴 DOWN', short: true },
-                        { title: 'Time',   value: new Date().toLocaleString('en-IN', { timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }), short: true },
-                        { title: 'URL',    value: 'https://example.com', short: false },
-                    ],
-                    footer: 'UptimeForge Monitor',
-                }]
-            }}, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: rcForm.url, body: { text: '🚨 *UptimeForge Test* — Rocket.Chat integration is working!' } }, { headers: authHeaders() });
             showToast('✅ Test message sent to Rocket.Chat!');
         } catch (e) {
             showToast('❌ Failed: ' + (e.response?.data?.error || e.message || 'Check URL'));
