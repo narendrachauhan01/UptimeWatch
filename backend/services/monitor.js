@@ -262,10 +262,10 @@ function getEligibleRecipients(recipients, serverId, serverUserId) {
 async function checkOne(server, settings, recipients) {
     // Plan-based interval check
     if (server.userId) {
-        const plan      = server.userId.plan || 'free_trial';
-        const interval  = await getPlanInterval(plan, settings);
+        const plan        = server.userId.plan || 'free_trial';
+        const interval    = await getPlanInterval(plan, settings);
         const lastChecked = server.lastChecked ? new Date(server.lastChecked).getTime() : 0;
-        if (lastChecked && (Date.now() - lastChecked) < interval * 1000) return; // not due yet
+        if (lastChecked && (Date.now() - lastChecked) < interval * 1000) return;
     }
 
     const result = await checkUrl(server.url, {
@@ -293,34 +293,44 @@ async function checkOne(server, settings, recipients) {
         status:       result.up ? 'up' : 'down',
     };
 
+    let alertType = null;
+    let alertDetail = null;
+
     if (!result.up) {
         const isNewDown = prevStatus !== 'down';
         if (isNewDown) setFields.lastDownAt = new Date();
-        console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} downAlertSent:${wasAlertSent}`);
         if (!wasAlertSent) {
-            const eligible = getEligibleRecipients(recipients, server._id, server.userId);
-            console.log(`[Monitor] ${server.name} → DOWN alert to ${eligible.length} recipients`);
-            await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
-            await fireIntegrations(server, 'down', server.userId?._id || server.userId);
             setFields.downAlertSent = true;
+            alertType = 'down';
+            alertDetail = result.error || `HTTP ${result.code}`;
         } else {
-            console.log(`[Monitor] ${server.name} → still down, alert already sent`);
-            await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
+            // still down — log only, no repeat alert
+            saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`).catch(() => {});
         }
     } else {
         if (prevStatus === 'down') {
             setFields.lastUpAt      = new Date();
             setFields.downAlertSent = false;
-            const eligible = getEligibleRecipients(recipients, server._id, server.userId);
-            await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
-            await fireIntegrations(server, 'up', server.userId?._id || server.userId);
+            alertType   = 'recovered';
+            alertDetail = `HTTP ${result.code}`;
         }
     }
 
+    // 1. Write DB first — so next tick sees correct state
     await Server.findByIdAndUpdate(server._id, {
         $set:  setFields,
         $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -1440 } },
     });
+
+    // 2. Fire alerts & integrations in background — don't block checkAll
+    if (alertType) {
+        const eligible = getEligibleRecipients(recipients, server._id, server.userId);
+        const userId   = server.userId?._id || server.userId;
+        const intType  = alertType === 'recovered' ? 'up' : 'down';
+        console.log(`[Monitor] ${server.name} → ${alertType.toUpperCase()} alert to ${eligible.length} recipients`);
+        sendAlerts(server, eligible, alertType === 'recovered' ? 'recovered' : 'down', alertDetail).catch(() => {});
+        fireIntegrations(server, intType, userId).catch(() => {});
+    }
 }
 
 async function checkAll() {
