@@ -178,10 +178,11 @@ function TargetModal({ target, onClose, onSave }) {
                                             <div style={{ fontSize:10, color:'#94a3b8' }}>{intg.config?.url?.slice(0,35)||'Configured'}</div>
                                         </div>
                                         <span style={{ fontSize:10, fontWeight:700, background:'rgba(16,185,129,0.2)', color:'#34d399', padding:'2px 7px', borderRadius:20 }}>✓ Active</span>
-                                        <button type="button" onClick={()=>setIntegExpanded(isExp?null:intg._id)}
-                                            style={{ padding:'3px 8px', background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, color:'#a78bfa', fontSize:10, cursor:'pointer', fontWeight:700 }}>
-                                            🌐 {siteSel.length===0?'All':siteSel.length} {isExp?'▲':'▼'}
-                                        </button>
+                                        <button type="button" onClick={async()=>{
+                                            if(!window.confirm(`Remove ${intg.type} integration?`)) return;
+                                            await axios.delete(`${API_URL}/api/integrations/${intg.type}`,{headers:authHeaders()});
+                                            setIntegrations(p=>p.filter(x=>x._id!==intg._id));
+                                        }} style={{ padding:'3px 8px', background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:6, color:'#f87171', fontSize:11, cursor:'pointer' }}>🗑</button>
                                     </div>
                                     {isExp && (
                                         <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 9px 9px', padding:'8px 12px' }}>
