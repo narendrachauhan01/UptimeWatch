@@ -239,8 +239,19 @@ export default function PaymentPage({ user, onUserUpdate }) {
             order_id:    orderData.orderId,
             prefill:     orderData.prefill,
             theme:       { color: '#7c3aed' },
+            config: {
+                display: {
+                    blocks: {
+                        utib: { name: 'Pay using UPI', instruments: [{ method: 'upi', flows: ['intent', 'collect', 'qr'] }] },
+                    },
+                    sequence: ['block.utib', 'block.other'],
+                    preferences: { show_default_blocks: true },
+                },
+            },
             modal: {
                 ondismiss: () => { setPaying(false); handleCancel(); },
+                backdropclose: false,
+                escape: false,
             },
             handler: async (response) => {
                 try {
@@ -364,6 +375,12 @@ export default function PaymentPage({ user, onUserUpdate }) {
                                 <strong>UPI · Cards · Netbanking</strong>
                             </div>
                         </div>
+
+                        {/Android|iPhone|iPad/i.test(navigator.userAgent) && (
+                            <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:10, padding:'10px 14px', marginBottom:12, fontSize:12, color:'#92400e' }}>
+                                📱 <strong>Mobile tip:</strong> UPI app open na ho to <strong>QR Code</strong> option use karo ya <strong>Debit/Credit Card</strong> try karo.
+                            </div>
+                        )}
 
                         {planFeatures.length > 0 && (
                             <ul className="rzp-features">
