@@ -14,8 +14,14 @@ exports.getIntegrations = async (req, res) => {
 exports.testWebhook = async (req, res) => {
     const { url, body } = req.body;
     if (!url) return res.status(400).json({ error: 'URL required' });
+
+    // Block non-webhook URLs
+    const blocked = ['docs.google.com','drive.google.com','google.com','youtube.com','facebook.com','instagram.com'];
     try {
         const parsed = new URL(url);
+        if (blocked.some(d => parsed.hostname.includes(d))) {
+            return res.status(400).json({ error: `"${parsed.hostname}" is not a webhook URL. Use a webhook URL from Rocket.Chat, Slack, Discord, n8n, Zapier etc.` });
+        }
         const payload = JSON.stringify(body || { text: '🚨 *Test* — integration is working!' });
         const mod = url.startsWith('https') ? https : http;
         await new Promise((resolve, reject) => {
@@ -23,18 +29,18 @@ exports.testWebhook = async (req, res) => {
                 hostname: parsed.hostname,
                 path: parsed.pathname + parsed.search,
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(payload),
-                },
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
             }, (resp) => {
                 let data = '';
                 resp.on('data', c => data += c);
-                resp.on('end', () => resp.statusCode < 400
-                    ? resolve(data)
-                    : reject(new Error(`HTTP ${resp.statusCode}: ${data}`)));
+                resp.on('end', () => {
+                    if (resp.statusCode < 400) return resolve(data);
+                    // Strip HTML from error — show clean message
+                    const clean = data.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+                    reject(new Error(`HTTP ${resp.statusCode}: ${clean || 'Request rejected by server'}`));
+                });
             });
-            r.on('error', reject);
+            r.on('error', (e) => reject(new Error(`Connection failed: ${e.message}`)));
             r.write(payload);
             r.end();
         });
