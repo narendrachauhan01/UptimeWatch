@@ -175,6 +175,7 @@ exports.verifyPayment = async (req, res) => {
             plan:      plan === 'verification' ? null : plan,
             amount,
             utr:       razorpay_payment_id,
+            razorpay_payment_id,
             status:    'approved',
             reviewedAt: new Date(),
             planEndsAt,
@@ -194,6 +195,70 @@ exports.verifyPayment = async (req, res) => {
         console.error('[Payment] verify failed:', e?.error || e);
         const msg = e?.error?.description || e?.message || 'Payment verification failed';
         res.status(500).json({ error: msg });
+    }
+};
+
+// POST /api/payment/webhook  — Razorpay refund webhook
+exports.razorpayWebhook = async (req, res) => {
+    try {
+        // Verify webhook signature
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (secret) {
+            const sig = req.headers['x-razorpay-signature'];
+            const body = JSON.stringify(req.body);
+            const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
+            if (sig !== expected) return res.status(400).json({ error: 'Invalid signature' });
+        }
+
+        const event = req.body?.event;
+        console.log(`[Razorpay Webhook] Event: ${event}`);
+
+        if (event === 'refund.created' || event === 'refund.processed') {
+            const paymentId = req.body?.payload?.refund?.entity?.payment_id;
+            if (!paymentId) return res.json({ ok: true });
+
+            // Find payment record by razorpay_payment_id
+            const pr = await PaymentRequest.findOne({ razorpay_payment_id: paymentId });
+            if (!pr) {
+                console.log(`[Razorpay Webhook] No payment record for ${paymentId}`);
+                return res.json({ ok: true });
+            }
+
+            // Revert user plan to free_trial
+            const user = await User.findById(pr.userId);
+            if (user) {
+                const prevPlan = user.plan;
+                user.plan = 'free_trial';
+                user.planEndsAt = null;
+                user.isActive = false;
+                await user.save();
+
+                // Update payment record
+                pr.status = 'refunded';
+                pr.adminNote = `Refund processed via Razorpay webhook. Payment: ${paymentId}`;
+                await pr.save();
+
+                console.log(`[Razorpay Webhook] Refund: ${user.email} reverted ${prevPlan} → free_trial`);
+
+                // Send email notification to user
+                try {
+                    await sendEmail(user.email, 'Your UptimeForge plan has been cancelled',
+                        `<div style="font-family:Inter,sans-serif;padding:28px;max-width:500px;margin:0 auto">
+                            <h2 style="color:#ef4444">Plan Cancelled</h2>
+                            <p>Hi ${user.name},</p>
+                            <p>Your <strong>${PLAN_LABEL[prevPlan] || prevPlan}</strong> plan has been cancelled due to a refund.</p>
+                            <p>Your account has been reverted to the <strong>Free Trial</strong> plan.</p>
+                            <p>If you have any questions, please contact support.</p>
+                        </div>`
+                    );
+                } catch (_) {}
+            }
+        }
+
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[Razorpay Webhook] Error:', e.message);
+        res.status(500).json({ error: e.message });
     }
 };
 
