@@ -24,19 +24,58 @@ const adminOnly = (req, res, next) => {
     next();
 };
 
+// Test connection for each provider
+async function testConnection(provider) {
+    try {
+        if (provider === 'greenapi') {
+            const id = process.env.GREEN_API_INSTANCE;
+            const token = process.env.GREEN_API_TOKEN;
+            if (!id || !token) return { connected: false, reason: 'Not configured' };
+            const state = await wa.getInstanceState();
+            const connected = state?.stateInstance === 'authorized';
+            return { connected, reason: connected ? 'Authorized' : (state?.stateInstance || 'Not authorized') };
+
+        } else if (provider === 'twilio') {
+            const sid = process.env.TWILIO_ACCOUNT_SID;
+            const auth = process.env.TWILIO_AUTH_TOKEN;
+            if (!sid || !auth) return { connected: false, reason: 'Not configured' };
+            const creds = Buffer.from(`${sid}:${auth}`).toString('base64');
+            const result = await new Promise((resolve) => {
+                const https = require('https');
+                const req = https.get(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`,
+                    { headers: { Authorization: `Basic ${creds}` } },
+                    (res) => {
+                        let d = '';
+                        res.on('data', c => d += c);
+                        res.on('end', () => resolve({ status: res.statusCode, data: d }));
+                    });
+                req.on('error', () => resolve({ status: 500 }));
+            });
+            const connected = result.status === 200;
+            return { connected, reason: connected ? 'Credentials verified' : 'Invalid credentials' };
+
+        } else if (provider === 'aisensy') {
+            const key = process.env.AISENSY_API_KEY;
+            if (!key) return { connected: false, reason: 'Not configured' };
+            // AiSensy doesn't have a simple verify endpoint — assume configured = connected
+            return { connected: true, reason: 'API Key set' };
+        }
+    } catch (e) {
+        return { connected: false, reason: e.message };
+    }
+    return { connected: false, reason: 'Unknown provider' };
+}
+
 // Status
 router.get('/status', auth, async (req, res) => {
     const provider = process.env.WA_PROVIDER || 'greenapi';
-    const base     = wa.getStatus();
-    const state    = provider === 'greenapi' ? await wa.getInstanceState() : null;
+    const { connected, reason } = await testConnection(provider);
     res.json({
-        ...base,
         provider,
-        instanceState: state?.stateInstance || null,
-        instanceId:    process.env.GREEN_API_INSTANCE || '',
-        hasToken:      !!(process.env.GREEN_API_TOKEN && process.env.GREEN_API_TOKEN !== 'your_token_here'),
-        twilioSid:     process.env.TWILIO_ACCOUNT_SID ? process.env.TWILIO_ACCOUNT_SID.slice(0,8)+'...' : '',
-        aisensyKey:    process.env.AISENSY_API_KEY ? process.env.AISENSY_API_KEY.slice(0,8)+'...' : '',
+        connected,
+        reason,
+        status: connected ? 'ready' : 'not_configured',
+        instanceId: process.env.GREEN_API_INSTANCE || '',
     });
 });
 
@@ -63,7 +102,9 @@ router.post('/config', auth, adminOnly, async (req, res) => {
             if (apiUrl) updateEnv('AISENSY_API_URL', apiUrl);
         }
 
-        res.json({ success: true, provider });
+        // Auto-test connection after saving
+        const { connected, reason } = await testConnection(provider);
+        res.json({ success: true, provider, connected, reason });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

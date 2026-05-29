@@ -88,14 +88,18 @@ export default function WhatsAppPage() {
     useEffect(() => { load(); }, []);
 
     const currentProvider = PROVIDERS.find(p => p.key === provider) || PROVIDERS[0];
-    const isConnected = info?.status === 'ready' && (provider !== 'greenapi' || info?.instanceState === 'authorized');
+    const isConnected = info?.connected === true;
 
     const saveConfig = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
-            await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { headers: authHeaders() });
-            showMsg('✅ Credentials saved!');
+            const r = await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { headers: authHeaders() });
+            if (r.data.connected) {
+                showMsg(`✅ Connected! ${r.data.reason}`);
+            } else {
+                showMsg(`⚠️ Saved but not connected — ${r.data.reason}. Check credentials.`);
+            }
             load();
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Save failed')); }
         setSaving(false);
@@ -119,9 +123,11 @@ export default function WhatsAppPage() {
                     <p className="pg-sub">Configure provider so users receive WhatsApp alerts</p>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:10,
-                    background: isConnected ? '#dcfce7' : loading ? '#f1f5f9' : '#fef3c7',
-                    color: isConnected ? '#16a34a' : loading ? '#94a3b8' : '#d97706', fontWeight:700, fontSize:13 }}>
-                    {loading ? '⏳ Checking...' : isConnected ? '✅ Connected' : '⚠️ Not configured'}
+                    background: loading ? '#f1f5f9' : isConnected ? '#dcfce7' : '#fee2e2',
+                    color: loading ? '#94a3b8' : isConnected ? '#16a34a' : '#dc2626', fontWeight:700, fontSize:13 }}>
+                    {loading ? '⏳ Checking...' : isConnected
+                        ? `✅ Connected — ${info?.reason || ''}`
+                        : `❌ Disconnected — ${info?.reason || 'Not configured'}`}
                 </div>
             </div>
 
