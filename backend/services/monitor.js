@@ -259,6 +259,70 @@ function getEligibleRecipients(recipients, serverId, serverUserId) {
     });
 }
 
+async function checkOne(server, settings, recipients) {
+    // Plan-based interval check
+    if (server.userId) {
+        const plan      = server.userId.plan || 'free_trial';
+        const interval  = await getPlanInterval(plan, settings);
+        const lastChecked = server.lastChecked ? new Date(server.lastChecked).getTime() : 0;
+        if (lastChecked && (Date.now() - lastChecked) < interval * 1000) return; // not due yet
+    }
+
+    const result = await checkUrl(server.url, {
+        timeout:         server.timeout         || 10,
+        followRedirects: server.followRedirects !== false,
+        httpMethod:      server.httpMethod       || 'GET',
+        upCodes:         server.upCodes?.length  ? server.upCodes : [200, 301, 302],
+    });
+
+    const prevStatus   = server.status;
+    const wasAlertSent = server.downAlertSent;
+
+    let intervalLabel = '30s (admin)';
+    if (server.userId) {
+        const plan = server.userId.plan || 'free_trial';
+        const iv   = await getPlanInterval(plan, settings);
+        intervalLabel = iv >= 60 ? `${iv/60}m (${plan})` : `${iv}s (${plan})`;
+    }
+    console.log(`[Monitor] ${server.name} → HTTP ${result.code || 0} | ${result.up ? 'UP' : 'DOWN'} | ${result.time}ms | ⏱ ${intervalLabel}`);
+
+    const setFields = {
+        lastChecked:  new Date(),
+        responseTime: result.time,
+        httpCode:     result.code,
+        status:       result.up ? 'up' : 'down',
+    };
+
+    if (!result.up) {
+        const isNewDown = prevStatus !== 'down';
+        if (isNewDown) setFields.lastDownAt = new Date();
+        console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} downAlertSent:${wasAlertSent}`);
+        if (!wasAlertSent) {
+            const eligible = getEligibleRecipients(recipients, server._id, server.userId);
+            console.log(`[Monitor] ${server.name} → DOWN alert to ${eligible.length} recipients`);
+            await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
+            await fireIntegrations(server, 'down', server.userId?._id || server.userId);
+            setFields.downAlertSent = true;
+        } else {
+            console.log(`[Monitor] ${server.name} → still down, alert already sent`);
+            await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
+        }
+    } else {
+        if (prevStatus === 'down') {
+            setFields.lastUpAt      = new Date();
+            setFields.downAlertSent = false;
+            const eligible = getEligibleRecipients(recipients, server._id, server.userId);
+            await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
+            await fireIntegrations(server, 'up', server.userId?._id || server.userId);
+        }
+    }
+
+    await Server.findByIdAndUpdate(server._id, {
+        $set:  setFields,
+        $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -1440 } },
+    });
+}
+
 async function checkAll() {
     if (checkAllRunning) {
         console.log('[Monitor] checkAll already running, skipping this tick');
@@ -266,82 +330,12 @@ async function checkAll() {
     }
     checkAllRunning = true;
     try {
-        const settings  = await Settings.get();
-        const servers   = await Server.find({ active: true }).populate('userId', 'plan');
+        const settings   = await Settings.get();
+        const servers    = await Server.find({ active: true }).populate('userId', 'plan');
         const recipients = await Recipient.find({ active: true }).populate('servers');
 
-        for (const server of servers) {
-            // Plan-based interval check — only for user-owned servers
-            if (server.userId) {
-                const plan      = server.userId.plan || 'free_trial';
-                const interval  = await getPlanInterval(plan, settings);
-                const lastChecked = server.lastChecked ? new Date(server.lastChecked).getTime() : 0;
-                if (lastChecked && (Date.now() - lastChecked) < interval * 1000) {
-                    // not due yet — skip
-                    continue;
-                }
-            }
-            // Admin-owned servers (userId=null) are always checked every 30s
-
-            const result = await checkUrl(server.url, {
-                timeout:         server.timeout         || 10,
-                followRedirects: server.followRedirects !== false,
-                httpMethod:      server.httpMethod       || 'GET',
-                upCodes:         server.upCodes?.length  ? server.upCodes : [200, 301, 302],
-            });
-            const prevStatus = server.status;
-            const wasAlertSent = server.downAlertSent;
-
-            // Determine interval label for log
-            let intervalLabel = '30s (admin)';
-            if (server.userId) {
-                const plan = server.userId.plan || 'free_trial';
-                const iv = await getPlanInterval(plan, settings);
-                intervalLabel = iv >= 60 ? `${iv/60}m (${plan})` : `${iv}s (${plan})`;
-            }
-            console.log(`[Monitor] ${server.name} → HTTP ${result.code || 0} | ${result.up ? 'UP' : 'DOWN'} | ${result.time}ms | ⏱ ${intervalLabel}`);
-
-            const setFields = {
-                lastChecked: new Date(),
-                responseTime: result.time,
-                httpCode: result.code,
-                status: result.up ? 'up' : 'down',
-            };
-
-            if (!result.up) {
-                const isNewDown = prevStatus !== 'down';
-                if (isNewDown) setFields.lastDownAt = new Date();
-
-                console.log(`[Monitor] ${server.name} → isNewDown:${isNewDown} downAlertSent:${wasAlertSent}`);
-
-                if (!wasAlertSent) {
-                    // Alert not sent yet (new down OR was down but alert missed) — send NOW
-                    const eligible = getEligibleRecipients(recipients, server._id, server.userId);
-                    console.log(`[Monitor] ${server.name} → DOWN alert to ${eligible.length} recipients`);
-                    await sendAlerts(server, eligible, 'down', result.error || `HTTP ${result.code}`);
-                    await fireIntegrations(server, 'down', server.userId?._id || server.userId);
-                    setFields.downAlertSent = true;
-                } else {
-                    // Alert already sent, site still down — no repeat
-                    console.log(`[Monitor] ${server.name} → still down, alert already sent`);
-                    await saveAlertOnly(server, 'down', result.error || `HTTP ${result.code}`);
-                }
-            } else {
-                if (prevStatus === 'down') {
-                    setFields.lastUpAt = new Date();
-                    setFields.downAlertSent = false;  // reset flag on recovery
-                    const eligible = getEligibleRecipients(recipients, server._id, server.userId);
-                    // Recovered — send recovery alert ONCE
-                    await sendAlerts(server, eligible, 'recovered', `HTTP ${result.code}`);
-                    await fireIntegrations(server, 'up', server.userId?._id || server.userId);
-                }
-            }
-
-            await Server.findByIdAndUpdate(server._id, {
-                $set: setFields,
-                $push: { history: { $each: [{ time: new Date(), responseTime: result.time, status: result.up ? 'up' : 'down', httpCode: result.code }], $slice: -1440 } },
-            });
-        }
+        // Run ALL site checks in parallel — down site timeouts don't block others
+        await Promise.allSettled(servers.map(server => checkOne(server, settings, recipients)));
     } catch (err) {
         console.error('[Monitor] checkAll error:', err.message);
     } finally {
