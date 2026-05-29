@@ -25,14 +25,33 @@ async function fireIntegrations(server, type, userId) {
             // Check server filter — empty = all servers
             if (intg.servers?.length > 0 && !intg.servers.some(s => s.toString() === server._id.toString())) continue;
 
+            const isDown = type === 'down';
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
+
             const payload = {
                 event: type,
                 site: server.name,
                 url: server.url,
-                status: type === 'down' ? 'DOWN' : 'UP',
-                time: new Date().toISOString(),
+                status: isDown ? 'DOWN' : 'UP',
+                time: now.toISOString(),
             };
-            const text = type === 'down'
+
+            const rcBody = JSON.stringify({
+                attachments: [{
+                    color: isDown ? '#ef4444' : '#22c55e',
+                    title: isDown ? `🚨 ${server.name} is DOWN` : `✅ ${server.name} is back UP`,
+                    title_link: server.url,
+                    fields: [
+                        { title: 'Status',  value: isDown ? '🔴 DOWN' : '🟢 UP',   short: true },
+                        { title: 'Time',    value: timeStr,                          short: true },
+                        { title: 'URL',     value: server.url,                       short: false },
+                    ],
+                    footer: 'UptimeForge Monitor',
+                }]
+            });
+
+            const text = isDown
                 ? `🚨 *${server.name}* is DOWN — ${server.url}`
                 : `✅ *${server.name}* is back UP — ${server.url}`;
 
@@ -40,13 +59,15 @@ async function fireIntegrations(server, type, userId) {
                 if (['slack','discord','webhook','rocketchat'].includes(intg.type)) {
                     const url = intg.config?.url;
                     if (!url) continue;
-                    const body = intg.type === 'slack' || intg.type === 'rocketchat'
+                    const body = intg.type === 'rocketchat'
+                        ? rcBody
+                        : intg.type === 'slack'
                         ? JSON.stringify({ text })
                         : intg.type === 'discord'
                         ? JSON.stringify({ content: text })
                         : JSON.stringify(payload);
 
-                    const headers = { 'Content-Type': 'application/json' };
+                    const headers = { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) };
                     if (intg.config?.secret) headers['X-UptimeForge-Secret'] = intg.config.secret;
 
                     const mod = url.startsWith('https') ? https : http;
