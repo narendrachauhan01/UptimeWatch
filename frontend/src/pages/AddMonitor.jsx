@@ -266,7 +266,6 @@ export default function AddMonitor() {
                                                 <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                                                     {[
                                                         {ch:'email',    icon:'✉️', label:'Email',             color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe'},
-                                                        {ch:'whatsapp', icon:'💬', label:'WhatsApp (coming soon)', color:'#94a3b8', bg:'#f8fafc', border:'#e2e8f0', disabled:true},
                                                     ].map(o => (
                                                         <button key={o.ch} type="button"
                                                             onClick={()=>!o.disabled && setNewRecip({...newRecip,channel:o.ch})}
