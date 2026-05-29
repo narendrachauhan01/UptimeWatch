@@ -86,7 +86,6 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
     { to: '/server-resources',     label: 'Infra',               icon: <IcoServer /> },
     { to: '/integration-backend', label: '🔗 Integration Backend', icon: <IcoMail /> },
     { to: '/redis-cache',         label: '🗑 Redis Cache',         icon: <IcoSettings /> },
-    { to: '/plan-canceling',      label: '❌ Plan Canceling',       icon: <IcoSettings /> },
   ] : [
     { to: '/performance',  label: 'Performance',  icon: <IcoChart /> },
     { to: '/monitoring',   label: 'Monitoring',   icon: <IcoDash /> },

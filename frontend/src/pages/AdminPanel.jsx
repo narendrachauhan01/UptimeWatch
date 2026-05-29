@@ -384,11 +384,15 @@ export default function AdminPanel({ initialTab = 'overview' }) {
         } catch (e) { showToast(e.response?.data?.error || 'Delete failed'); }
     };
 
+    const refundedPayments = payments.filter(p => p.status === 'refunded');
+    const totalRefunded    = refundedPayments.reduce((s, p) => s + (p.amount || 0), 0);
+
     const TABS = [
         { id: 'overview',      label: 'Overview' },
         { id: 'users',         label: `Users (${users.length})` },
         { id: 'payments',      label: `Payments (${payments.length})` },
         { id: 'transactions',  label: `Payments & Refund (${payments.length})` },
+        { id: 'canceling',     label: `❌ Plan Canceling (${refundedPayments.length})` },
     ];
 
     // Filtered payments for the payments tab
@@ -1027,6 +1031,107 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                PLAN CANCELING TAB
+            ══════════════════════════════════════ */}
+            {tab === 'canceling' && (
+                <div>
+                    {/* Summary Cards */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:16, marginBottom:24 }}>
+                        {[
+                            { label:'Total Cancelled', value: refundedPayments.length, icon:'❌', color:'#dc2626', bg:'#fef2f2', border:'#fecdd3' },
+                            { label:'Total Refunded',  value: `₹${totalRefunded}`,     icon:'💸', color:'#dc2626', bg:'#fff1f2', border:'#fca5a5' },
+                            { label:'Plan Revenue Lost', value: `₹${refundedPayments.filter(p=>p.type!=='verification').reduce((s,p)=>s+(p.amount||0),0)}`, icon:'📉', color:'#b91c1c', bg:'#fef2f2', border:'#fecdd3' },
+                        ].map(c => (
+                            <div key={c.label} style={{ background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:14, padding:'20px 22px', display:'flex', gap:14, alignItems:'center' }}>
+                                <div style={{ fontSize:32 }}>{c.icon}</div>
+                                <div>
+                                    <div style={{ fontSize:24, fontWeight:800, color:c.color }}>{c.value}</div>
+                                    <div style={{ fontSize:12, color:c.color, fontWeight:600, opacity:0.75 }}>{c.label}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Table */}
+                    <div style={{ background:'#fff', borderRadius:16, border:'1.5px solid #fecdd3', overflow:'hidden', boxShadow:'0 2px 8px rgba(239,68,68,0.08)' }}>
+                        <div style={{ background:'#fef2f2', padding:'14px 20px', borderBottom:'1px solid #fecdd3', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                                <span style={{ fontSize:18 }}>↩</span>
+                                <span style={{ fontWeight:700, color:'#dc2626', fontSize:15 }}>Cancelled & Refunded Plans ({refundedPayments.length})</span>
+                            </div>
+                            {refundedPayments.length > 0 && (
+                                <span style={{ fontSize:12, color:'#dc2626', fontWeight:600, background:'#fff', padding:'3px 12px', borderRadius:20, border:'1px solid #fecdd3' }}>
+                                    Total Lost: ₹{totalRefunded}
+                                </span>
+                            )}
+                        </div>
+
+                        {refundedPayments.length === 0 ? (
+                            <div style={{ padding:60, textAlign:'center' }}>
+                                <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+                                <div style={{ fontWeight:800, fontSize:16, color:'#16a34a' }}>No Cancelled Plans</div>
+                                <div style={{ fontSize:13, color:'#94a3b8', marginTop:6 }}>All plans are active — no refunds issued</div>
+                            </div>
+                        ) : (
+                            <div style={{ overflowX:'auto' }}>
+                                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+                                    <thead>
+                                        <tr style={{ background:'#fff5f5' }}>
+                                            {['#','Cancelled On','User','Plan','Amount Refunded','Razorpay Payment ID','Note'].map(h => (
+                                                <th key={h} style={{ padding:'11px 16px', textAlign:'left', fontWeight:700, color:'#b91c1c', fontSize:11, textTransform:'uppercase', letterSpacing:0.5, borderBottom:'1px solid #fecdd3', whiteSpace:'nowrap' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {refundedPayments.map((p, i) => (
+                                            <tr key={p._id} style={{ borderBottom:'1px solid #fff1f2', background: i%2===0 ? '#fff':'#fffafa', transition:'background 0.1s' }}>
+                                                <td style={{ padding:'13px 16px', color:'#ef4444', fontWeight:800, fontSize:12 }}>{i+1}</td>
+                                                <td style={{ padding:'13px 16px', color:'#64748b', whiteSpace:'nowrap', fontSize:12 }}>
+                                                    {new Date(p.reviewedAt || p.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                                                </td>
+                                                <td style={{ padding:'13px 16px' }}>
+                                                    <div style={{ fontWeight:700, color:'#1e1b4b', fontSize:13 }}>{p.userName || '—'}</div>
+                                                    <div style={{ fontSize:11, color:'#94a3b8', marginTop:2 }}>{p.userEmail || ''}</div>
+                                                </td>
+                                                <td style={{ padding:'13px 16px' }}>
+                                                    <span style={{ padding:'3px 12px', borderRadius:20, fontSize:11, fontWeight:700,
+                                                        background: p.plan==='gold'?'#fef9c3': p.plan==='silver'?'#f1f5f9': p.plan==='bronze'?'#fef3c7':'#fee2e2',
+                                                        color: p.plan==='gold'?'#b45309': p.plan==='silver'?'#475569': p.plan==='bronze'?'#92400e':'#dc2626' }}>
+                                                        {p.plan ? p.plan.charAt(0).toUpperCase()+p.plan.slice(1) : 'Verification'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding:'13px 16px' }}>
+                                                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                                        <s style={{ color:'#dc2626', fontWeight:800, fontSize:15 }}>₹{p.amount}</s>
+                                                        <span style={{ fontSize:10, color:'#94a3b8', fontWeight:600 }}>refunded</span>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding:'13px 16px', fontFamily:'monospace', fontSize:11, color:'#94a3b8' }}>
+                                                    {p.razorpay_payment_id || p.utr || '—'}
+                                                </td>
+                                                <td style={{ padding:'13px 16px', fontSize:11, color:'#ef4444', maxWidth:220 }}>
+                                                    <div style={{ lineHeight:1.5 }}>{p.adminNote || '—'}</div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style={{ borderTop:'2px solid #fecdd3', background:'#fff1f2' }}>
+                                            <td colSpan={4} style={{ padding:'13px 16px', fontWeight:700, color:'#dc2626', fontSize:13 }}>Total Refunded Amount</td>
+                                            <td style={{ padding:'13px 16px', fontWeight:800, color:'#dc2626', fontSize:18 }}>
+                                                <s>₹{totalRefunded}</s>
+                                            </td>
+                                            <td colSpan={2}/>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
