@@ -3,10 +3,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { API_URL } from '../api';
 import axios from 'axios';
 
-const authHeaders = () => {
-    const t = localStorage.getItem('sm_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 const latColor = ms => !ms ? '#94a3b8' : ms < 100 ? '#10b981' : ms < 300 ? '#f59e0b' : '#ef4444';
 

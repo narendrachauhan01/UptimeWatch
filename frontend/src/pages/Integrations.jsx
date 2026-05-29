@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL, getServers, addRecipient, getRecipients } from '../api';
 
-const authHeaders = () => {
-    const t = localStorage.getItem('sm_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 // ── WhatsApp Add Modal ────────────────────────────────────────────────────────
 function WhatsAppModal({ servers, onClose, onSaved }) {
@@ -231,18 +227,18 @@ export default function Integrations() {
 
     useEffect(() => {
         getServers().then(r => setServers(r.data)).catch(()=>{});
-        axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() })
+        axios.get(`${API_URL}/api/integrations`, { withCredentials: true })
             .then(r => {
                 const m={};
                 r.data.forEach(i => { m[i.type] = true; });
                 setSaved(m);
             }).catch(()=>{});
-        axios.get(`${API_URL}/api/email-config/status`, { headers: authHeaders() })
+        axios.get(`${API_URL}/api/email-config/status`, { withCredentials: true })
             .then(r => setEmailActive(r.data?.configured===true)).catch(()=>{});
     }, []);
 
     const handleWebhookSave = async (form) => {
-        await axios.post(`${API_URL}/api/integrations/webhook`, { config: form, events: form.events||'all' }, { headers: authHeaders() });
+        await axios.post(`${API_URL}/api/integrations/webhook`, { config: form, events: form.events||'all' }, { withCredentials: true });
         setSaved(p=>({...p, webhook:true}));
         showToast('✅ Webhook saved!');
     };
@@ -266,7 +262,7 @@ export default function Integrations() {
     const deleteIntegration = async (type) => {
         if (!window.confirm(`Remove ${type} integration?`)) return;
         try {
-            await axios.delete(`${API_URL}/api/integrations/${type}`, { headers: authHeaders() });
+            await axios.delete(`${API_URL}/api/integrations/${type}`, { withCredentials: true });
             setSaved(p => { const n={...p}; delete n[type]; return n; });
             showToast(`✅ ${type} integration removed`);
         } catch { showToast('❌ Failed to remove'); }
@@ -274,7 +270,7 @@ export default function Integrations() {
 
     const openRcModal = async () => {
         try {
-            const r = await axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() });
+            const r = await axios.get(`${API_URL}/api/integrations`, { withCredentials: true });
             const rc = r.data.find(i => i.type === 'rocketchat');
             if (rc) {
                 setRcForm({ url: rc.config?.url||'', events: rc.events||'all' });
@@ -290,7 +286,7 @@ export default function Integrations() {
         if (!rcForm.url) return;
         setRcSaving(true);
         try {
-            await axios.post(`${API_URL}/api/integrations/rocketchat`, { config: { url: rcForm.url }, events: rcForm.events||'all', servers: rcAllSites ? [] : rcSelected }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/integrations/rocketchat`, { config: { url: rcForm.url }, events: rcForm.events||'all', servers: rcAllSites ? [] : rcSelected }, { withCredentials: true });
             setSaved(p=>({...p, rocketchat:true}));
             showToast('✅ Rocket.Chat saved!');
             setRcModal(false);
@@ -302,7 +298,7 @@ export default function Integrations() {
         if (!rcForm.url) { showToast('⚠️ Enter webhook URL first'); return; }
         setRcTesting(true);
         try {
-            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: rcForm.url, body: { text: '🚨 *UptimeForge Test* — Rocket.Chat integration is working!' } }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: rcForm.url, body: { text: '🚨 *UptimeForge Test* — Rocket.Chat integration is working!' } }, { withCredentials: true });
             showToast('✅ Test message sent to Rocket.Chat!');
         } catch (e) {
             showToast('❌ Failed: ' + (e.response?.data?.error || e.message || 'Check URL'));
@@ -312,7 +308,7 @@ export default function Integrations() {
 
     const openWebhookModal = async () => {
         try {
-            const r = await axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() });
+            const r = await axios.get(`${API_URL}/api/integrations`, { withCredentials: true });
             const wh = r.data.find(i => i.type === 'webhook');
             if (wh) {
                 setWebhookForm({ url: wh.config?.url||'', secret: wh.config?.secret||'', events: wh.events||'all' });
@@ -328,7 +324,7 @@ export default function Integrations() {
         if (!webhookForm.url) return;
         setWebhookSaving(true);
         try {
-            await axios.post(`${API_URL}/api/integrations/webhook`, { config: webhookForm, events: webhookForm.events||'all', servers: webhookAllSites ? [] : webhookSelected }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/integrations/webhook`, { config: webhookForm, events: webhookForm.events||'all', servers: webhookAllSites ? [] : webhookSelected }, { withCredentials: true });
             setSaved(p=>({...p, webhook:true}));
             showToast('✅ Webhook saved!');
             setWebhookModal(false);
@@ -342,7 +338,7 @@ export default function Integrations() {
         try {
             const t = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
             const payload = { text:'🔔 *UptimeForge Alert*', event:'test', site:'Test Site', url:'https://example.com', status:'DOWN', time: new Date().toISOString(), attachments:[{ color:'#ef4444', title:'🚨 Test Site is DOWN — Rocket.Chat · Slack · Discord · Zapier · n8n Multiple Webhook support is working!', title_link:'https://example.com', fields:[{title:'Status',value:'🔴 DOWN',short:true},{title:'Time',value:t,short:true},{title:'URL',value:'https://example.com',short:false}], footer:'UptimeForge Monitor' }] };
-            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: webhookForm.url, body: payload }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/integrations/test-webhook`, { url: webhookForm.url, body: payload }, { withCredentials: true });
             showToast('✅ Test payload sent! Check your webhook receiver.');
         } catch (e) {
             showToast('❌ Failed: ' + (e.response?.data?.error || e.message || 'Check URL'));

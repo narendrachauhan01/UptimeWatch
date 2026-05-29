@@ -220,28 +220,25 @@ function AppInner() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('sm_token');
-    if (!token) { setAuthed(false); return; }
-
     const savedUser = localStorage.getItem('sm_user');
     if (savedUser) {
       try {
         JSON.parse(savedUser);
-        axios.get(`${API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_URL}/api/users/me`, { withCredentials: true })
           .then(r => {
             setUser(r.data);
             localStorage.setItem('sm_user', JSON.stringify(r.data));
             setIsAdmin(false);
             setAuthed(true);
           })
-          .catch(() => { localStorage.removeItem('sm_token'); localStorage.removeItem('sm_user'); setAuthed(false); });
+          .catch(() => { localStorage.removeItem('sm_user'); setAuthed(false); });
         return;
       } catch (_) {}
     }
 
-    axios.get(`${API_URL}/api/auth/verify`, { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${API_URL}/api/auth/verify`, { withCredentials: true })
       .then(() => { setIsAdmin(true); setAuthed(true); })
-      .catch(() => { localStorage.removeItem('sm_token'); setAuthed(false); });
+      .catch(() => { setAuthed(false); });
   }, []);
 
   const handleLogin = (userData, isNewUser = false) => {
@@ -278,8 +275,8 @@ function AppInner() {
     localStorage.setItem('sm_user', JSON.stringify(userData));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('sm_token');
+  const handleLogout = async () => {
+    try { await axios.post(`${API_URL}/api/users/logout`, {}, { withCredentials: true }); } catch (_) {}
     localStorage.removeItem('sm_user');
     setAuthed(false); setUser(null); setIsAdmin(false);
     showToast('Logged out successfully.');

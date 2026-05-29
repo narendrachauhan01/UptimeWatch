@@ -1,15 +1,9 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-const api = axios.create({ baseURL: `${BASE_URL}/api` });
+const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
 export const API_URL = BASE_URL;
-
-// Attach token to every request
-api.interceptors.request.use(cfg => {
-    const token = localStorage.getItem('sm_token');
-    if (token) cfg.headers.Authorization = `Bearer ${token}`;
-    return cfg;
-});
+export const logoutUser = () => api.post('/users/logout');
 
 // Expiry
 export const getExpiry = (id) => api.get(`/expiry/${id}`);

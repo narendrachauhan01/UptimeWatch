@@ -67,9 +67,7 @@ export default function Resources() {
 
   const loadLatest = useCallback(async () => {
     try {
-      const token = localStorage.getItem('sm_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.get(`${API_URL}/api/metrics/latest`, { headers });
+      const res = await axios.get(`${API_URL}/api/metrics/latest`, { withCredentials: true });
       // filter out test/empty entries
       const real = res.data.filter(s => s.ramTotal > 0);
       setServers(real);
@@ -81,9 +79,7 @@ export default function Resources() {
 
   const loadHistory = useCallback(async (serverId) => {
     try {
-      const token = localStorage.getItem('sm_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.get(`${API_URL}/api/metrics/${serverId}/history`, { headers });
+      const res = await axios.get(`${API_URL}/api/metrics/${serverId}/history`, { withCredentials: true });
       setHistory(res.data.map(h => ({
         time: new Date(h.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
         cpu: h.cpu || 0,

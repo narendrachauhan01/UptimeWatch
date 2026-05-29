@@ -9,6 +9,15 @@ const { sendEmail, otpEmailHtml } = require('../services/email');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const COOKIE_OPTS = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+};
+
+const setTokenCookie = (res, token) => res.cookie('sm_token', token, COOKIE_OPTS);
+
 function genOtp() {
     return String(Math.floor(100000 + Math.random() * 900000));
 }
@@ -87,6 +96,7 @@ router.post('/register/verify-otp', async (req, res) => {
         await PendingRegistration.deleteOne({ email: email.toLowerCase() });
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        setTokenCookie(res, token);
         res.json({ token, user: userPayload(user) });
     } catch (e) {
         res.status(400).json({ error: e.message });
@@ -106,6 +116,7 @@ router.post('/login', async (req, res) => {
         if (user.isBlocked) return res.status(403).json({ error: 'Account blocked. Contact support.' });
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        setTokenCookie(res, token);
         res.json({ token, user: userPayload(user) });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -142,6 +153,7 @@ router.post('/google-auth', async (req, res) => {
         }
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        setTokenCookie(res, token);
         res.json({ token, user: userPayload(user), isNewUser });
     } catch (e) {
         res.status(400).json({ error: 'Google Sign-In failed: ' + e.message });
@@ -253,6 +265,12 @@ router.get('/me', auth, async (req, res) => {
     const planConfig = settings.plans?.[u.plan];
     const dynamicLimit = planConfig ? planConfig.sites : 2;
     res.json({ ...userPayload(u), siteLimit: dynamicLimit });
+});
+
+// ── Logout — clear cookie ─────────────────────────────────────────────────────
+router.post('/logout', (req, res) => {
+    res.clearCookie('sm_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
+    res.json({ success: true });
 });
 
 module.exports = router;

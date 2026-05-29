@@ -3,7 +3,8 @@ require('dotenv').config();
 const express  = require('express');
 const http     = require('http');
 const mongoose = require('mongoose');
-const cors     = require('cors');
+const cors          = require('cors');
+const cookieParser  = require('cookie-parser');
 
 const wa      = require('./services/whatsapp');
 const monitor = require('./services/monitor');
@@ -26,6 +27,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/api/servers',      require('./routes/servers'));
 app.use('/api/recipients',   require('./routes/recipients'));

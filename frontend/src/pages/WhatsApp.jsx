@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getWaStatus, API_URL } from '../api';
 
-const authHeaders = () => {
     const t = localStorage.getItem('sm_token') || localStorage.getItem('sm_admin_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 const GreenAPILogo = () => (
     <svg width="36" height="36" viewBox="0 0 36 36">
@@ -94,7 +91,7 @@ export default function WhatsAppPage() {
         e.preventDefault();
         setSaving(true);
         try {
-            const r = await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { headers: authHeaders() });
+            const r = await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { withCredentials: true });
             if (r.data.connected) {
                 showMsg(`✅ Connected! ${r.data.reason}`);
             } else {
@@ -109,7 +106,7 @@ export default function WhatsAppPage() {
         if (!testPhone) return;
         setTesting(true);
         try {
-            await axios.post(`${API_URL}/api/whatsapp/test`, { phone: testPhone.replace(/\D/g,'') }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/whatsapp/test`, { phone: testPhone.replace(/\D/g,'') }, { withCredentials: true });
             showMsg('✅ Test message sent!');
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Test failed')); }
         setTesting(false);

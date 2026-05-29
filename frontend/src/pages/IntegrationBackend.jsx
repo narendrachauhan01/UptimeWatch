@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getWaStatus, API_URL } from '../api';
 
-const authHeaders = () => {
-    const t = localStorage.getItem('sm_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 // ── Email Modal ───────────────────────────────────────────────────────────────
 const InfoBox = ({ steps }) => {
@@ -40,7 +36,7 @@ function EmailModal({ onClose }) {
     const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
 
     useEffect(() => {
-        axios.get(`${API_URL}/api/email-config/status`, { headers: authHeaders() })
+        axios.get(`${API_URL}/api/email-config/status`, { withCredentials: true })
             .then(r => { setStatus(r.data); setTestTo(r.data.mailUser || ''); })
             .catch(() => {});
     }, []);
@@ -48,7 +44,7 @@ function EmailModal({ onClose }) {
     const test = async () => {
         setTesting(true);
         try {
-            await axios.post(`${API_URL}/api/email-config/test`, { to: testTo || status?.mailUser }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/email-config/test`, { to: testTo || status?.mailUser }, { withCredentials: true });
             showMsg('✅ Test email sent to ' + (testTo || status?.mailUser));
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Test failed')); }
         setTesting(false);
@@ -134,7 +130,7 @@ function WhatsAppModal({ onClose }) {
         e.preventDefault();
         setSaving(true);
         try {
-            const r = await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { headers: authHeaders() });
+            const r = await axios.post(`${API_URL}/api/whatsapp/config`, { provider, ...form }, { withCredentials: true });
             setConnected(r.data.connected);
             showMsg(r.data.connected ? `✅ Connected! ${r.data.reason}` : `⚠️ Saved — ${r.data.reason}`);
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Failed')); }
@@ -145,7 +141,7 @@ function WhatsAppModal({ onClose }) {
         if (!testPhone) return;
         setTesting(true);
         try {
-            await axios.post(`${API_URL}/api/whatsapp/test`, { phone: testPhone.replace(/\D/g,'') }, { headers: authHeaders() });
+            await axios.post(`${API_URL}/api/whatsapp/test`, { phone: testPhone.replace(/\D/g,'') }, { withCredentials: true });
             showMsg('✅ Test message sent!');
         } catch (err) { showMsg('❌ ' + (err.response?.data?.error || 'Test failed')); }
         setTesting(false);
@@ -241,7 +237,7 @@ export default function IntegrationBackend() {
     const [waOk,      setWaOk]      = useState(null);
 
     useEffect(() => {
-        axios.get(`${API_URL}/api/email-config/status`, { headers: authHeaders() }).then(r => setEmailOk(r.data.configured)).catch(()=>{});
+        axios.get(`${API_URL}/api/email-config/status`, { withCredentials: true }).then(r => setEmailOk(r.data.configured)).catch(()=>{});
         getWaStatus().then(r => setWaOk(r.data.connected)).catch(()=>{});
     }, [emailOpen, waOpen]);
 
@@ -273,7 +269,7 @@ export default function IntegrationBackend() {
                 </div>
                 <button onClick={async()=>{
                     try {
-                        const r = await axios.post(`${API_URL}/api/admin/clear-cache`, {}, { headers: authHeaders() });
+                        const r = await axios.post(`${API_URL}/api/admin/clear-cache`, {}, { withCredentials: true });
                         alert(`✅ Cache cleared — ${r.data.cleared} entries removed. Fresh SSL/Domain data will be fetched.`);
                     } catch { alert('❌ Failed to clear cache'); }
                 }} style={{ padding:'9px 18px', background:'#fef3c7', border:'1.5px solid #fde68a', borderRadius:10, fontSize:13, fontWeight:700, color:'#d97706', cursor:'pointer', whiteSpace:'nowrap' }}>

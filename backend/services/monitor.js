@@ -1,6 +1,7 @@
 const https = require('https');
 const http = require('http');
 const net = require('net');
+const axios = require('axios');
 const Server = require('../models/Server');
 const PingTarget = require('../models/PingTarget');
 const Recipient = require('../models/Recipient');
@@ -96,31 +97,19 @@ async function fireIntegrations(server, type, userId) {
                 if (['slack','discord','webhook','rocketchat'].includes(intg.type)) {
                     const url = intg.config?.url;
                     if (!url) continue;
-                    const body = intg.type === 'rocketchat' || intg.type === 'slack'
-                        ? rcSlackBody
+                    const data = intg.type === 'rocketchat' || intg.type === 'slack'
+                        ? JSON.parse(rcSlackBody)
                         : intg.type === 'discord'
-                        ? discordBody
-                        : JSON.stringify(payload);
-
-                    const headers = { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) };
+                        ? JSON.parse(discordBody)
+                        : payload;
+                    const headers = { 'Content-Type': 'application/json' };
                     if (intg.config?.secret) headers['X-UptimeForge-Secret'] = intg.config.secret;
-
-                    const mod = url.startsWith('https') ? https : http;
-                    const parsed = new URL(url);
-                    const req = mod.request({ hostname: parsed.hostname, path: parsed.pathname + parsed.search, method: 'POST', headers }, () => {});
-                    req.on('error', () => {});
-                    req.write(body);
-                    req.end();
+                    axios.post(url, data, { headers, timeout: 10000 }).catch(() => {});
                 }
                 if (intg.type === 'telegram') {
                     const { botToken, chatId } = intg.config || {};
                     if (!botToken || !chatId) continue;
-                    const tUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-                    const body = JSON.stringify({ chat_id: chatId, text: tgText, parse_mode: 'Markdown' });
-                    const req = https.request(tUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' } }, () => {});
-                    req.on('error', () => {});
-                    req.write(body);
-                    req.end();
+                    axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, { chat_id: chatId, text: tgText, parse_mode: 'Markdown' }, { timeout: 10000 }).catch(() => {});
                 }
             } catch (_) {}
         }

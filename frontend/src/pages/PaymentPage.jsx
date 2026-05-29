@@ -202,7 +202,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
     const handleCancel = async () => {
         if (!isNewUnverified || paymentDone.current) return;
         try { await deleteMyAccount(); } catch (_) {}
-        localStorage.removeItem('sm_token');
+        // token cleared via logout API;
         localStorage.removeItem('sm_user');
         localStorage.removeItem('sm_intended_plan');
         window.location.href = '/register';
@@ -251,7 +251,7 @@ export default function PaymentPage({ user, onUserUpdate }) {
                         plan,
                     });
                     if (res.data.token) {
-                        localStorage.setItem('sm_token', res.data.token);
+                        // token now in httpOnly cookie;
                         localStorage.setItem('sm_user', JSON.stringify(res.data.user));
                         localStorage.removeItem('sm_intended_plan');
                         onUserUpdate?.(res.data.user);

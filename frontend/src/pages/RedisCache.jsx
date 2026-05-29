@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../api';
 
-const authHeaders = () => {
-    const t = localStorage.getItem('sm_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 export default function RedisCache() {
     const [msg,     setMsg]     = useState('');
@@ -17,7 +13,7 @@ export default function RedisCache() {
         if (!window.confirm('Clear all SSL & Domain cache? Fresh data will be fetched on next check.')) return;
         setLoading(true);
         try {
-            const r = await axios.post(`${API_URL}/api/admin/clear-cache`, {}, { headers: authHeaders() });
+            const r = await axios.post(`${API_URL}/api/admin/clear-cache`, {}, { withCredentials: true });
             showMsg(`✅ Cleared ${r.data.cleared} cached entries. Next SSL/Domain check will fetch fresh data.`);
         } catch { showMsg('❌ Failed — Redis may not be running'); }
         setLoading(false);

@@ -3,10 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { addServer, getPlans, getRecipients, getServers, API_URL } from '../api';
 
-const authHeaders = () => {
-    const t = localStorage.getItem('sm_token');
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 
 export default function AddMonitor() {
     const navigate = useNavigate();
@@ -63,7 +59,7 @@ export default function AddMonitor() {
         }).catch(() => {});
         getServers().then(r => setServers(r.data)).catch(() => {});
         // Fetch saved integrations (webhook etc.)
-        axios.get(`${API_URL}/api/integrations`, { headers: authHeaders() })
+        axios.get(`${API_URL}/api/integrations`, { withCredentials: true })
             .then(r => {
                 setSavedIntegrations(r.data);
                 const map = {};
@@ -91,7 +87,7 @@ export default function AddMonitor() {
         try {
             let serverId;
             if (isEdit) {
-                await axios.put(`${API_URL}/api/servers/${editServer._id}`, form, { headers: authHeaders() });
+                await axios.put(`${API_URL}/api/servers/${editServer._id}`, form, { withCredentials: true });
                 serverId = editServer._id;
             } else {
                 const serverRes = await addServer(form);
@@ -102,7 +98,7 @@ export default function AddMonitor() {
             await Promise.all(recipients.map(rec => {
                 const sites = recipSiteMap[rec._id] || [];
                 if (sites.length > 0) {
-                    return axios.put(`${API_URL}/api/recipients/${rec._id}`, { servers: sites }, { headers: authHeaders() });
+                    return axios.put(`${API_URL}/api/recipients/${rec._id}`, { servers: sites }, { withCredentials: true });
                 }
                 return Promise.resolve();
             }));
@@ -355,7 +351,7 @@ export default function AddMonitor() {
                                     const saveIntgSites = async (newSites) => {
                                         await axios.post(`${API_URL}/api/integrations/${intg.type}`,
                                             { config: intg.config, events: intg.events, servers: newSites },
-                                            { headers: authHeaders() });
+                                            { withCredentials: true });
                                     };
                                     return (
                                         <div key={intg._id} style={{ marginBottom:6 }}>

@@ -37,7 +37,7 @@ export default function Login({ onLogin }) {
     setError('');
     try {
       const res = await googleAuth({ credential: response.credential });
-      localStorage.setItem('sm_token', res.data.token);
+      // token now in httpOnly cookie;
       localStorage.setItem('sm_user', JSON.stringify(res.data.user));
       onLogin(res.data.user, res.data.isNewUser);
     } catch (e) {
@@ -92,7 +92,7 @@ export default function Login({ onLogin }) {
     setLoading(true);
     try {
       const res = await loginUser({ email: form.email, password: form.password });
-      localStorage.setItem('sm_token', res.data.token);
+      // token now in httpOnly cookie;
       localStorage.setItem('sm_user', JSON.stringify(res.data.user));
       onLogin(res.data.user);
     } catch (e) {
@@ -108,7 +108,7 @@ export default function Login({ onLogin }) {
     setLoading(true);
     try {
       const res = await axios.post(`${API_URL}/api/auth/login`, { username: form.username, password: form.password });
-      localStorage.setItem('sm_token', res.data.token);
+      // token now in httpOnly cookie;
       localStorage.removeItem('sm_user');
       onLogin(null);
     } catch (e) {
