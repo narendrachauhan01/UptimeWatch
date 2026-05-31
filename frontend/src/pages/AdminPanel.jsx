@@ -340,9 +340,10 @@ export default function AdminPanel({ initialTab = 'overview' }) {
         const q = search.toLowerCase();
         const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.includes(q);
         const matchPlan = planFilter === 'all' || u.plan === planFilter;
-        const matchBilling = billingFilter === 'all' || (billingFilter === 'annually' ? u.billing === 'annually' : (u.billing === 'monthly' || !u.billing));
-        return matchSearch && matchPlan && matchBilling;
+        return matchSearch && matchPlan;
     });
+    const monthlyFiltered = filtered.filter(u => u.billing !== 'annually');
+    const annualFiltered  = filtered.filter(u => u.billing === 'annually');
 
     // Stats for overview
     const totalSites   = users.reduce((a, u) => a + (u.serverCount || 0), 0);
@@ -756,24 +757,6 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                             ))}
                         </div>
 
-                        {/* Billing filter */}
-                        <div style={{ display: 'flex', gap: 6 }}>
-                            {[['monthly','📅 Monthly'],['annually','📆 Annual']].map(([val, label]) => (
-                                <button key={val} onClick={() => setBillingFilter(billingFilter === val ? 'all' : val)} style={{
-                                    padding: '7px 14px',
-                                    border: `1px solid ${billingFilter === val ? (val === 'annually' ? '#f59e0b' : '#3b82f6') : T.border}`,
-                                    borderRadius: 9999, fontSize: 12, fontWeight: 600,
-                                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                                    background: billingFilter === val ? (val === 'annually' ? '#f59e0b' : '#3b82f6') : '#fff',
-                                    color: billingFilter === val ? '#fff' : T.sub,
-                                }}>
-                                    {label}
-                                    <span style={{ marginLeft:6, background: billingFilter === val ? 'rgba(255,255,255,0.25)' : '#f1f5f9', borderRadius:50, padding:'1px 7px', fontSize:11, color: billingFilter === val ? '#fff' : T.sub }}>
-                                        {val === 'annually' ? users.filter(u => u.billing === 'annually').length : users.filter(u => u.billing === 'monthly' || !u.billing).length}
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
 
                         {/* Export CSV */}
                         <button onClick={exportCSV} disabled={users.length === 0} style={{
@@ -796,18 +779,22 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                     ) : filtered.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: 60, color: T.muted, fontSize: 14 }}>No users found.</div>
                     ) : (
+                    <>
+                    {/* ── Monthly Users ── */}
+                    <div style={{ marginBottom: 24 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+                            <span style={{ fontWeight:800, fontSize:15, color:'#1e40af' }}>📅 Monthly Users</span>
+                            <span style={{ background:'#dbeafe', color:'#1e40af', fontWeight:700, fontSize:12, padding:'2px 10px', borderRadius:50 }}>{monthlyFiltered.length}</span>
+                        </div>
+                        {monthlyFiltered.length === 0 ? (
+                            <div style={{ textAlign:'center', padding:'24px 0', color:T.muted, fontSize:13 }}>No monthly users</div>
+                        ) : (
                         <div style={{ ...cardStyle, overflow: 'hidden' }}>
                             <div style={{ overflowX: 'auto' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                                    <thead>
-                                        <tr>
-                                            {['User', 'Plan', 'Sites', 'Status', 'Expiry', 'Actions'].map(h => (
-                                                <th key={h} style={thStyle}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
+                                    <thead><tr>{['User', 'Plan', 'Sites', 'Status', 'Expiry', 'Actions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
                                     <tbody>
-                                        {filtered.map(u => (
+                                        {monthlyFiltered.map(u => (
                                             <React.Fragment key={u._id}>
                                                 <tr
                                                     style={{ borderBottom: `1px solid #F3F4F6`, cursor: 'pointer', transition: 'background 0.1s' }}
@@ -926,6 +913,110 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 </table>
                             </div>
                         </div>
+                        )}
+                    </div>
+
+                    {/* ── Annual Users ── */}
+                    <div>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+                            <span style={{ fontWeight:800, fontSize:15, color:'#b45309' }}>📆 Annual Users</span>
+                            <span style={{ background:'#fef3c7', color:'#b45309', fontWeight:700, fontSize:12, padding:'2px 10px', borderRadius:50 }}>{annualFiltered.length}</span>
+                        </div>
+                        {annualFiltered.length === 0 ? (
+                            <div style={{ textAlign:'center', padding:'24px 0', color:T.muted, fontSize:13 }}>No annual users yet</div>
+                        ) : (
+                        <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead><tr>{['User', 'Plan', 'Sites', 'Status', 'Expiry', 'Actions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+                                    <tbody>
+                                        {annualFiltered.map(u => (
+                                            <React.Fragment key={u._id}>
+                                                <tr style={{ borderBottom:`1px solid #F3F4F6`, cursor:'pointer', transition:'background 0.1s' }}
+                                                    onMouseEnter={e=>e.currentTarget.style.background=T.rowHover}
+                                                    onMouseLeave={e=>e.currentTarget.style.background=u.isBlocked?'#FFF5F5':'#fff'}
+                                                    onClick={()=>setExpandedId(expandedId===u._id?null:u._id)}>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent'}}>
+                                                        <div style={{display:'flex',alignItems:'center',gap:12}}>
+                                                            <Avatar name={u.name} size={36}/>
+                                                            <div>
+                                                                <div style={{fontWeight:700,color:T.text,display:'flex',alignItems:'center',gap:6}}>
+                                                                    {u.name}
+                                                                    {u.accountId&&<span style={{fontSize:10,fontFamily:'monospace',background:'#EDE9FE',color:T.primary,padding:'1px 7px',borderRadius:9999}}>{u.accountId}</span>}
+                                                                </div>
+                                                                <div style={{fontSize:11,color:T.sub,marginTop:1}}>{u.email}</div>
+                                                                {u.phone&&<div style={{fontSize:11,color:T.muted}}>{u.phone}</div>}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent'}}><PlanBadge plan={u.plan}/></td>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent',fontWeight:700}}>{u.serverCount||0}</td>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent'}}><StatusBadge u={u}/></td>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent',fontSize:12,color:T.sub}}>
+                                                        {u.plan!=='free_trial'&&u.planEndsAt?fmt(u.planEndsAt):u.trialEndsAt?fmt(u.trialEndsAt):'—'}
+                                                    </td>
+                                                    <td style={{...tdStyle,background:u.isBlocked?'#FFF5F5':'transparent'}} onClick={e=>e.stopPropagation()}>
+                                                        <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                                                            <button onClick={()=>openAssign(u)} style={{...btnPrimary,padding:'5px 10px',fontSize:11}}>Assign Plan</button>
+                                                            <button onClick={()=>startEdit(u)} style={{...btnSecondary,padding:'5px 10px',fontSize:11}}>Edit</button>
+                                                            <button onClick={()=>extendTrial(u._id,u.name)} style={{padding:'5px 10px',fontSize:11,background:'#EFF6FF',color:T.info,border:`1px solid #BFDBFE`,borderRadius:8,cursor:'pointer',fontWeight:600}}>+Trial</button>
+                                                            <button onClick={()=>toggleBlock(u)} style={{padding:'5px 10px',fontSize:11,borderRadius:8,cursor:'pointer',fontWeight:600,border:`1px solid ${u.isBlocked?'#BBF7D0':'#FECDD3'}`,background:u.isBlocked?'#F0FDF4':'#FFF1F2',color:u.isBlocked?T.success:T.danger}}>{u.isBlocked?'Unblock':'Block'}</button>
+                                                            <button onClick={()=>deleteUser(u)} style={{padding:'5px 10px',fontSize:11,background:'#FEF2F2',color:T.danger,border:`1px solid #FECDD3`,borderRadius:8,cursor:'pointer',fontWeight:600}}>Delete</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {expandedId===u._id&&(
+                                                    <tr><td colSpan={6} style={{padding:0,background:'#F9FAFB',borderBottom:`1px solid ${T.border}`}}>
+                                                        <div style={{padding:'16px 20px'}}>
+                                                            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:14}}>
+                                                                {[
+                                                                    {label:'Plan',val:<PlanBadge plan={u.plan}/>},
+                                                                    {label:'Billing',val:<span style={{fontWeight:700,fontSize:12,padding:'2px 10px',borderRadius:50,background:'#fef3c7',color:'#b45309'}}>📆 Annual</span>},
+                                                                    {label:'Status',val:<StatusBadge u={u}/>},
+                                                                    {label:'Sites',val:<strong>{u.serverCount||0}</strong>},
+                                                                    {label:'Plan Ends',val:<strong>{fmt(u.planEndsAt)}</strong>},
+                                                                    {label:'Registered',val:<strong>{fmt(u.createdAt)}</strong>},
+                                                                ].map(item=>(
+                                                                    <div key={item.label}>
+                                                                        <div style={{fontSize:10,fontWeight:700,color:T.muted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>{item.label}</div>
+                                                                        <div style={{fontSize:13}}>{item.val}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </td></tr>
+                                                )}
+                                                {editId===u._id&&(
+                                                    <tr><td colSpan={6} style={{padding:0,background:'#F5F3FF',borderBottom:`1px solid #DDD6FE`}}>
+                                                        <div style={{padding:'16px 20px'}}>
+                                                            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:14}}>
+                                                                <div><label style={{fontSize:11,fontWeight:700,color:T.sub,display:'block',marginBottom:6}}>Plan</label>
+                                                                    <select value={editForm.plan} onChange={e=>setEditForm({...editForm,plan:e.target.value})} style={inputSt}>
+                                                                        {PLAN_OPTIONS.map(p=><option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
+                                                                    </select></div>
+                                                                <div><label style={{fontSize:11,fontWeight:700,color:T.sub,display:'block',marginBottom:6}}>Plan Ends At</label>
+                                                                    <input type="date" style={inputSt} value={editForm.planEndsAt} onChange={e=>setEditForm({...editForm,planEndsAt:e.target.value})}/></div>
+                                                                <div style={{display:'flex',alignItems:'flex-end',paddingBottom:2}}>
+                                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,fontWeight:600,color:T.text}}>
+                                                                        <input type="checkbox" checked={editForm.isBlocked} onChange={e=>setEditForm({...editForm,isBlocked:e.target.checked})}/>Block this account
+                                                                    </label></div>
+                                                            </div>
+                                                            <div style={{display:'flex',gap:10}}>
+                                                                <button style={btnPrimary} onClick={saveEdit}>Save Changes</button>
+                                                                <button style={btnSecondary} onClick={()=>setEditId(null)}>Cancel</button>
+                                                            </div>
+                                                        </div>
+                                                    </td></tr>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                    </>
                     )}
                 </div>
             )}
