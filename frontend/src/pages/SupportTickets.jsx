@@ -172,76 +172,81 @@ export default function SupportTickets() {
 
                 {/* Ticket detail */}
                 {selected && (
-                    <div style={{ background:'#fff', borderRadius:16, border:'1.5px solid #e2e8f0', padding:24, position:'sticky', top:20 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-                            <div>
-                                <div style={{ fontWeight:800, fontSize:16, color:'#1e1b4b', marginBottom:6 }}>{selected.subject}</div>
-                                <div style={{ fontSize:12, color:'#64748b' }}>{selected.name} · <span style={{ color:'#7c3aed' }}>{selected.email}</span></div>
-                            </div>
-                            <button onClick={()=>setSelected(null)} style={{ background:'#f1f5f9', border:'none', borderRadius:7, width:28, height:28, cursor:'pointer', fontSize:14 }}>✕</button>
-                        </div>
+                    <div style={{ background:'#fff', borderRadius:20, border:'1.5px solid #e2e8f0', overflow:'hidden', boxShadow:'0 4px 20px rgba(0,0,0,0.08)', position:'sticky', top:20 }}>
 
-                        {/* Controls */}
-                        <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-                            <select value={selected.status} onChange={e=>update(selected._id,{status:e.target.value})}
-                                style={{ flex:1, padding:'7px 10px', border:'1.5px solid #e2e8f0', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                                <option value="open">Open</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="closed">Closed</option>
-                            </select>
-                            <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
-                                style={{ flex:1, padding:'7px 10px', border:'1.5px solid #e2e8f0', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                                <option value="low">🟢 Low</option>
-                                <option value="medium">🟡 Medium</option>
-                                <option value="high">🔴 High</option>
-                            </select>
-                            <button onClick={()=>del(selected._id)} style={{ padding:'7px 12px', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:8, color:'#dc2626', fontSize:12, cursor:'pointer' }}>🗑</button>
-                        </div>
-
-                        {/* Thread */}
-                        <div style={{ maxHeight:380, overflowY:'auto', display:'flex', flexDirection:'column', gap:10, marginBottom:16, paddingRight:4 }}>
-                            {/* Original message */}
-                            <div style={{ background:'#f5f3ff', borderRadius:12, padding:14, borderLeft:'3px solid #7c3aed' }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-                                    <div>
-                                        <span style={{ fontSize:12, fontWeight:800, color:'#7c3aed' }}>👤 {selected.name}</span>
-                                        <span style={{ fontSize:11, color:'#94a3b8', marginLeft:6 }}>{selected.email}</span>
-                                    </div>
-                                    <div style={{ textAlign:'right' }}>
-                                        <div style={{ fontSize:11, color:'#64748b', fontWeight:600 }}>{fmtDate(selected.createdAt)}</div>
-                                        <div style={{ fontSize:10, color:'#94a3b8' }}>{timeAgo(selected.createdAt)}</div>
-                                    </div>
+                        {/* Chat header */}
+                        <div style={{ background:'linear-gradient(135deg,#1e1b4b,#3730a3)', padding:'14px 16px' }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+                                <div style={{ flex:1, minWidth:0 }}>
+                                    <div style={{ fontWeight:800, color:'#fff', fontSize:14, marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{selected.subject}</div>
+                                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)' }}>{selected.name} · {selected.email}</div>
                                 </div>
-                                <div style={{ fontSize:13, color:'#1e1b4b', lineHeight:1.6, whiteSpace:'pre-wrap' }}>{selected.message}</div>
-                                <ImgThumb urls={selected.images} />
+                                <button onClick={()=>setSelected(null)} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:6, width:24, height:24, cursor:'pointer', color:'#fff', fontSize:12, flexShrink:0, marginLeft:8 }}>✕</button>
+                            </div>
+                            <div style={{ display:'flex', gap:6 }}>
+                                <select value={selected.status} onChange={e=>update(selected._id,{status:e.target.value})}
+                                    style={{ flex:1, padding:'5px 8px', border:'none', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.15)', color:'#fff' }}>
+                                    <option value="open" style={{color:'#000'}}>Open</option>
+                                    <option value="in_progress" style={{color:'#000'}}>In Progress</option>
+                                    <option value="resolved" style={{color:'#000'}}>Resolved</option>
+                                    <option value="closed" style={{color:'#000'}}>Closed</option>
+                                </select>
+                                <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
+                                    style={{ flex:1, padding:'5px 8px', border:'none', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.15)', color:'#fff' }}>
+                                    <option value="low" style={{color:'#000'}}>🟢 Low</option>
+                                    <option value="medium" style={{color:'#000'}}>🟡 Medium</option>
+                                    <option value="high" style={{color:'#000'}}>🔴 High</option>
+                                </select>
+                                <button onClick={()=>del(selected._id)} style={{ padding:'5px 10px', background:'rgba(239,68,68,0.3)', border:'none', borderRadius:6, color:'#fca5a5', fontSize:11, cursor:'pointer', fontWeight:700 }}>🗑</button>
+                            </div>
+                        </div>
+
+                        {/* Chat bubbles */}
+                        <div style={{ padding:'16px 12px', minHeight:300, maxHeight:420, overflowY:'auto', display:'flex', flexDirection:'column', gap:14, background:'#f8fafc' }}>
+                            {/* Original */}
+                            <div style={{ display:'flex', justifyContent:'flex-start', gap:6 }}>
+                                <div style={{ width:28, height:28, borderRadius:'50%', background:'#6366f1', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, alignSelf:'flex-end' }}>
+                                    {(selected.name||'U')[0].toUpperCase()}
+                                </div>
+                                <div style={{ maxWidth:'80%' }}>
+                                    <div style={{ background:'#fff', borderRadius:'12px 12px 12px 4px', padding:'10px 14px', fontSize:13, color:'#1e1b4b', lineHeight:1.6, whiteSpace:'pre-wrap', border:'1px solid #e2e8f0', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}>
+                                        {selected.message}
+                                    </div>
+                                    <ImgThumb urls={selected.images} />
+                                    <div style={{ fontSize:10, color:'#94a3b8', marginTop:3, marginLeft:4 }}>{fmtDate(selected.createdAt)} · {timeAgo(selected.createdAt)}</div>
+                                </div>
                             </div>
 
                             {/* Replies */}
-                            {selected.replies?.map((r,i) => (
-                                <div key={i} style={{ background:r.from==='admin'?'#f0fdf4':'#f5f3ff', borderRadius:12, padding:14, borderLeft:`3px solid ${r.from==='admin'?'#16a34a':'#7c3aed'}` }}>
-                                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-                                        <span style={{ fontSize:12, fontWeight:800, color:r.from==='admin'?'#16a34a':'#7c3aed' }}>
-                                            {r.from==='admin'?'🛡 Support (Admin)':'👤 '+selected.name}
-                                        </span>
-                                        <div style={{ textAlign:'right' }}>
-                                            <div style={{ fontSize:11, color:'#64748b', fontWeight:600 }}>{fmtDate(r.at)}</div>
-                                            <div style={{ fontSize:10, color:'#94a3b8' }}>{timeAgo(r.at)}</div>
+                            {selected.replies?.map((r,i) => {
+                                const isAdmin = r.from === 'admin';
+                                return (
+                                    <div key={i} style={{ display:'flex', justifyContent: isAdmin?'flex-end':'flex-start', gap:6 }}>
+                                        {!isAdmin && <div style={{ width:28, height:28, borderRadius:'50%', background:'#6366f1', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, alignSelf:'flex-end' }}>{(selected.name||'U')[0].toUpperCase()}</div>}
+                                        <div style={{ maxWidth:'80%', display:'flex', flexDirection:'column', alignItems: isAdmin?'flex-end':'flex-start' }}>
+                                            <div style={{ background: isAdmin?'#4f46e5':'#fff', color: isAdmin?'#fff':'#1e1b4b', borderRadius: isAdmin?'12px 12px 4px 12px':'12px 12px 12px 4px', padding:'10px 14px', fontSize:13, lineHeight:1.6, whiteSpace:'pre-wrap', border: isAdmin?'none':'1px solid #e2e8f0', boxShadow: isAdmin?'0 3px 10px rgba(79,70,229,0.25)':'0 1px 4px rgba(0,0,0,0.05)' }}>
+                                                {r.message}
+                                            </div>
+                                            <ImgThumb urls={r.images} />
+                                            <div style={{ fontSize:10, color:'#94a3b8', marginTop:3, [isAdmin?'marginRight':'marginLeft']:4 }}>
+                                                {fmtDate(r.at)} · {timeAgo(r.at)} · {isAdmin?'You (Admin)':selected.name}
+                                            </div>
                                         </div>
+                                        {isAdmin && <div style={{ width:28, height:28, borderRadius:'50%', background:'#10b981', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0, alignSelf:'flex-end' }}>🛡</div>}
                                     </div>
-                                    <div style={{ fontSize:13, color:'#1e1b4b', lineHeight:1.6, whiteSpace:'pre-wrap' }}>{r.message}</div>
-                                    <ImgThumb urls={r.images} />
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
-                        {/* Reply box */}
-                        {selected.status !== 'closed' && (
-                            <div>
-                                <textarea value={reply} onChange={e=>setReply(e.target.value)} rows={3}
-                                    placeholder="Type your reply..." style={{ width:'100%', padding:'10px 12px', border:'1.5px solid #e2e8f0', borderRadius:10, fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:8 }} />
+                        {/* Reply bar */}
+                        {selected.status !== 'closed' ? (
+                            <div style={{ borderTop:'1px solid #e2e8f0', padding:'12px', background:'#fff' }}>
+                                <textarea value={reply} onChange={e=>setReply(e.target.value)} rows={2}
+                                    placeholder="Type your reply..." style={{ width:'100%', padding:'8px 12px', border:'1.5px solid #e2e8f0', borderRadius:10, fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:8, background:'#f8fafc' }} />
                                 <AdminImageUpload sendReply={sendReply} reply={reply} sending={sending} />
                             </div>
+                        ) : (
+                            <div style={{ padding:12, textAlign:'center', color:'#94a3b8', fontSize:12, borderTop:'1px solid #e2e8f0' }}>🔒 Ticket closed</div>
                         )}
                     </div>
                 )}
