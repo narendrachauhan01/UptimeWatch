@@ -8,124 +8,180 @@ const PLAN_COLORS  = { free_trial: '#64748b', bronze: '#b45309', silver: '#47556
 const PLAN_BG     = { free_trial: '#f1f5f9', bronze: '#fef3c7', silver: '#f8fafc', gold: '#fefce8' };
 const PLAN_LABEL  = { free_trial: 'Free Trial', bronze: 'Bronze', silver: 'Silver', gold: 'Gold' };
 
-// ── Shared inline style tokens ──────────────────────────────────────────────
-const C = {
-    primary:   '#7c3aed',
-    success:   '#16a34a',
-    danger:    '#ef4444',
-    warning:   '#f59e0b',
-    info:      '#3b82f6',
-    border:    '#e2e8f0',
-    bg:        '#f8fafc',
-    card:      '#ffffff',
-    text:      '#0f172a',
-    muted:     '#64748b',
-    light:     '#94a3b8',
+// ── Design tokens (TailAdmin palette) ────────────────────────────────────────
+const T = {
+    primary:  '#4F46E5',
+    success:  '#10B981',
+    danger:   '#EF4444',
+    warning:  '#F59E0B',
+    info:     '#3B82F6',
+    border:   '#E5E7EB',
+    pageBg:   '#F1F5F9',
+    card:     '#ffffff',
+    headerBg: '#F9FAFB',
+    text:     '#111827',
+    sub:      '#6B7280',
+    muted:    '#9CA3AF',
+    rowHover: '#F9FAFB',
 };
 
-const card = {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 16,
-    padding: '20px 24px',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-    marginBottom: 0,
+// ── Reusable style helpers ────────────────────────────────────────────────────
+const cardStyle = {
+    background: T.card,
+    border: `1px solid ${T.border}`,
+    borderRadius: 10,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
 };
 
 const pill = (bg, color) => ({
-    display: 'inline-flex', alignItems: 'center', gap: 4,
-    padding: '3px 10px', borderRadius: 99,
-    fontSize: 11, fontWeight: 700, letterSpacing: 0.3,
+    display: 'inline-flex', alignItems: 'center',
+    padding: '2px 10px', borderRadius: 9999,
+    fontSize: 11, fontWeight: 600, letterSpacing: 0.2,
     background: bg, color,
+    whiteSpace: 'nowrap',
 });
 
-function Avatar({ name, size = 40 }) {
+const inputSt = {
+    width: '100%', padding: '9px 12px',
+    border: `1px solid ${T.border}`, borderRadius: 8,
+    fontSize: 13, outline: 'none', background: '#fff',
+    color: T.text, fontFamily: 'inherit',
+    boxSizing: 'border-box',
+};
+
+const btnPrimary = {
+    padding: '9px 18px', background: T.primary, color: '#fff',
+    border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit',
+};
+const btnDanger = {
+    padding: '9px 18px', background: T.danger, color: '#fff',
+    border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit',
+};
+const btnSuccess = {
+    padding: '9px 18px', background: T.success, color: '#fff',
+    border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit',
+};
+const btnSecondary = {
+    padding: '9px 18px', background: '#fff',
+    border: `1px solid ${T.border}`, borderRadius: 8,
+    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+    color: T.sub,
+};
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+function Avatar({ name, size = 36 }) {
     const initials = (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const colors = ['#7c3aed','#2563eb','#059669','#d97706','#dc2626','#db2777'];
-    const idx = (name || '').charCodeAt(0) % colors.length;
+    const palette = ['#4F46E5','#10B981','#F59E0B','#EF4444','#3B82F6','#8B5CF6'];
+    const idx = (name || '').charCodeAt(0) % palette.length;
     return (
         <div style={{
             width: size, height: size, borderRadius: '50%',
-            background: colors[idx], color: '#fff',
+            background: palette[idx], color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: size * 0.38, flexShrink: 0,
+            fontWeight: 700, fontSize: size * 0.38, flexShrink: 0, letterSpacing: 0.5,
         }}>{initials}</div>
     );
 }
 
+// ── Plan Badge ────────────────────────────────────────────────────────────────
 function PlanBadge({ plan }) {
-    const bg   = PLAN_BG[plan]    || '#f1f5f9';
-    const color= PLAN_COLORS[plan] || '#64748b';
-    return <span style={pill(bg, color)}>{PLAN_LABEL[plan] || plan}</span>;
+    return <span style={pill(PLAN_BG[plan] || '#f1f5f9', PLAN_COLORS[plan] || '#64748b')}>{PLAN_LABEL[plan] || plan}</span>;
 }
 
+// ── Status Badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ u }) {
-    if (u.isBlocked) return <span style={pill('#fef2f2','#dc2626')}>Blocked</span>;
-    if (!u.isActive) return <span style={pill('#fff7ed','#c2410c')}>Expired</span>;
-    if (u.plan === 'free_trial') return <span style={pill('#eff6ff','#1d4ed8')}>Trial</span>;
-    return <span style={pill('#f0fdf4','#15803d')}>Active</span>;
+    if (u.isBlocked)    return <span style={pill('#FEE2E2','#DC2626')}>Blocked</span>;
+    if (!u.isActive)    return <span style={pill('#FEF3C7','#D97706')}>Expired</span>;
+    if (u.plan === 'free_trial') return <span style={pill('#EFF6FF','#2563EB')}>Trial</span>;
+    return <span style={pill('#D1FAE5','#065F46')}>Active</span>;
 }
 
+// ── Payment Status Badge ──────────────────────────────────────────────────────
 function PayStatusBadge({ status }) {
     const map = {
-        approved: { bg:'#dcfce7', color:'#15803d', label:'Approved' },
-        pending:  { bg:'#fef9c3', color:'#b45309', label:'Pending'  },
-        rejected: { bg:'#fee2e2', color:'#dc2626', label:'Rejected' },
-        refunded: { bg:'#fee2e2', color:'#dc2626', label:'↩ Refunded' },
+        approved: { bg:'#D1FAE5', color:'#065F46', label:'Approved' },
+        pending:  { bg:'#FEF9C3', color:'#92400E', label:'Pending'  },
+        rejected: { bg:'#FEE2E2', color:'#B91C1C', label:'Rejected' },
+        refunded: { bg:'#FEE2E2', color:'#B91C1C', label:'Refunded' },
     };
-    const s = map[status] || { bg:'#f1f5f9', color:'#64748b', label: status || 'Unknown' };
+    const s = map[status] || { bg:'#F3F4F6', color:'#6B7280', label: status || 'Unknown' };
     return <span style={pill(s.bg, s.color)}>{s.label}</span>;
 }
 
+// ── Date formatter ────────────────────────────────────────────────────────────
 function fmt(date) {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// ── Metric Card ──────────────────────────────────────────────────────────────
+// ── Metric Card (left color border + icon) ────────────────────────────────────
 function MetricCard({ label, value, color, icon, sub }) {
     return (
         <div style={{
-            ...card,
+            ...cardStyle,
             borderLeft: `4px solid ${color}`,
+            padding: '20px 20px',
             display: 'flex', alignItems: 'center', gap: 16,
         }}>
             <div style={{
-                width: 48, height: 48, borderRadius: 12,
+                width: 48, height: 48, borderRadius: 10,
                 background: `${color}18`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, flexShrink: 0,
+                fontSize: 20, flexShrink: 0,
             }}>{icon}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1, fontFamily: 'Outfit, sans-serif' }}>{value}</div>
-                <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-                {sub && <div style={{ fontSize: 11, color: C.light, marginTop: 2 }}>{sub}</div>}
+                <div style={{ fontSize: 26, fontWeight: 800, color: T.text, lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 11, color: T.sub, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+                {sub && <div style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>{sub}</div>}
             </div>
         </div>
     );
 }
 
-// ── Revenue Card ─────────────────────────────────────────────────────────────
-function RevCard({ label, value, sub, color }) {
+// ── Revenue Tile ──────────────────────────────────────────────────────────────
+function RevTile({ label, value, sub, color }) {
     return (
-        <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 18px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.light, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color, lineHeight: 1, fontFamily: 'Outfit, sans-serif' }}>{value}</div>
-            <div style={{ fontSize: 11, color: C.light, marginTop: 5 }}>{sub}</div>
+        <div style={{
+            ...cardStyle,
+            borderLeft: `4px solid ${color}`,
+            padding: '16px 18px',
+        }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: T.text, lineHeight: 1 }}>{value}</div>
+            {sub && <div style={{ fontSize: 11, color: T.muted, marginTop: 5 }}>{sub}</div>}
         </div>
     );
 }
 
-// ── Section Header ────────────────────────────────────────────────────────────
-function SectionHeader({ title, right }) {
+// ── Table TH ─────────────────────────────────────────────────────────────────
+const thStyle = {
+    padding: '11px 16px', textAlign: 'left',
+    fontSize: 11, fontWeight: 700, color: T.sub,
+    textTransform: 'uppercase', letterSpacing: 0.6,
+    background: T.headerBg, borderBottom: `1px solid ${T.border}`,
+    whiteSpace: 'nowrap',
+};
+
+// ── Table TD ─────────────────────────────────────────────────────────────────
+const tdStyle = {
+    padding: '13px 16px', fontSize: 13, color: T.text,
+    borderBottom: `1px solid #F3F4F6`, verticalAlign: 'middle',
+};
+
+// ── Section Title ─────────────────────────────────────────────────────────────
+function SectionTitle({ title, right }) {
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{title}</div>
-            {right}
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{title}</div>
+            {right && <div>{right}</div>}
         </div>
     );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 export default function AdminPanel({ initialTab = 'overview' }) {
     const location = useLocation();
     const urlTab = new URLSearchParams(location.search).get('tab');
@@ -143,12 +199,12 @@ export default function AdminPanel({ initialTab = 'overview' }) {
     const [payments, setPayments]   = useState([]);
     const [paySearch, setPaySearch] = useState('');
     const [payStatusFilter, setPayStatusFilter] = useState('all');
-    const [assignModal, setAssignModal] = useState(null); // { user }
+    const [assignModal, setAssignModal] = useState(null);
     const [assignForm, setAssignForm]   = useState({ plan: 'bronze', duration: '1m', customDate: '' });
     const [profileForm, setProfileForm] = useState({ username: '', email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
     const [profileSaving, setProfileSaving] = useState(false);
     const [profileMsg, setProfileMsg] = useState({ text: '', type: '' });
-    const [refundStatuses, setRefundStatuses] = useState({}); // { paymentId: statusData }
+    const [refundStatuses, setRefundStatuses] = useState({});
 
     const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
@@ -348,7 +404,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
     };
     const refundPayment = async (id) => {
         if (!window.confirm('Refund this payment on Razorpay? User plan will be cancelled.')) return;
-        try { await adminRefundPayment(id); showToast('✅ Refund initiated — plan cancelled'); loadPayments(); load(); }
+        try { await adminRefundPayment(id); showToast('Refund initiated — plan cancelled'); loadPayments(); load(); }
         catch (e) { showToast(e.response?.data?.error || 'Reject failed'); }
     };
 
@@ -405,14 +461,14 @@ export default function AdminPanel({ initialTab = 'overview' }) {
     };
 
     const TABS = [
-        { id: 'overview',      label: 'Overview' },
-        { id: 'users',         label: `Users (${users.length})` },
-        { id: 'payments',      label: `Payments (${payments.length})` },
-        { id: 'transactions',  label: `Payments & Refund (${payments.length})` },
-        { id: 'canceling',     label: `❌ Plan Canceling (${refundedPayments.length})` },
+        { id: 'overview',     label: 'Overview' },
+        { id: 'users',        label: `Users (${users.length})` },
+        { id: 'payments',     label: `Payments (${payments.length})` },
+        { id: 'transactions', label: `Payments & Refund (${payments.length})` },
+        { id: 'canceling',   label: `Plan Canceling (${refundedPayments.length})` },
     ];
 
-    // Filtered payments for the payments tab
+    // Filtered payments
     const filteredPayments = (() => {
         const q = paySearch.toLowerCase();
         return payments.filter(p => {
@@ -422,120 +478,123 @@ export default function AdminPanel({ initialTab = 'overview' }) {
         });
     })();
 
-    // ── Shared input style ───────────────────────────────────────────────────
-    const inputStyle = {
-        width: '100%', padding: '9px 12px', border: `1.5px solid ${C.border}`,
-        borderRadius: 9, fontSize: 13, outline: 'none', background: '#fff',
-        color: C.text, fontFamily: 'inherit',
-        transition: 'border-color 0.15s',
-    };
-    const iconBtnStyle = (hoverColor) => ({
-        width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        border: `1.5px solid ${C.border}`, borderRadius: 8, background: '#fff',
-        cursor: 'pointer', fontSize: 14, transition: 'all 0.15s', flexShrink: 0,
-    });
+    // ── Icon helpers ──────────────────────────────────────────────────────────
+    const SearchIcon = () => (
+        <svg width="15" height="15" fill="none" stroke={T.muted} strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+    );
 
+    // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="pg-wrap">
-            {/* ── Toast ── */}
+        <div className="pg-wrap" style={{ background: T.pageBg, minHeight: '100vh' }}>
+
+            {/* ── Toast ────────────────────────────────────────────────────── */}
             {toast && (
                 <div style={{
-                    position: 'fixed', bottom: 24, right: 24,
-                    background: '#1e293b', color: '#fff',
-                    padding: '12px 20px', borderRadius: 12,
-                    fontSize: 14, fontWeight: 600,
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                    position: 'fixed', bottom: 28, right: 28,
+                    background: '#1E293B', color: '#fff',
+                    padding: '12px 20px', borderRadius: 10,
+                    fontSize: 13, fontWeight: 600,
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                     zIndex: 9999,
                 }}>{toast}</div>
             )}
 
             {tab !== 'profile' && (
                 <>
-                    {/* ── Page Header ── */}
-                    <div className="pg-header">
+                    {/* ── Page Header ──────────────────────────────────────── */}
+                    <div style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                        marginBottom: 24, flexWrap: 'wrap', gap: 12,
+                    }}>
                         <div>
-                            <h1 className="pg-title">Payment Admin Panel</h1>
-                            <p className="pg-sub">Manage users, plans, and payments</p>
+                            <h1 style={{ fontSize: 22, fontWeight: 800, color: T.text, margin: 0 }}>Admin Panel</h1>
+                            <p style={{ fontSize: 13, color: T.sub, margin: '4px 0 0' }}>Manage users, plans, and payments</p>
                         </div>
-                        <button className="btn-refresh" onClick={() => window.location.reload()} style={{ fontSize: 13 }}>Refresh</button>
+                        <button
+                            onClick={() => { load(); loadPayments(); }}
+                            style={{ ...btnSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            Refresh
+                        </button>
                     </div>
 
-                    {/* ── Tabs ── */}
+                    {/* ── Pill Tabs ─────────────────────────────────────────── */}
                     <div style={{
-                        display: 'flex', gap: 4, marginBottom: 24,
-                        background: '#f1f5f9', borderRadius: 12,
-                        padding: 4, width: 'fit-content',
+                        display: 'flex', gap: 6, marginBottom: 28,
+                        overflowX: 'auto', paddingBottom: 4,
+                        msOverflowStyle: 'none', scrollbarWidth: 'none',
                     }}>
                         {TABS.map(t => (
-                            <button key={t.id}
-                                onClick={() => setTab(t.id)}
-                                style={{
-                                    padding: '8px 18px', border: 'none', borderRadius: 9,
-                                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                    fontFamily: 'inherit', transition: 'all 0.15s',
-                                    background: tab === t.id ? '#fff' : 'transparent',
-                                    color: tab === t.id ? C.primary : C.muted,
-                                    boxShadow: tab === t.id ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                                }}>
-                                {t.label}
-                            </button>
+                            <button key={t.id} onClick={() => setTab(t.id)} style={{
+                                padding: '8px 18px', border: `1px solid ${tab === t.id ? T.primary : T.border}`,
+                                borderRadius: 9999, fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                                transition: 'all 0.15s',
+                                background: tab === t.id ? T.primary : '#fff',
+                                color: tab === t.id ? '#fff' : T.sub,
+                                boxShadow: tab === t.id ? '0 2px 8px rgba(79,70,229,0.25)' : 'none',
+                            }}>{t.label}</button>
                         ))}
                     </div>
                 </>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 OVERVIEW TAB
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'overview' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-                    {/* Metric Cards — row 1: user stats */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-                        <MetricCard label="Total Users"  value={users.length}  color={C.primary}  icon="👥" />
-                        <MetricCard label="Active"       value={activeUsers}    color={C.success}  icon="✅" />
-                        <MetricCard label="Paid Users"   value={paidUsers}      color={C.warning}  icon="💰" />
-                        <MetricCard label="Total Sites"  value={totalSites}     color={C.info}     icon="🌐" />
-                        <MetricCard label="Free Trial"   value={users.filter(u => u.plan === 'free_trial').length} color="#64748b" icon="⏳" />
-                        <MetricCard label="Blocked"      value={blockedUsers}   color={C.danger}   icon="🚫" />
+                    {/* Row 1 — User Metric Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 16 }}>
+                        <MetricCard label="Total Users"  value={users.length}  color={T.primary}  icon="👥" />
+                        <MetricCard label="Active"       value={activeUsers}    color={T.success}  icon="✅" />
+                        <MetricCard label="Paid Users"   value={paidUsers}      color={T.warning}  icon="💳" />
+                        <MetricCard label="Total Sites"  value={totalSites}     color={T.info}     icon="🌐" />
+                        <MetricCard label="Free Trial"   value={users.filter(u => u.plan === 'free_trial').length} color="#64748B" icon="⏳" />
+                        <MetricCard label="Blocked"      value={blockedUsers}   color={T.danger}   icon="🚫" />
                     </div>
 
-                    {/* Revenue Cards */}
-                    <div style={{ ...card }}>
-                        <SectionHeader title="Revenue Summary" />
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-                            <RevCard label="Total Revenue"      value={`₹${totalRevenue.toLocaleString('en-IN')}`}              sub={`${payments.length} transactions`}                                     color={C.success}  />
-                            <RevCard label="This Month"         value={`₹${monthRevenue.toLocaleString('en-IN')}`}              sub={now.toLocaleString('en-IN', { month: 'long', year: 'numeric' })}      color={C.primary}  />
-                            <RevCard label="Plan Revenue"       value={`₹${planRevenue.toLocaleString('en-IN')}`}               sub="Subscriptions only"                                                     color={C.warning}  />
-                            <RevCard label="Verification Fees"  value={`₹${(totalRevenue - planRevenue).toLocaleString('en-IN')}`} sub="₹2 trial fees"                                                    color="#64748b"    />
+                    {/* Row 2 — Revenue Tiles */}
+                    <div style={{ ...cardStyle, padding: '20px 24px' }}>
+                        <SectionTitle title="Revenue Summary" />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
+                            <RevTile label="Total Revenue"     value={`₹${totalRevenue.toLocaleString('en-IN')}`}                   sub={`${payments.length} transactions`}                                   color={T.success} />
+                            <RevTile label="This Month"        value={`₹${monthRevenue.toLocaleString('en-IN')}`}                   sub={now.toLocaleString('en-IN', { month: 'long', year: 'numeric' })}     color={T.primary} />
+                            <RevTile label="Plan Revenue"      value={`₹${planRevenue.toLocaleString('en-IN')}`}                    sub="Subscriptions only"                                                    color={T.warning} />
+                            <RevTile label="Verification Fees" value={`₹${(totalRevenue - planRevenue).toLocaleString('en-IN')}`}   sub="₹2 trial fees"                                                        color="#64748B"   />
                         </div>
                     </div>
 
-                    {/* Pending Payments — action required */}
+                    {/* Pending Payments alert */}
                     {pendingPayments.length > 0 && (
-                        <div style={{ ...card, borderLeft: `4px solid ${C.warning}`, background: '#fffbeb' }}>
-                            <SectionHeader title={`Pending Payments — Action Required (${pendingPayments.length})`} />
+                        <div style={{ ...cardStyle, borderLeft: `4px solid ${T.warning}`, padding: '20px 24px' }}>
+                            <SectionTitle title={`Pending Payments — Action Required (${pendingPayments.length})`} />
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 {pendingPayments.map(pr => (
                                     <div key={pr._id} style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        gap: 12, background: '#fff', border: `1px solid #fde68a`,
-                                        borderRadius: 12, padding: '12px 16px', flexWrap: 'wrap',
+                                        gap: 12, background: '#FFFBEB', border: `1px solid #FDE68A`,
+                                        borderRadius: 8, padding: '12px 16px', flexWrap: 'wrap',
                                     }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{pr.userName}</div>
-                                            <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>{pr.userEmail}</div>
+                                            <div style={{ fontWeight: 700, color: T.text, fontSize: 14 }}>{pr.userName}</div>
+                                            <div style={{ fontSize: 12, color: T.sub, marginBottom: 4 }}>{pr.userEmail}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                                <span style={pill('#fef3c7','#b45309')}>
+                                                <span style={pill('#FEF3C7','#92400E')}>
                                                     {pr.type === 'verification' ? '₹2 Verification' : `${pr.plan?.charAt(0).toUpperCase() + pr.plan?.slice(1)} ₹${pr.amount}`}
                                                 </span>
-                                                <span style={{ fontSize: 11, color: C.light }}>{fmt(pr.createdAt)}</span>
+                                                <span style={{ fontSize: 11, color: T.muted }}>{fmt(pr.createdAt)}</span>
                                             </div>
-                                            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>UTR: <strong>{pr.utr}</strong></div>
+                                            <div style={{ fontSize: 12, color: T.sub, marginTop: 4 }}>UTR: <strong>{pr.utr}</strong></div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                                            <button className="ap-btn ap-btn-approve" onClick={() => approvePayment(pr._id)}>✓ Approve</button>
-                                            <button className="ap-btn ap-btn-reject"  onClick={() => rejectPayment(pr._id)}>✕ Reject</button>
+                                            <button style={btnSuccess} onClick={() => approvePayment(pr._id)}>Approve</button>
+                                            <button style={btnDanger}  onClick={() => rejectPayment(pr._id)}>Reject</button>
                                         </div>
                                     </div>
                                 ))}
@@ -543,71 +602,71 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         </div>
                     )}
 
-                    {/* Expiring Plans + Trial Expiring — side by side */}
+                    {/* Plans Expiring + Trials Expiring */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {/* Plans expiring in 7 days */}
-                        <div style={{ ...card, ...(expiringPlans.length > 0 ? { borderLeft: `4px solid ${C.warning}` } : {}) }}>
-                            <SectionHeader title={`Plans Expiring in 7 Days — ${expiringPlans.length}`} />
+                        <div style={{ ...cardStyle, borderLeft: expiringPlans.length > 0 ? `4px solid ${T.warning}` : `4px solid ${T.border}`, padding: '20px 20px' }}>
+                            <SectionTitle title={`Plans Expiring in 7 Days (${expiringPlans.length})`} />
                             {expiringPlans.length === 0 ? (
-                                <div style={{ fontSize: 13, color: C.light, padding: '8px 0' }}>No plans expiring soon</div>
-                            ) : expiringPlans.map(u => (
+                                <div style={{ fontSize: 13, color: T.muted, padding: '8px 0' }}>No plans expiring soon</div>
+                            ) : expiringPlans.map((u, i) => (
                                 <div key={u._id} style={{
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    padding: '10px 0', borderBottom: `1px solid ${C.border}`, gap: 10,
+                                    padding: '10px 0', borderBottom: i < expiringPlans.length - 1 ? `1px solid ${T.border}` : 'none', gap: 10,
                                 }}>
                                     <div>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{u.name}</div>
-                                        <div style={{ fontSize: 11, color: C.muted }}>{u.email}</div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{u.name}</div>
+                                        <div style={{ fontSize: 11, color: T.sub }}>{u.email}</div>
                                     </div>
                                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                         <PlanBadge plan={u.plan} />
-                                        <div style={{ fontSize: 11, color: C.warning, fontWeight: 600, marginTop: 3 }}>Ends {fmt(u.planEndsAt)}</div>
+                                        <div style={{ fontSize: 11, color: T.warning, fontWeight: 600, marginTop: 3 }}>Ends {fmt(u.planEndsAt)}</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
                         {/* Trials expiring in 2 days */}
-                        <div style={{ ...card, ...(trialExpiring.length > 0 ? { borderLeft: `4px solid ${C.warning}` } : {}) }}>
-                            <SectionHeader title={`Trials Expiring in 2 Days — ${trialExpiring.length}`} />
+                        <div style={{ ...cardStyle, borderLeft: trialExpiring.length > 0 ? `4px solid ${T.warning}` : `4px solid ${T.border}`, padding: '20px 20px' }}>
+                            <SectionTitle title={`Trials Expiring in 2 Days (${trialExpiring.length})`} />
                             {trialExpiring.length === 0 ? (
-                                <div style={{ fontSize: 13, color: C.light, padding: '8px 0' }}>No trials expiring soon</div>
-                            ) : trialExpiring.map(u => (
+                                <div style={{ fontSize: 13, color: T.muted, padding: '8px 0' }}>No trials expiring soon</div>
+                            ) : trialExpiring.map((u, i) => (
                                 <div key={u._id} style={{
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    padding: '10px 0', borderBottom: `1px solid ${C.border}`, gap: 10,
+                                    padding: '10px 0', borderBottom: i < trialExpiring.length - 1 ? `1px solid ${T.border}` : 'none', gap: 10,
                                 }}>
                                     <div>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{u.name}</div>
-                                        <div style={{ fontSize: 11, color: C.muted }}>{u.email}</div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{u.name}</div>
+                                        <div style={{ fontSize: 11, color: T.sub }}>{u.email}</div>
                                     </div>
                                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                        <div style={{ fontSize: 11, color: C.warning, fontWeight: 600, marginBottom: 4 }}>Ends {fmt(u.trialEndsAt)}</div>
-                                        <button className="ap-btn ap-btn-trial" style={{ fontSize: 12 }} onClick={() => extendTrial(u._id)}>+5 days</button>
+                                        <div style={{ fontSize: 11, color: T.warning, fontWeight: 600, marginBottom: 4 }}>Ends {fmt(u.trialEndsAt)}</div>
+                                        <button style={{ ...btnPrimary, padding: '5px 12px', fontSize: 11 }} onClick={() => extendTrial(u._id)}>+5 days</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Plan Distribution */}
-                    <div style={{ ...card }}>
-                        <SectionHeader title="Plan Distribution" />
+                    {/* Plan Distribution — horizontal bar chart */}
+                    <div style={{ ...cardStyle, padding: '20px 24px' }}>
+                        <SectionTitle title="Plan Distribution" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             {PLAN_OPTIONS.map(p => {
                                 const count = users.filter(u => u.plan === p).length;
                                 const pct = users.length ? Math.round(count / users.length * 100) : 0;
                                 return (
-                                    <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ width: 100, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: PLAN_COLORS[p], flexShrink: 0 }} />
-                                            <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{PLAN_LABEL[p]}</span>
+                                    <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                        <div style={{ width: 90, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: PLAN_COLORS[p], flexShrink: 0 }} />
+                                            <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{PLAN_LABEL[p]}</span>
                                         </div>
-                                        <div style={{ flex: 1, height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                            <div style={{ width: `${pct}%`, height: '100%', background: PLAN_COLORS[p], borderRadius: 99, transition: 'width 0.5s ease', minWidth: pct > 0 ? 4 : 0 }} />
+                                        <div style={{ flex: 1, height: 8, background: '#F3F4F6', borderRadius: 9999, overflow: 'hidden' }}>
+                                            <div style={{ width: `${pct}%`, height: '100%', background: PLAN_COLORS[p], borderRadius: 9999, transition: 'width 0.5s ease', minWidth: pct > 0 ? 4 : 0 }} />
                                         </div>
-                                        <div style={{ width: 70, textAlign: 'right', flexShrink: 0, fontSize: 12, fontWeight: 700, color: C.text }}>
-                                            {count} <span style={{ color: C.light, fontWeight: 400 }}>({pct}%)</span>
+                                        <div style={{ width: 72, textAlign: 'right', flexShrink: 0, fontSize: 12, fontWeight: 700, color: T.text }}>
+                                            {count} <span style={{ color: T.muted, fontWeight: 400 }}>({pct}%)</span>
                                         </div>
                                     </div>
                                 );
@@ -616,30 +675,34 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                     </div>
 
                     {/* Recent Registrations */}
-                    <div style={{ ...card }}>
-                        <SectionHeader title="Recent Registrations" />
+                    <div style={{ ...cardStyle, padding: '20px 24px' }}>
+                        <SectionTitle title="Recent Registrations" right={
+                            <span style={{ fontSize: 12, color: T.sub }}>Last {Math.min(users.length, 8)} users</span>
+                        } />
                         <div>
                             {users.slice(0, 8).map((u, i) => (
                                 <div key={u._id} style={{
                                     display: 'flex', alignItems: 'center', gap: 14,
                                     padding: '12px 0',
-                                    borderBottom: i < 7 ? `1px solid ${C.border}` : 'none',
+                                    borderBottom: i < 7 ? `1px solid #F3F4F6` : 'none',
                                 }}>
-                                    <Avatar name={u.name} size={36} />
+                                    <Avatar name={u.name} size={38} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                                            <span style={{ fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</span>
-                                            {u.accountId && <span style={{ fontSize:11, fontWeight:700, background:'#ede9fe', color:'#7c3aed', padding:'1px 8px', borderRadius:20, flexShrink:0, fontFamily:'monospace' }}>{u.accountId}</span>}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{u.name}</span>
+                                            {u.accountId && (
+                                                <span style={{ fontSize: 10, fontWeight: 700, background: '#EDE9FE', color: T.primary, padding: '1px 8px', borderRadius: 9999, fontFamily: 'monospace' }}>{u.accountId}</span>
+                                            )}
                                         </div>
-                                        <div style={{ fontSize: 12, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <div style={{ fontSize: 12, color: T.sub, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {u.email}{u.phone ? ` · ${u.phone}` : ''}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                         <PlanBadge plan={u.plan} />
-                                        <span style={{ fontSize: 12, color: C.muted }}>{u.serverCount || 0} sites</span>
+                                        <span style={{ fontSize: 12, color: T.sub }}>{u.serverCount || 0} sites</span>
                                     </div>
-                                    <div style={{ fontSize: 12, color: C.light, whiteSpace: 'nowrap', flexShrink: 0 }}>{fmt(u.createdAt)}</div>
+                                    <div style={{ fontSize: 12, color: T.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>{fmt(u.createdAt)}</div>
                                 </div>
                             ))}
                         </div>
@@ -647,46 +710,48 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 USERS TAB
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'users' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
                     {/* Toolbar */}
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search */}
                         <div style={{
                             flex: 1, minWidth: 220, display: 'flex', alignItems: 'center', gap: 10,
-                            background: '#fff', border: `1.5px solid ${C.border}`, borderRadius: 10,
-                            padding: '9px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                            background: '#fff', border: `1px solid ${T.border}`, borderRadius: 8,
+                            padding: '9px 12px',
                         }}>
-                            <svg width="15" height="15" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                            <input style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: C.text, flex: 1, fontFamily: 'inherit' }}
+                            <SearchIcon />
+                            <input style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: T.text, flex: 1, fontFamily: 'inherit' }}
                                 placeholder="Search name, email, phone..."
                                 value={search} onChange={e => setSearch(e.target.value)} />
-                            {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: C.light, cursor: 'pointer', fontSize: 13, padding: 0 }}>✕</button>}
+                            {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 13, padding: 0 }}>✕</button>}
                         </div>
 
                         {/* Plan filter pills */}
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {['all', ...PLAN_OPTIONS].map(p => (
-                                <button key={p}
-                                    onClick={() => setPlanFilter(p)}
-                                    style={{
-                                        padding: '8px 14px', border: `1.5px solid ${planFilter === p && p !== 'all' ? PLAN_COLORS[p] : planFilter === p ? C.primary : C.border}`,
-                                        borderRadius: 99, fontSize: 12, fontWeight: 600,
-                                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                                        background: planFilter === p ? (p !== 'all' ? PLAN_COLORS[p] : C.primary) : '#fff',
-                                        color: planFilter === p ? '#fff' : C.muted,
-                                    }}>
+                                <button key={p} onClick={() => setPlanFilter(p)} style={{
+                                    padding: '7px 14px',
+                                    border: `1px solid ${planFilter === p ? (p !== 'all' ? PLAN_COLORS[p] : T.primary) : T.border}`,
+                                    borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                                    background: planFilter === p ? (p !== 'all' ? PLAN_COLORS[p] : T.primary) : '#fff',
+                                    color: planFilter === p ? '#fff' : T.sub,
+                                }}>
                                     {p === 'all' ? 'All' : PLAN_LABEL[p]}
                                 </button>
                             ))}
                         </div>
 
                         {/* Export CSV */}
-                        <button className="btn-download" onClick={exportCSV} disabled={users.length === 0}>
-                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                        <button onClick={exportCSV} disabled={users.length === 0} style={{
+                            ...btnSecondary, display: 'flex', alignItems: 'center', gap: 6,
+                        }}>
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                 <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
@@ -694,159 +759,176 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         </button>
                     </div>
 
-                    {/* User count label */}
-                    <div style={{ fontSize: 12, color: C.light, fontWeight: 500 }}>
-                        Showing {filtered.length} of {users.length} users
-                    </div>
+                    {/* Count label */}
+                    <div style={{ fontSize: 12, color: T.muted }}>Showing {filtered.length} of {users.length} users</div>
 
-                    {/* Users list */}
+                    {/* Users Table */}
                     {loading ? (
-                        <div style={{ textAlign: 'center', padding: 48, color: C.light, fontSize: 14 }}>Loading users...</div>
+                        <div style={{ textAlign: 'center', padding: 60, color: T.muted, fontSize: 14 }}>Loading users...</div>
                     ) : filtered.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: 48, color: C.light, fontSize: 14 }}>No users found.</div>
+                        <div style={{ textAlign: 'center', padding: 60, color: T.muted, fontSize: 14 }}>No users found.</div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {filtered.map(u => (
-                                <div key={u._id} style={{
-                                    ...card,
-                                    padding: 0, overflow: 'hidden',
-                                    borderLeft: u.isBlocked ? `4px solid ${C.danger}` : `4px solid transparent`,
-                                    background: u.isBlocked ? '#fff5f5' : '#fff',
-                                    transition: 'box-shadow 0.15s',
-                                }}>
-                                    {/* Main row */}
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: 14,
-                                        padding: '14px 20px', cursor: 'pointer',
-                                    }}
-                                        onClick={() => setExpandedId(expandedId === u._id ? null : u._id)}>
-                                        <Avatar name={u.name} size={42} />
+                        <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead>
+                                        <tr>
+                                            {['User', 'Plan', 'Sites', 'Status', 'Expiry', 'Actions'].map(h => (
+                                                <th key={h} style={thStyle}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filtered.map(u => (
+                                            <React.Fragment key={u._id}>
+                                                <tr
+                                                    style={{ borderBottom: `1px solid #F3F4F6`, cursor: 'pointer', transition: 'background 0.1s' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = T.rowHover}
+                                                    onMouseLeave={e => e.currentTarget.style.background = u.isBlocked ? '#FFF5F5' : '#fff'}
+                                                    onClick={() => setExpandedId(expandedId === u._id ? null : u._id)}
+                                                >
+                                                    {/* User cell */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                            <Avatar name={u.name} size={36} />
+                                                            <div>
+                                                                <div style={{ fontWeight: 700, color: T.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    {u.name}
+                                                                    {u.accountId && <span style={{ fontSize: 10, fontFamily: 'monospace', background: '#EDE9FE', color: T.primary, padding: '1px 7px', borderRadius: 9999 }}>{u.accountId}</span>}
+                                                                </div>
+                                                                <div style={{ fontSize: 11, color: T.sub, marginTop: 1 }}>{u.email}</div>
+                                                                {u.phone && <div style={{ fontSize: 11, color: T.muted }}>{u.phone}</div>}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    {/* Plan */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent' }}>
+                                                        <PlanBadge plan={u.plan} />
+                                                    </td>
+                                                    {/* Sites */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent', fontWeight: 700 }}>
+                                                        {u.serverCount || 0}
+                                                    </td>
+                                                    {/* Status */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent' }}>
+                                                        <StatusBadge u={u} />
+                                                    </td>
+                                                    {/* Expiry */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent', fontSize: 12, color: T.sub }}>
+                                                        {u.plan !== 'free_trial' && u.planEndsAt ? fmt(u.planEndsAt) : u.trialEndsAt ? fmt(u.trialEndsAt) : '—'}
+                                                    </td>
+                                                    {/* Actions */}
+                                                    <td style={{ ...tdStyle, background: u.isBlocked ? '#FFF5F5' : 'transparent' }} onClick={e => e.stopPropagation()}>
+                                                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                                            <button title="Assign Plan" onClick={() => openAssign(u)} style={{ ...btnPrimary, padding: '5px 10px', fontSize: 11 }}>Plan</button>
+                                                            <button title="Edit" onClick={() => startEdit(u)} style={{ ...btnSecondary, padding: '5px 10px', fontSize: 11 }}>Edit</button>
+                                                            <button title="Extend Trial" onClick={() => extendTrial(u._id)} style={{ padding: '5px 10px', fontSize: 11, background: '#EFF6FF', color: T.info, border: `1px solid #BFDBFE`, borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>+Trial</button>
+                                                            <button title={u.isBlocked ? 'Unblock' : 'Block'} onClick={() => toggleBlock(u)}
+                                                                style={{ padding: '5px 10px', fontSize: 11, borderRadius: 8, cursor: 'pointer', fontWeight: 600, border: `1px solid ${u.isBlocked ? '#BBF7D0' : '#FECDD3'}`, background: u.isBlocked ? '#F0FDF4' : '#FFF1F2', color: u.isBlocked ? T.success : T.danger }}>
+                                                                {u.isBlocked ? 'Unblock' : 'Block'}
+                                                            </button>
+                                                            <button title="Delete" onClick={() => deleteUser(u)} style={{ padding: '5px 10px', fontSize: 11, background: '#FEF2F2', color: T.danger, border: `1px solid #FECDD3`, borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Del</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
 
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{u.name}</span>
-                                                <PlanBadge plan={u.plan} />
-                                                <StatusBadge u={u} />
-                                            </div>
-                                            <div style={{ fontSize: 12, color: C.muted, marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                                <span>{u.email}</span>
-                                                {u.phone && <span>{u.phone}</span>}
-                                                {u.state && <span>{u.state}{u.country ? `, ${u.country}` : ''}</span>}
-                                            </div>
-                                            <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
-                                                {u.serverCount || 0} sites · Joined {fmt(u.createdAt)}
-                                                {u.plan !== 'free_trial' && u.planEndsAt ? ` · Plan ends ${fmt(u.planEndsAt)}` : ''}
-                                                {u.plan === 'free_trial' && u.trialEndsAt ? ` · Trial ends ${fmt(u.trialEndsAt)}` : ''}
-                                            </div>
-                                        </div>
+                                                {/* Expanded detail row */}
+                                                {expandedId === u._id && (
+                                                    <tr>
+                                                        <td colSpan={6} style={{ padding: 0, background: '#F9FAFB', borderBottom: `1px solid ${T.border}` }}>
+                                                            <div style={{ padding: '16px 20px' }}>
+                                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
+                                                                    {[
+                                                                        { label: 'Plan',       val: <PlanBadge plan={u.plan} /> },
+                                                                        { label: 'Status',     val: <StatusBadge u={u} /> },
+                                                                        { label: 'Sites',      val: <strong>{u.serverCount || 0}</strong> },
+                                                                        { label: 'Trial Ends', val: <strong>{fmt(u.trialEndsAt)}</strong> },
+                                                                        { label: 'Plan Ends',  val: <strong>{fmt(u.planEndsAt)}</strong> },
+                                                                        { label: 'Registered', val: <strong>{fmt(u.createdAt)}</strong> },
+                                                                        ...(u.address ? [{ label: 'Address', val: <strong>{u.address}</strong> }] : []),
+                                                                        ...(u.state   ? [{ label: 'State',   val: <strong>{u.state}</strong>   }] : []),
+                                                                        ...(u.country ? [{ label: 'Country', val: <strong>{u.country}</strong> }] : []),
+                                                                    ].map(item => (
+                                                                        <div key={item.label}>
+                                                                            <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
+                                                                            <div style={{ fontSize: 13 }}>{item.val}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
 
-                                        {/* Actions */}
-                                        <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}
-                                            onClick={e => e.stopPropagation()}>
-                                            <button title="Assign Plan" className="ap-btn ap-btn-assign" onClick={() => openAssign(u)}
-                                                style={{ fontSize: 12, padding: '5px 12px' }}>Assign Plan</button>
-                                            <button title="Edit" className="ap-btn ap-btn-edit" onClick={() => startEdit(u)}
-                                                style={{ fontSize: 12, padding: '5px 10px' }}>Edit</button>
-                                            <button title="Extend Trial" className="ap-btn ap-btn-trial" onClick={() => extendTrial(u._id)}
-                                                style={{ fontSize: 12, padding: '5px 10px' }}>+Trial</button>
-                                            <button title={u.isBlocked ? 'Unblock' : 'Block'}
-                                                className={`ap-btn ${u.isBlocked ? 'ap-btn-unblock' : 'ap-btn-block'}`}
-                                                onClick={() => toggleBlock(u)}
-                                                style={{ fontSize: 12, padding: '5px 10px' }}>
-                                                {u.isBlocked ? 'Unblock' : 'Block'}
-                                            </button>
-                                            <button title="Delete" className="ap-btn ap-btn-del" onClick={() => deleteUser(u)}
-                                                style={{ fontSize: 12, padding: '5px 10px' }}>Delete</button>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded detail */}
-                                    {expandedId === u._id && (
-                                        <div style={{ padding: '14px 20px', background: C.bg, borderTop: `1px solid ${C.border}` }}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
-                                                {[
-                                                    { label: 'Plan',        val: <PlanBadge plan={u.plan} /> },
-                                                    { label: 'Status',      val: <StatusBadge u={u} /> },
-                                                    { label: 'Sites',       val: <strong>{u.serverCount || 0}</strong> },
-                                                    { label: 'Trial Ends',  val: <strong>{fmt(u.trialEndsAt)}</strong> },
-                                                    { label: 'Plan Ends',   val: <strong>{fmt(u.planEndsAt)}</strong> },
-                                                    { label: 'Registered',  val: <strong>{fmt(u.createdAt)}</strong> },
-                                                    ...(u.address ? [{ label: 'Address', val: <strong>{u.address}</strong> }] : []),
-                                                    ...(u.state   ? [{ label: 'State',   val: <strong>{u.state}</strong>   }] : []),
-                                                    ...(u.country ? [{ label: 'Country', val: <strong>{u.country}</strong> }] : []),
-                                                ].map(item => (
-                                                    <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                                        <span style={{ fontSize: 10, fontWeight: 700, color: C.light, textTransform: 'uppercase', letterSpacing: 0.5 }}>{item.label}</span>
-                                                        <span style={{ fontSize: 13 }}>{item.val}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Edit panel */}
-                                    {editId === u._id && (
-                                        <div style={{ padding: '16px 20px', background: '#faf5ff', borderTop: `2px solid #ede9fe` }}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
-                                                <div className="form-group">
-                                                    <label>Plan</label>
-                                                    <select value={editForm.plan} onChange={e => setEditForm({ ...editForm, plan: e.target.value })}>
-                                                        {PLAN_OPTIONS.map(p => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Plan Ends At</label>
-                                                    <input type="date" value={editForm.planEndsAt} onChange={e => setEditForm({ ...editForm, planEndsAt: e.target.value })} />
-                                                </div>
-                                                <div className="form-group" style={{ justifyContent: 'flex-end' }}>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', paddingTop: 22 }}>
-                                                        <input type="checkbox" checked={editForm.isBlocked} onChange={e => setEditForm({ ...editForm, isBlocked: e.target.checked })} />
-                                                        Block this account
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', gap: 10 }}>
-                                                <button className="btn-save" onClick={saveEdit}>Save Changes</button>
-                                                <button className="btn-cancel" onClick={() => setEditId(null)}>Cancel</button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                                {/* Edit panel row */}
+                                                {editId === u._id && (
+                                                    <tr>
+                                                        <td colSpan={6} style={{ padding: 0, background: '#F5F3FF', borderBottom: `1px solid #DDD6FE` }}>
+                                                            <div style={{ padding: '16px 20px' }}>
+                                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 14 }}>
+                                                                    <div>
+                                                                        <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, display: 'block', marginBottom: 6 }}>Plan</label>
+                                                                        <select value={editForm.plan} onChange={e => setEditForm({ ...editForm, plan: e.target.value })} style={inputSt}>
+                                                                            {PLAN_OPTIONS.map(p => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, display: 'block', marginBottom: 6 }}>Plan Ends At</label>
+                                                                        <input type="date" style={inputSt} value={editForm.planEndsAt} onChange={e => setEditForm({ ...editForm, planEndsAt: e.target.value })} />
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+                                                                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: T.text }}>
+                                                                            <input type="checkbox" checked={editForm.isBlocked} onChange={e => setEditForm({ ...editForm, isBlocked: e.target.checked })} />
+                                                                            Block this account
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', gap: 10 }}>
+                                                                    <button style={btnPrimary} onClick={saveEdit}>Save Changes</button>
+                                                                    <button style={btnSecondary} onClick={() => setEditId(null)}>Cancel</button>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 PAYMENTS TAB
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'payments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {/* Summary pills / filter bar */}
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+
+                    {/* Filter bar */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                         {[
-                            { key: 'all',      label: 'All',      count: payments.length,                                  bg: '#f1f5f9', color: C.muted,    activeBg: C.primary  },
-                            { key: 'pending',  label: 'Pending',  count: payments.filter(p=>p.status==='pending').length,   bg: '#fef9c3', color: '#b45309',  activeBg: '#d97706'  },
-                            { key: 'approved', label: 'Approved', count: payments.filter(p=>p.status==='approved').length,  bg: '#dcfce7', color: '#15803d',  activeBg: C.success  },
-                            { key: 'rejected', label: 'Rejected', count: payments.filter(p=>p.status==='rejected').length,  bg: '#fee2e2', color: C.danger,   activeBg: C.danger   },
-                            { key: 'refunded', label: 'Refunded', count: payments.filter(p=>p.status==='refunded').length,  bg: '#fef2f2', color: '#dc2626',  activeBg: '#dc2626'  },
+                            { key: 'all',      label: 'All',      count: payments.length,                                    activeBg: T.primary, activeColor: '#fff' },
+                            { key: 'pending',  label: 'Pending',  count: payments.filter(p=>p.status==='pending').length,   activeBg: '#D97706', activeColor: '#fff' },
+                            { key: 'approved', label: 'Approved', count: payments.filter(p=>p.status==='approved').length,  activeBg: T.success, activeColor: '#fff' },
+                            { key: 'rejected', label: 'Rejected', count: payments.filter(p=>p.status==='rejected').length,  activeBg: T.danger,  activeColor: '#fff' },
+                            { key: 'refunded', label: 'Refunded', count: payments.filter(p=>p.status==='refunded').length,  activeBg: '#B91C1C', activeColor: '#fff' },
                         ].map(s => (
-                            <button key={s.key} onClick={() => setPayStatusFilter(s.key)}
-                                style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                                    padding: '8px 16px', borderRadius: 99,
-                                    border: `1.5px solid ${payStatusFilter === s.key ? s.activeBg : C.border}`,
-                                    background: payStatusFilter === s.key ? s.activeBg : '#fff',
-                                    color: payStatusFilter === s.key ? '#fff' : s.color,
-                                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                                    transition: 'all 0.15s',
-                                }}>
+                            <button key={s.key} onClick={() => setPayStatusFilter(s.key)} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 7,
+                                padding: '7px 16px', borderRadius: 9999,
+                                border: `1px solid ${payStatusFilter === s.key ? s.activeBg : T.border}`,
+                                background: payStatusFilter === s.key ? s.activeBg : '#fff',
+                                color: payStatusFilter === s.key ? s.activeColor : T.sub,
+                                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                            }}>
                                 {s.label}
                                 <span style={{
-                                    background: payStatusFilter === s.key ? 'rgba(255,255,255,0.25)' : s.bg,
-                                    color: payStatusFilter === s.key ? '#fff' : s.color,
-                                    borderRadius: 99, padding: '1px 7px', fontSize: 11, fontWeight: 800,
+                                    background: payStatusFilter === s.key ? 'rgba(255,255,255,0.25)' : '#F3F4F6',
+                                    color: payStatusFilter === s.key ? '#fff' : T.sub,
+                                    borderRadius: 9999, padding: '1px 7px', fontSize: 11, fontWeight: 700,
                                 }}>{s.count}</span>
                             </button>
                         ))}
@@ -854,92 +936,84 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         {/* Search */}
                         <div style={{
                             flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 10,
-                            background: '#fff', border: `1.5px solid ${C.border}`, borderRadius: 10,
-                            padding: '8px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                            background: '#fff', border: `1px solid ${T.border}`, borderRadius: 8,
+                            padding: '9px 12px',
                         }}>
-                            <svg width="15" height="15" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                            <input style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: C.text, flex: 1, fontFamily: 'inherit' }}
+                            <SearchIcon />
+                            <input style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: T.text, flex: 1, fontFamily: 'inherit' }}
                                 placeholder="Search by ID, name or email..."
                                 value={paySearch} onChange={e => setPaySearch(e.target.value)} />
-                            {paySearch && <button onClick={() => setPaySearch('')} style={{ background: 'none', border: 'none', color: C.light, cursor: 'pointer', fontSize: 13, padding: 0 }}>✕</button>}
+                            {paySearch && <button onClick={() => setPaySearch('')} style={{ background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 13, padding: 0 }}>✕</button>}
                         </div>
                     </div>
 
-                    {/* Payment cards */}
+                    {/* Payment Cards */}
                     {filteredPayments.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: 48, color: C.light, fontSize: 14 }}>
+                        <div style={{ textAlign: 'center', padding: 60, color: T.muted, fontSize: 14 }}>
                             {paySearch || payStatusFilter !== 'all' ? 'No payments match your filter.' : 'No payments yet.'}
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {filteredPayments.map(pr => {
-                                const planColor = { bronze:'#b45309', silver:'#475569', gold:'#ca8a04' }[pr.plan] || '#64748b';
                                 const isPending = !pr.status || pr.status === 'pending';
+                                const planColor = { bronze:'#B45309', silver:'#475569', gold:'#CA8A04' }[pr.plan] || '#64748B';
                                 return (
                                     <div key={pr._id} style={{
-                                        ...card,
-                                        borderLeft: isPending ? `4px solid ${C.warning}` : `4px solid transparent`,
-                                        background: isPending ? '#fffbeb' : '#fff',
+                                        ...cardStyle,
+                                        padding: '18px 20px',
+                                        borderLeft: isPending ? `4px solid ${T.warning}` : `4px solid ${T.border}`,
                                     }}>
                                         {/* Top row */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                                                <Avatar name={pr.userName} size={38} />
+                                                <Avatar name={pr.userName} size={40} />
                                                 <div style={{ minWidth: 0 }}>
-                                                    <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{pr.userName}</div>
-                                                    <div style={{ fontSize: 12, color: C.muted }}>{pr.userEmail}</div>
+                                                    <div style={{ fontWeight: 700, color: T.text, fontSize: 14 }}>{pr.userName}</div>
+                                                    <div style={{ fontSize: 12, color: T.sub }}>{pr.userEmail}</div>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
                                                 {pr.type === 'verification' ? (
-                                                    <span style={pill('#fef3c7','#b45309')}>₹{pr.amount} Verification</span>
+                                                    <span style={pill('#FEF3C7','#92400E')}>₹{pr.amount} Verification</span>
                                                 ) : (
-                                                    <span style={pill(`${planColor}22`, planColor)}>
+                                                    <span style={pill(`${planColor}20`, planColor)}>
                                                         {pr.plan?.charAt(0).toUpperCase() + pr.plan?.slice(1)}
                                                     </span>
                                                 )}
-                                                <strong style={{ fontSize: 16, color: C.text }}>₹{pr.amount}</strong>
+                                                <strong style={{ fontSize: 20, color: T.text }}>₹{pr.amount}</strong>
                                                 <PayStatusBadge status={pr.status} />
                                             </div>
                                         </div>
 
-                                        {/* UTR + date row */}
-                                        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                                            <div style={{ fontSize: 12, color: C.muted }}>
-                                                Razorpay ID: <strong style={{ fontFamily: 'monospace', color: C.text }}>{pr.utr}</strong>
+                                        {/* UTR + date */}
+                                        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                                            <div style={{ fontSize: 12, color: T.sub }}>
+                                                Razorpay ID: <span style={{ fontFamily: 'monospace', color: T.text, fontWeight: 600 }}>{pr.utr}</span>
                                             </div>
-                                            <span style={{ fontSize: 12, color: C.light }}>
-                                                {new Date(pr.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
-                                            </span>
+                                            <span style={{ fontSize: 12, color: T.muted }}>{fmt(pr.createdAt)}</span>
                                         </div>
 
-                                        {/* Action buttons */}
+                                        {/* Actions */}
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                                             {isPending && (
                                                 <>
-                                                    <button className="ap-btn ap-btn-approve" style={{ fontSize: 12 }} onClick={() => approvePayment(pr._id)}>✓ Approve</button>
-                                                    <button className="ap-btn ap-btn-reject"  style={{ fontSize: 12 }} onClick={() => rejectPayment(pr._id)}>✕ Reject</button>
+                                                    <button style={btnSuccess} onClick={() => approvePayment(pr._id)}>Approve</button>
+                                                    <button style={btnDanger}  onClick={() => rejectPayment(pr._id)}>Reject</button>
                                                 </>
                                             )}
                                             {pr.status === 'approved' && (
-                                                <button onClick={() => refundPayment(pr._id)} style={{
-                                                    fontSize: 12, padding: '5px 14px', background: '#fef2f2',
-                                                    border: `1.5px solid #fecdd3`, borderRadius: 8,
-                                                    color: '#dc2626', fontWeight: 700, cursor: 'pointer',
-                                                }}>
-                                                    💸 Refund
+                                                <button onClick={() => refundPayment(pr._id)} style={{ ...btnSecondary, color: T.danger, borderColor: '#FECDD3' }}>
+                                                    Refund
                                                 </button>
                                             )}
                                             {pr.status === 'refunded' && (
-                                                <span style={{
-                                                    fontSize: 12, padding: '5px 14px', background: '#fef2f2',
-                                                    border: `1.5px solid #fecdd3`, borderRadius: 8,
-                                                    color: '#dc2626', fontWeight: 700,
-                                                }}>
-                                                    ↩ Refunded
-                                                </span>
+                                                <span style={pill('#FEE2E2','#B91C1C')}>Refunded</span>
                                             )}
-                                            <button className="ap-btn ap-btn-del" style={{ fontSize: 12, padding: '5px 12px' }} onClick={() => deletePayment(pr._id)}>🗑</button>
+                                            <button onClick={() => deletePayment(pr._id)} style={{ ...btnSecondary, color: T.danger, borderColor: '#FECDD3', padding: '9px 12px' }}>
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -949,9 +1023,9 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 TRANSACTIONS TAB — auto-load refund statuses
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'transactions' && (() => {
                 const refunded = payments.filter(p => p.status === 'refunded');
                 refunded.forEach(p => {
@@ -959,7 +1033,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         adminRefundStatus(p._id).then(r => {
                             setRefundStatuses(prev => ({ ...prev, [p._id]: r.data }));
                         }).catch(() => {
-                            setRefundStatuses(prev => ({ ...prev, [p._id]: { label: '❓ Unknown', color: '#94a3b8', desc: 'Could not fetch' } }));
+                            setRefundStatuses(prev => ({ ...prev, [p._id]: { label: 'Unknown', color: '#9CA3AF', desc: 'Could not fetch' } }));
                         });
                     }
                 });
@@ -967,74 +1041,69 @@ export default function AdminPanel({ initialTab = 'overview' }) {
             })()}
 
             {tab === 'transactions' && (
-                <div>
-                    <div style={{ overflowX: 'auto', borderRadius: 14, border: `1px solid ${C.border}`, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                             <thead>
-                                <tr style={{ background: C.bg }}>
+                                <tr>
                                     {['#', 'Date', 'User', 'Type', 'Plan', 'Amount', 'Status', 'Razorpay ID'].map(h => (
-                                        <th key={h} style={{
-                                            padding: '12px 16px', textAlign: 'left',
-                                            fontWeight: 700, color: C.muted, fontSize: 11,
-                                            textTransform: 'uppercase', letterSpacing: 0.6,
-                                            whiteSpace: 'nowrap',
-                                            borderBottom: `2px solid ${C.border}`,
-                                        }}>{h}</th>
+                                        <th key={h} style={thStyle}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {payments.length === 0 ? (
-                                    <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: C.light }}>No transactions yet</td></tr>
+                                    <tr><td colSpan={8} style={{ padding: 48, textAlign: 'center', color: T.muted }}>No transactions yet</td></tr>
                                 ) : payments.map((p, i) => {
                                     const isRefunded = p.status === 'refunded';
                                     const statusMap = {
-                                        approved: { bg:'#dcfce7', color:'#15803d' },
-                                        pending:  { bg:'#fef9c3', color:'#b45309' },
-                                        rejected: { bg:'#fee2e2', color:'#dc2626' },
-                                        refunded: { bg:'#fee2e2', color:'#dc2626' },
+                                        approved: { bg:'#D1FAE5', color:'#065F46' },
+                                        pending:  { bg:'#FEF9C3', color:'#92400E' },
+                                        rejected: { bg:'#FEE2E2', color:'#B91C1C' },
+                                        refunded: { bg:'#FEE2E2', color:'#B91C1C' },
                                     };
-                                    const sc = statusMap[p.status] || { bg:'#f1f5f9', color:'#64748b' };
+                                    const sc = statusMap[p.status] || { bg:'#F3F4F6', color:'#6B7280' };
                                     return (
-                                        <tr key={p._id} style={{
-                                            borderBottom: `1px solid ${C.border}`,
-                                            background: isRefunded ? '#fff5f5' : '#fff',
-                                        }}>
-                                            <td style={{ padding: '12px 16px', color: C.light, fontWeight: 600 }}>{i + 1}</td>
-                                            <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', color: '#475569' }}>
-                                                {new Date(p.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                                        <tr key={p._id}
+                                            style={{ background: isRefunded ? '#FFF5F5' : '#fff', transition: 'background 0.1s' }}
+                                            onMouseEnter={e => !isRefunded && (e.currentTarget.style.background = T.rowHover)}
+                                            onMouseLeave={e => (e.currentTarget.style.background = isRefunded ? '#FFF5F5' : '#fff')}
+                                        >
+                                            <td style={{ ...tdStyle, color: T.muted, fontWeight: 600 }}>{i + 1}</td>
+                                            <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: T.sub }}>
+                                                {fmt(p.createdAt)}
                                             </td>
-                                            <td style={{ padding: '12px 16px' }}>
-                                                <div style={{ fontWeight: 700, color: C.text }}>{p.userName || '—'}</div>
-                                                <div style={{ fontSize: 11, color: C.light }}>{p.userEmail || ''}</div>
+                                            <td style={tdStyle}>
+                                                <div style={{ fontWeight: 700, color: T.text }}>{p.userName || '—'}</div>
+                                                <div style={{ fontSize: 11, color: T.muted }}>{p.userEmail || ''}</div>
                                             </td>
-                                            <td style={{ padding: '12px 16px', color: '#475569', textTransform: 'capitalize' }}>{p.type}</td>
-                                            <td style={{ padding: '12px 16px' }}>
+                                            <td style={{ ...tdStyle, color: T.sub, textTransform: 'capitalize' }}>{p.type}</td>
+                                            <td style={tdStyle}>
                                                 <span style={pill(
-                                                    p.plan==='gold'?'#fef9c3': p.plan==='silver'?'#f1f5f9': p.plan==='bronze'?'#fef3c7':'#f1f5f9',
-                                                    p.plan==='gold'?'#b45309': p.plan==='silver'?'#475569': p.plan==='bronze'?'#92400e':'#64748b'
+                                                    p.plan==='gold'?'#FEF9C3': p.plan==='silver'?'#F1F5F9': p.plan==='bronze'?'#FEF3C7':'#F3F4F6',
+                                                    p.plan==='gold'?'#92400E': p.plan==='silver'?'#475569': p.plan==='bronze'?'#92400E':'#6B7280'
                                                 )}>
                                                     {p.plan ? p.plan.charAt(0).toUpperCase()+p.plan.slice(1) : 'Verification'}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '12px 16px', fontWeight: 700, color: isRefunded ? '#dc2626' : C.text }}>
+                                            <td style={{ ...tdStyle, fontWeight: 700, color: isRefunded ? T.danger : T.text }}>
                                                 {isRefunded ? <s>₹{p.amount}</s> : `₹${p.amount}`}
                                             </td>
-                                            <td style={{ padding: '12px 16px' }}>
+                                            <td style={tdStyle}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                                                     <span style={pill(sc.bg, sc.color)}>
-                                                        {isRefunded ? '↩ Refunded' : p.status?.charAt(0).toUpperCase()+p.status?.slice(1)}
+                                                        {isRefunded ? 'Refunded' : p.status?.charAt(0).toUpperCase()+p.status?.slice(1)}
                                                     </span>
                                                     {isRefunded && (
                                                         refundStatuses[p._id]
-                                                            ? <span style={{ ...pill('#f0fdf4', refundStatuses[p._id].color), border: `1px solid ${refundStatuses[p._id].color}44`, width: 'fit-content' }}>
+                                                            ? <span style={{ ...pill('#F0FDF4', refundStatuses[p._id].color), border: `1px solid ${refundStatuses[p._id].color}44` }}>
                                                                 {refundStatuses[p._id].label}
                                                               </span>
-                                                            : <span style={{ fontSize: 11, color: C.light }}>⏳ Checking...</span>
+                                                            : <span style={{ fontSize: 11, color: T.muted }}>Checking...</span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 11, color: C.muted }}>
+                                            <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: T.sub }}>
                                                 {p.razorpay_payment_id || p.utr || '—'}
                                             </td>
                                         </tr>
@@ -1042,11 +1111,11 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 })}
                             </tbody>
                             <tfoot>
-                                <tr style={{ borderTop: `2px solid ${C.border}`, background: C.bg }}>
-                                    <td colSpan={5} style={{ padding: '12px 16px', fontWeight: 700, color: C.text, fontSize: 13 }}>
+                                <tr style={{ background: T.headerBg, borderTop: `2px solid ${T.border}` }}>
+                                    <td colSpan={5} style={{ padding: '13px 16px', fontWeight: 700, color: T.text, fontSize: 13 }}>
                                         Total Revenue (excl. refunds)
                                     </td>
-                                    <td style={{ padding: '12px 16px', fontWeight: 800, color: C.primary, fontSize: 16 }}>₹{totalRevenue}</td>
+                                    <td style={{ padding: '13px 16px', fontWeight: 800, color: T.primary, fontSize: 16 }}>₹{totalRevenue}</td>
                                     <td colSpan={2} />
                                 </tr>
                             </tfoot>
@@ -1055,98 +1124,90 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 PLAN CANCELING TAB
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'canceling' && (
-                <div>
-                    {/* Summary Cards */}
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:16, marginBottom:24 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                    {/* Summary Metric Cards — red theme */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                         {[
-                            { label:'Total Cancelled', value: refundedPayments.length, icon:'❌', color:'#dc2626', bg:'#fef2f2', border:'#fecdd3' },
-                            { label:'Total Refunded',  value: `₹${totalRefunded}`,     icon:'💸', color:'#dc2626', bg:'#fff1f2', border:'#fca5a5' },
-                            { label:'Plan Revenue Lost', value: `₹${refundedPayments.filter(p=>p.type!=='verification').reduce((s,p)=>s+(p.amount||0),0)}`, icon:'📉', color:'#b91c1c', bg:'#fef2f2', border:'#fecdd3' },
+                            { label: 'Total Cancelled',   value: refundedPayments.length, icon: '❌', color: T.danger },
+                            { label: 'Total Refunded',    value: `₹${totalRefunded.toLocaleString('en-IN')}`, icon: '💸', color: '#B91C1C' },
+                            { label: 'Plan Revenue Lost', value: `₹${refundedPayments.filter(p=>p.type!=='verification').reduce((s,p)=>s+(p.amount||0),0).toLocaleString('en-IN')}`, icon: '📉', color: '#991B1B' },
                         ].map(c => (
-                            <div key={c.label} style={{ background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:14, padding:'20px 22px', display:'flex', gap:14, alignItems:'center' }}>
-                                <div style={{ fontSize:32 }}>{c.icon}</div>
+                            <div key={c.label} style={{ ...cardStyle, borderLeft: `4px solid ${c.color}`, padding: '20px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ width: 48, height: 48, borderRadius: 10, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{c.icon}</div>
                                 <div>
-                                    <div style={{ fontSize:24, fontWeight:800, color:c.color }}>{c.value}</div>
-                                    <div style={{ fontSize:12, color:c.color, fontWeight:600, opacity:0.75 }}>{c.label}</div>
+                                    <div style={{ fontSize: 24, fontWeight: 800, color: c.color, lineHeight: 1 }}>{c.value}</div>
+                                    <div style={{ fontSize: 11, color: T.sub, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>{c.label}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
 
                     {/* Table */}
-                    <div style={{ background:'#fff', borderRadius:16, border:'1.5px solid #fecdd3', overflow:'hidden', boxShadow:'0 2px 8px rgba(239,68,68,0.08)' }}>
-                        <div style={{ background:'#fef2f2', padding:'14px 20px', borderBottom:'1px solid #fecdd3', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                                <span style={{ fontSize:18 }}>↩</span>
-                                <span style={{ fontWeight:700, color:'#dc2626', fontSize:15 }}>Cancelled & Refunded Plans ({refundedPayments.length})</span>
-                            </div>
+                    <div style={{ ...cardStyle, borderLeft: `4px solid ${T.danger}`, overflow: 'hidden' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontWeight: 700, color: T.text, fontSize: 15 }}>Cancelled & Refunded Plans ({refundedPayments.length})</div>
                             {refundedPayments.length > 0 && (
-                                <span style={{ fontSize:12, color:'#dc2626', fontWeight:600, background:'#fff', padding:'3px 12px', borderRadius:20, border:'1px solid #fecdd3' }}>
-                                    Total Lost: ₹{totalRefunded}
-                                </span>
+                                <span style={pill('#FEE2E2','#B91C1C')}>Total Lost: ₹{totalRefunded}</span>
                             )}
                         </div>
 
                         {refundedPayments.length === 0 ? (
-                            <div style={{ padding:60, textAlign:'center' }}>
-                                <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
-                                <div style={{ fontWeight:800, fontSize:16, color:'#16a34a' }}>No Cancelled Plans</div>
-                                <div style={{ fontSize:13, color:'#94a3b8', marginTop:6 }}>All plans are active — no refunds issued</div>
+                            <div style={{ padding: 60, textAlign: 'center' }}>
+                                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                                <div style={{ fontWeight: 700, fontSize: 16, color: T.success }}>No Cancelled Plans</div>
+                                <div style={{ fontSize: 13, color: T.muted, marginTop: 6 }}>All plans are active — no refunds issued</div>
                             </div>
                         ) : (
-                            <div style={{ overflowX:'auto' }}>
-                                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                                     <thead>
-                                        <tr style={{ background:'#fff5f5' }}>
-                                            {['#','Cancelled On','User','Plan','Amount Refunded','Razorpay Payment ID','Note'].map(h => (
-                                                <th key={h} style={{ padding:'11px 16px', textAlign:'left', fontWeight:700, color:'#b91c1c', fontSize:11, textTransform:'uppercase', letterSpacing:0.5, borderBottom:'1px solid #fecdd3', whiteSpace:'nowrap' }}>{h}</th>
+                                        <tr>
+                                            {['#', 'Cancelled On', 'User', 'Plan', 'Amount Refunded', 'Razorpay Payment ID', 'Note'].map(h => (
+                                                <th key={h} style={{ ...thStyle, color: '#B91C1C' }}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {refundedPayments.map((p, i) => (
-                                            <tr key={p._id} style={{ borderBottom:'1px solid #fff1f2', background: i%2===0 ? '#fff':'#fffafa', transition:'background 0.1s' }}>
-                                                <td style={{ padding:'13px 16px', color:'#ef4444', fontWeight:800, fontSize:12 }}>{i+1}</td>
-                                                <td style={{ padding:'13px 16px', color:'#64748b', whiteSpace:'nowrap', fontSize:12 }}>
-                                                    {new Date(p.reviewedAt || p.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                                            <tr key={p._id} style={{ background: i % 2 === 0 ? '#fff' : '#FFF5F5', borderBottom: `1px solid #FEE2E2` }}>
+                                                <td style={{ ...tdStyle, color: T.danger, fontWeight: 700 }}>{i + 1}</td>
+                                                <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: T.sub }}>
+                                                    {fmt(p.reviewedAt || p.createdAt)}
                                                 </td>
-                                                <td style={{ padding:'13px 16px' }}>
-                                                    <div style={{ fontWeight:700, color:'#1e1b4b', fontSize:13 }}>{p.userName || '—'}</div>
-                                                    <div style={{ fontSize:11, color:'#94a3b8', marginTop:2 }}>{p.userEmail || ''}</div>
+                                                <td style={tdStyle}>
+                                                    <div style={{ fontWeight: 700, color: T.text }}>{p.userName || '—'}</div>
+                                                    <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{p.userEmail || ''}</div>
                                                 </td>
-                                                <td style={{ padding:'13px 16px' }}>
-                                                    <span style={{ padding:'3px 12px', borderRadius:20, fontSize:11, fontWeight:700,
-                                                        background: p.plan==='gold'?'#fef9c3': p.plan==='silver'?'#f1f5f9': p.plan==='bronze'?'#fef3c7':'#fee2e2',
-                                                        color: p.plan==='gold'?'#b45309': p.plan==='silver'?'#475569': p.plan==='bronze'?'#92400e':'#dc2626' }}>
-                                                        {p.plan ? p.plan.charAt(0).toUpperCase()+p.plan.slice(1) : 'Verification'}
-                                                    </span>
+                                                <td style={tdStyle}>
+                                                    <PlanBadge plan={p.plan || 'free_trial'} />
                                                 </td>
-                                                <td style={{ padding:'13px 16px' }}>
-                                                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                                                        <s style={{ color:'#dc2626', fontWeight:800, fontSize:15 }}>₹{p.amount}</s>
-                                                        <span style={{ fontSize:10, color:'#94a3b8', fontWeight:600 }}>refunded</span>
+                                                <td style={tdStyle}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <s style={{ color: T.danger, fontWeight: 700, fontSize: 15 }}>₹{p.amount}</s>
+                                                        <span style={{ fontSize: 10, color: T.muted, fontWeight: 600 }}>refunded</span>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding:'13px 16px', fontFamily:'monospace', fontSize:11, color:'#94a3b8' }}>
+                                                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: T.muted }}>
                                                     {p.razorpay_payment_id || p.utr || '—'}
                                                 </td>
-                                                <td style={{ padding:'13px 16px', fontSize:11, color:'#ef4444', maxWidth:220 }}>
-                                                    <div style={{ lineHeight:1.5 }}>{p.adminNote || '—'}</div>
+                                                <td style={{ ...tdStyle, fontSize: 11, color: T.danger, maxWidth: 220 }}>
+                                                    {p.adminNote || '—'}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                     <tfoot>
-                                        <tr style={{ borderTop:'2px solid #fecdd3', background:'#fff1f2' }}>
-                                            <td colSpan={4} style={{ padding:'13px 16px', fontWeight:700, color:'#dc2626', fontSize:13 }}>Total Refunded Amount</td>
-                                            <td style={{ padding:'13px 16px', fontWeight:800, color:'#dc2626', fontSize:18 }}>
+                                        <tr style={{ borderTop: `2px solid #FECDD3`, background: '#FFF1F2' }}>
+                                            <td colSpan={4} style={{ padding: '13px 16px', fontWeight: 700, color: T.danger, fontSize: 13 }}>Total Refunded Amount</td>
+                                            <td style={{ padding: '13px 16px', fontWeight: 800, color: T.danger, fontSize: 16 }}>
                                                 <s>₹{totalRefunded}</s>
                                             </td>
-                                            <td colSpan={2}/>
+                                            <td colSpan={2} />
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -1156,9 +1217,9 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
-                SUPPORT TICKETS TAB
-            ══════════════════════════════════════ */}
+            {/* ================================================================
+                SUPPORT TICKETS TAB — leave as-is
+            ================================================================ */}
             {tab === 'support' && (
                 <div>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
@@ -1166,13 +1227,12 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                             <div style={{ fontWeight:800, fontSize:16, color:'#1e1b4b' }}>Support Tickets</div>
                             <div style={{ fontSize:13, color:'#64748b' }}>Messages from users via Contact Support page</div>
                         </div>
-                        <button onClick={loadTickets} style={{ padding:'8px 16px', background:'#f1f5f9', border:'1.5px solid #e2e8f0', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>🔄 Refresh</button>
+                        <button onClick={loadTickets} style={{ padding:'8px 16px', background:'#f1f5f9', border:'1.5px solid #e2e8f0', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>Refresh</button>
                     </div>
 
-                    {/* Priority summary */}
                     {tickets.length > 0 && (
                         <div style={{ display:'flex', gap:10, marginBottom:16 }}>
-                            {[['high','🔴 High','#fef2f2','#dc2626'],['medium','🟡 Medium','#fffbeb','#b45309'],['low','🟢 Low','#f0fdf4','#15803d']].map(([p,l,bg,c]) => (
+                            {[['high','High','#fef2f2','#dc2626'],['medium','Medium','#fffbeb','#b45309'],['low','Low','#f0fdf4','#15803d']].map(([p,l,bg,c]) => (
                                 <div key={p} style={{ padding:'6px 16px', background:bg, borderRadius:20, fontSize:12, fontWeight:700, color:c }}>
                                     {l}: {tickets.filter(t=>t.priority===p&&t.status!=='closed').length} open
                                 </div>
@@ -1199,12 +1259,12 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                     <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:6 }}>
                                         <span style={{ fontWeight:800, fontSize:15, color:'#1e1b4b' }}>{t.subject}</span>
                                         <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:prioBg, color:prioColor }}>
-                                            {t.priority==='high'?'🔴 High':t.priority==='medium'?'🟡 Medium':'🟢 Low'}
+                                            {t.priority==='high'?'High':t.priority==='medium'?'Medium':'Low'}
                                         </span>
                                         <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700,
                                             background: t.status==='open'?'#eff6ff':t.status==='replied'?'#f0fdf4':'#f1f5f9',
                                             color: t.status==='open'?'#1d4ed8':t.status==='replied'?'#15803d':'#64748b' }}>
-                                            {t.status==='open'?'🔵 Open':t.status==='replied'?'✅ Replied':'✓ Closed'}
+                                            {t.status==='open'?'Open':t.status==='replied'?'Replied':'Closed'}
                                         </span>
                                     </div>
                                     <div style={{ fontSize:13, color:'#64748b', marginBottom:4 }}>
@@ -1229,9 +1289,9 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                     </select>
                                     <a href={`mailto:${t.email}?subject=Re: ${encodeURIComponent(t.subject)}`}
                                         style={{ padding:'5px 12px', background:'#7c3aed', color:'#fff', borderRadius:8, fontSize:12, fontWeight:700, textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>
-                                        ✉️ Reply
+                                        Reply
                                     </a>
-                                    <button onClick={()=>deleteTicket(t._id)} style={{ padding:'5px 10px', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:8, color:'#dc2626', fontSize:12, cursor:'pointer' }}>🗑</button>
+                                    <button onClick={()=>deleteTicket(t._id)} style={{ padding:'5px 10px', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:8, color:'#dc2626', fontSize:12, cursor:'pointer' }}>Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -1239,9 +1299,9 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
-                INTEGRATION BACKEND TAB
-            ══════════════════════════════════════ */}
+            {/* ================================================================
+                INTEGRATIONS TAB
+            ================================================================ */}
             {tab === 'integrations' && (
                 <div>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
@@ -1251,14 +1311,13 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         <button onClick={async()=>{
                             try {
                                 const r = await adminClearCache();
-                                showToast(`✅ Cache cleared — ${r.data.cleared} entries removed`);
-                            } catch { showToast('❌ Cache clear failed'); }
+                                showToast(`Cache cleared — ${r.data.cleared} entries removed`);
+                            } catch { showToast('Cache clear failed'); }
                         }} style={{ padding:'8px 18px', background:'#fef3c7', border:'1.5px solid #fde68a', borderRadius:9, fontSize:13, fontWeight:700, color:'#d97706', cursor:'pointer', whiteSpace:'nowrap' }}>
-                            🗑 Clear SSL/Domain Cache
+                            Clear SSL/Domain Cache
                         </button>
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
-                        {/* Email */}
                         <div className="ap-card" style={{ display:'flex', flexDirection:'column', gap:16 }}>
                             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                                 <div style={{ width:44, height:44, borderRadius:12, background:'#fef2f2', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -1270,15 +1329,14 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 </div>
                             </div>
                             <div style={{ background:'#f8fafc', borderRadius:10, padding:'12px 14px', fontSize:13, color:'#475569' }}>
-                                <div>📧 From: <strong>{process.env.MAIL_USER || 'Not set'}</strong></div>
+                                <div>From: <strong>{process.env.MAIL_USER || 'Not set'}</strong></div>
                                 <div style={{ marginTop:4 }}>Status: SMTP credentials configured in server .env</div>
                             </div>
                             <a href="/email" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 20px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', borderRadius:10, fontSize:13, fontWeight:700, textDecoration:'none', width:'fit-content' }}>
-                                ✏️ Configure Email →
+                                Configure Email
                             </a>
                         </div>
 
-                        {/* WhatsApp */}
                         <div className="ap-card" style={{ display:'flex', flexDirection:'column', gap:16 }}>
                             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                                 <div style={{ width:44, height:44, borderRadius:12, background:'#f0fdf4', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -1294,16 +1352,16 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 <div style={{ marginTop:4 }}>Configure credentials to enable WhatsApp alerts for users</div>
                             </div>
                             <a href="/whatsapp" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 20px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', borderRadius:10, fontSize:13, fontWeight:700, textDecoration:'none', width:'fit-content' }}>
-                                ✏️ Configure WhatsApp →
+                                Configure WhatsApp
                             </a>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 SETTINGS TAB — moved to /plan-settings
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {false && settingsForm && (
                 <div>
                     <div className="ap-card">
@@ -1354,17 +1412,13 @@ export default function AdminPanel({ initialTab = 'overview' }) {
 
                     <div className="ap-card" style={{ marginTop: 16 }}>
                         <div className="ap-card-title">Free Trial — Feature List</div>
-                        <p className="ap-card-sub">One feature per line. Format: <strong>type:Feature text</strong> — types: <code>ok</code> ✓ | <code>no</code> ✕ | <code>limited</code> 😐 | <code>soon</code> 🔜</p>
+                        <p className="ap-card-sub">One feature per line.</p>
                         <textarea
                             className="ap-settings-input"
                             style={{ marginTop: 12, width: '100%', minHeight: 130, fontFamily: 'inherit', lineHeight: 1.6, resize: 'vertical' }}
-                            placeholder={'2 sites monitored\nEmail + WhatsApp alerts\nSSL & Domain expiry checks\n60s uptime checks\n5-day full access'}
                             value={settingsForm.freeTrialFeatures}
                             onChange={e => setSettingsForm({ ...settingsForm, freeTrialFeatures: e.target.value })}
                         />
-                        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>
-                            {settingsForm.freeTrialFeatures.split('\n').filter(s => s.trim()).length} feature{settingsForm.freeTrialFeatures.split('\n').filter(s => s.trim()).length !== 1 ? 's' : ''}
-                        </div>
                     </div>
 
                     <div className="ap-card" style={{ marginTop: 16 }}>
@@ -1373,52 +1427,27 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         <div className="ap-settings-plans">
                             {['bronze', 'silver', 'gold'].map(p => (
                                 <div key={p} className="ap-settings-plan-card" style={{ borderTop: `4px solid ${PLAN_COLORS[p]}` }}>
-                                    <div className="ap-settings-plan-name" style={{ color: PLAN_COLORS[p] }}>
-                                        {PLAN_LABEL[p]}
-                                    </div>
+                                    <div className="ap-settings-plan-name" style={{ color: PLAN_COLORS[p] }}>{PLAN_LABEL[p]}</div>
                                     <div className="form-group">
                                         <label>Price (₹/month)</label>
-                                        <input type="number" min="0" className="ap-settings-input"
-                                            value={settingsForm.plans[p].price}
-                                            onChange={e => setPlanField(p, 'price', e.target.value)}
-                                        />
+                                        <input type="number" min="0" className="ap-settings-input" value={settingsForm.plans[p].price} onChange={e => setPlanField(p, 'price', e.target.value)} />
                                     </div>
                                     <div className="form-group">
                                         <label>Max Sites</label>
-                                        <input type="number" min="1" className="ap-settings-input"
-                                            value={settingsForm.plans[p].sites}
-                                            onChange={e => setPlanField(p, 'sites', e.target.value)}
-                                        />
+                                        <input type="number" min="1" className="ap-settings-input" value={settingsForm.plans[p].sites} onChange={e => setPlanField(p, 'sites', e.target.value)} />
                                     </div>
                                     <div className="form-group">
                                         <label>Check Interval (seconds)</label>
-                                        <input type="number" min="30" step="30" className="ap-settings-input"
-                                            value={settingsForm.plans[p].interval}
-                                            onChange={e => setPlanField(p, 'interval', e.target.value)}
-                                        />
-                                        <span style={{ fontSize:11, color:'#94a3b8', marginTop:3, display:'block' }}>
-                                            {Math.floor(settingsForm.plans[p].interval / 60) > 0 ? `${Math.floor(settingsForm.plans[p].interval / 60)} min` : ''}{settingsForm.plans[p].interval % 60 > 0 ? ` ${settingsForm.plans[p].interval % 60} sec` : ''} per check
-                                        </span>
+                                        <input type="number" min="30" step="30" className="ap-settings-input" value={settingsForm.plans[p].interval} onChange={e => setPlanField(p, 'interval', e.target.value)} />
                                     </div>
                                     <div className="form-group">
                                         <label>Max Recipients</label>
-                                        <input type="number" min="1" className="ap-settings-input"
-                                            value={settingsForm.plans[p].recipientLimit}
-                                            onChange={e => setPlanField(p, 'recipientLimit', e.target.value)}
-                                        />
+                                        <input type="number" min="1" className="ap-settings-input" value={settingsForm.plans[p].recipientLimit} onChange={e => setPlanField(p, 'recipientLimit', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Features (one per line · format: type:text)</label>
-                                        <textarea
-                                            className="ap-settings-input"
-                                            style={{ minHeight: 130, fontFamily: 'monospace', fontSize:12, lineHeight: 1.6, resize: 'vertical' }}
-                                            placeholder={'ok:5 sites monitored\nlimited:2 min check interval\nok:Email alerts\nsoon:WhatsApp alerts\nno:SSL expiry monitoring'}
-                                            value={settingsForm.plans[p].features}
-                                            onChange={e => setPlanField(p, 'features', e.target.value)}
-                                        />
-                                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-                                            {settingsForm.plans[p].features.split('\n').filter(s => s.trim()).length} bullet{settingsForm.plans[p].features.split('\n').filter(s => s.trim()).length !== 1 ? 's' : ''}
-                                        </div>
+                                        <label>Features (one per line)</label>
+                                        <textarea className="ap-settings-input" style={{ minHeight: 130, fontFamily: 'monospace', fontSize:12, lineHeight: 1.6, resize: 'vertical' }}
+                                            value={settingsForm.plans[p].features} onChange={e => setPlanField(p, 'features', e.target.value)} />
                                     </div>
                                 </div>
                             ))}
@@ -1431,74 +1460,44 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 PROFILE TAB
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {tab === 'profile' && (
                 <div style={{ maxWidth: 520 }}>
                     <div className="ap-card">
-                        <div className="ap-card-title">👤 Admin Account</div>
+                        <div className="ap-card-title">Admin Account</div>
                         <p className="ap-card-sub">Update your admin username, email, or password. Current password is required to save any change.</p>
 
                         <div className="form-group" style={{ marginTop: 16 }}>
                             <label style={{ fontWeight: 600, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>Username</label>
-                            <input
-                                className="ap-settings-input"
-                                type="text"
-                                placeholder="Admin username"
-                                value={profileForm.username}
-                                onChange={e => setProfileForm(f => ({ ...f, username: e.target.value }))}
-                            />
+                            <input className="ap-settings-input" type="text" placeholder="Admin username" value={profileForm.username} onChange={e => setProfileForm(f => ({ ...f, username: e.target.value }))} />
                         </div>
 
                         <div className="form-group" style={{ marginTop: 14 }}>
                             <label style={{ fontWeight: 600, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>Email</label>
-                            <input
-                                className="ap-settings-input"
-                                type="email"
-                                placeholder="Admin email"
-                                value={profileForm.email}
-                                onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
-                            />
+                            <input className="ap-settings-input" type="email" placeholder="Admin email" value={profileForm.email} onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))} />
                         </div>
 
                         <div style={{ height: 1, background: '#e2e8f0', margin: '20px 0' }} />
 
-                        <div className="ap-card-title" style={{ fontSize: 14 }}>🔑 Change Password</div>
+                        <div className="ap-card-title" style={{ fontSize: 14 }}>Change Password</div>
 
                         <div className="form-group" style={{ marginTop: 12 }}>
                             <label style={{ fontWeight: 600, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>New Password <span style={{ color: '#94a3b8', fontWeight: 400 }}>(leave blank to keep current)</span></label>
-                            <input
-                                className="ap-settings-input"
-                                type="password"
-                                placeholder="Min. 6 characters"
-                                value={profileForm.newPassword}
-                                onChange={e => setProfileForm(f => ({ ...f, newPassword: e.target.value }))}
-                            />
+                            <input className="ap-settings-input" type="password" placeholder="Min. 6 characters" value={profileForm.newPassword} onChange={e => setProfileForm(f => ({ ...f, newPassword: e.target.value }))} />
                         </div>
 
                         <div className="form-group" style={{ marginTop: 14 }}>
                             <label style={{ fontWeight: 600, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>Confirm New Password</label>
-                            <input
-                                className="ap-settings-input"
-                                type="password"
-                                placeholder="Re-enter new password"
-                                value={profileForm.confirmPassword}
-                                onChange={e => setProfileForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                            />
+                            <input className="ap-settings-input" type="password" placeholder="Re-enter new password" value={profileForm.confirmPassword} onChange={e => setProfileForm(f => ({ ...f, confirmPassword: e.target.value }))} />
                         </div>
 
                         <div style={{ height: 1, background: '#e2e8f0', margin: '20px 0' }} />
 
                         <div className="form-group">
                             <label style={{ fontWeight: 700, fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>Current Password <span style={{ color: '#ef4444' }}>*</span></label>
-                            <input
-                                className="ap-settings-input"
-                                type="password"
-                                placeholder="Required to save changes"
-                                value={profileForm.currentPassword}
-                                onChange={e => setProfileForm(f => ({ ...f, currentPassword: e.target.value }))}
-                            />
+                            <input className="ap-settings-input" type="password" placeholder="Required to save changes" value={profileForm.currentPassword} onChange={e => setProfileForm(f => ({ ...f, currentPassword: e.target.value }))} />
                         </div>
 
                         {profileMsg.text && (
@@ -1511,26 +1510,14 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                             </div>
                         )}
 
-                        <button
-                            className="btn-submit"
-                            style={{ marginTop: 18 }}
-                            disabled={profileSaving}
+                        <button className="btn-submit" style={{ marginTop: 18 }} disabled={profileSaving}
                             onClick={async () => {
-                                if (!profileForm.currentPassword) {
-                                    setProfileMsg({ text: 'Current password is required', type: 'error' }); return;
-                                }
-                                if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-                                    setProfileMsg({ text: 'New passwords do not match', type: 'error' }); return;
-                                }
+                                if (!profileForm.currentPassword) { setProfileMsg({ text: 'Current password is required', type: 'error' }); return; }
+                                if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) { setProfileMsg({ text: 'New passwords do not match', type: 'error' }); return; }
                                 setProfileSaving(true);
                                 setProfileMsg({ text: '', type: '' });
                                 try {
-                                    await updateAdminProfile({
-                                        username: profileForm.username,
-                                        email: profileForm.email,
-                                        currentPassword: profileForm.currentPassword,
-                                        newPassword: profileForm.newPassword || undefined,
-                                    });
+                                    await updateAdminProfile({ username: profileForm.username, email: profileForm.email, currentPassword: profileForm.currentPassword, newPassword: profileForm.newPassword || undefined });
                                     setProfileMsg({ text: 'Profile updated successfully!', type: 'success' });
                                     setProfileForm(f => ({ ...f, currentPassword: '', newPassword: '', confirmPassword: '' }));
                                 } catch (e) {
@@ -1545,83 +1532,76 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════
+            {/* ================================================================
                 ASSIGN PLAN MODAL
-            ══════════════════════════════════════ */}
+            ================================================================ */}
             {assignModal && (
                 <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
-                    backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center',
+                    position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.5)',
+                    backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', padding: 20, zIndex: 500,
                 }} onClick={() => setAssignModal(null)}>
                     <div style={{
-                        background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480,
-                        boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
-                        animation: 'fadeIn 0.2s ease',
+                        background: '#fff', borderRadius: 12, width: '100%', maxWidth: 480,
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
                     }} onClick={e => e.stopPropagation()}>
                         {/* Modal header */}
                         <div style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                            padding: '22px 24px 18px', borderBottom: `1px solid ${C.border}`,
+                            padding: '20px 24px 16px', borderBottom: `1px solid ${T.border}`,
                         }}>
                             <div>
-                                <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>Assign Plan</div>
-                                <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{assignModal.user.name} · {assignModal.user.email}</div>
+                                <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Assign Plan</div>
+                                <div style={{ fontSize: 12, color: T.sub, marginTop: 2 }}>{assignModal.user.name} · {assignModal.user.email}</div>
                             </div>
                             <button onClick={() => setAssignModal(null)} style={{
-                                width: 32, height: 32, borderRadius: '50%', border: 'none',
-                                background: C.bg, color: C.muted, fontSize: 16, cursor: 'pointer',
+                                width: 30, height: 30, borderRadius: '50%', border: 'none',
+                                background: '#F3F4F6', color: T.sub, fontSize: 16, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.15s',
                             }}>✕</button>
                         </div>
 
                         {/* Modal body */}
                         <div style={{ padding: '20px 24px 24px' }}>
                             {/* Plan selector */}
-                            <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Select Plan</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Select Plan</div>
                             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                                 {['bronze', 'silver', 'gold'].map(p => (
-                                    <button key={p}
-                                        onClick={() => setAssignForm(f => ({ ...f, plan: p }))}
-                                        style={{
-                                            flex: 1, padding: '10px', border: `2px solid ${assignForm.plan === p ? PLAN_COLORS[p] : C.border}`,
-                                            borderRadius: 10, background: assignForm.plan === p ? PLAN_COLORS[p] : '#fff',
-                                            color: assignForm.plan === p ? '#fff' : PLAN_COLORS[p],
-                                            fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
-                                            fontFamily: 'inherit',
-                                        }}>
+                                    <button key={p} onClick={() => setAssignForm(f => ({ ...f, plan: p }))} style={{
+                                        flex: 1, padding: '10px', border: `2px solid ${assignForm.plan === p ? PLAN_COLORS[p] : T.border}`,
+                                        borderRadius: 8, background: assignForm.plan === p ? PLAN_COLORS[p] : '#fff',
+                                        color: assignForm.plan === p ? '#fff' : PLAN_COLORS[p],
+                                        fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
+                                    }}>
                                         {PLAN_LABEL[p]}
                                     </button>
                                 ))}
                             </div>
 
                             {/* Duration presets */}
-                            <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Duration</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Duration</div>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                                 {[
-                                    { val: '1m',     label: '1 Month' },
-                                    { val: '3m',     label: '3 Months' },
-                                    { val: '6m',     label: '6 Months' },
-                                    { val: '1y',     label: '1 Year' },
+                                    { val: '1m', label: '1 Month' },
+                                    { val: '3m', label: '3 Months' },
+                                    { val: '6m', label: '6 Months' },
+                                    { val: '1y', label: '1 Year' },
                                     { val: 'custom', label: 'Custom Date' },
                                 ].map(d => (
-                                    <button key={d.val}
-                                        onClick={() => setAssignForm(f => ({ ...f, duration: d.val }))}
-                                        style={{
-                                            padding: '8px 14px', border: `1.5px solid ${assignForm.duration === d.val ? C.primary : C.border}`,
-                                            borderRadius: 99, fontSize: 12, fontWeight: 600,
-                                            background: assignForm.duration === d.val ? C.primary : '#fff',
-                                            color: assignForm.duration === d.val ? '#fff' : C.muted,
-                                            cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
-                                        }}>
+                                    <button key={d.val} onClick={() => setAssignForm(f => ({ ...f, duration: d.val }))} style={{
+                                        padding: '7px 14px', border: `1px solid ${assignForm.duration === d.val ? T.primary : T.border}`,
+                                        borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                                        background: assignForm.duration === d.val ? T.primary : '#fff',
+                                        color: assignForm.duration === d.val ? '#fff' : T.sub,
+                                        cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
+                                    }}>
                                         {d.label}
                                     </button>
                                 ))}
                             </div>
 
                             {assignForm.duration === 'custom' && (
-                                <input type="date" className="ap-settings-input" style={{ marginBottom: 16 }}
+                                <input type="date" style={{ ...inputSt, marginBottom: 16 }}
                                     value={assignForm.customDate}
                                     onChange={e => setAssignForm(f => ({ ...f, customDate: e.target.value }))}
                                 />
@@ -1629,17 +1609,17 @@ export default function AdminPanel({ initialTab = 'overview' }) {
 
                             {/* Preview */}
                             <div style={{
-                                background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10,
-                                padding: '12px 16px', fontSize: 13, color: C.muted, marginBottom: 20,
+                                background: '#F9FAFB', border: `1px solid ${T.border}`, borderRadius: 8,
+                                padding: '12px 16px', fontSize: 13, color: T.sub, marginBottom: 20,
                             }}>
                                 Plan: <strong style={{ color: PLAN_COLORS[assignForm.plan] }}>{PLAN_LABEL[assignForm.plan]}</strong>
                                 &nbsp;·&nbsp;
-                                Expires: <strong style={{ color: C.text }}>{calcEndsAt() || '—'}</strong>
+                                Expires: <strong style={{ color: T.text }}>{calcEndsAt() || '—'}</strong>
                             </div>
 
                             <div style={{ display: 'flex', gap: 10 }}>
-                                <button className="btn-save" onClick={saveAssign} style={{ flex: 1 }}>Assign Plan</button>
-                                <button className="btn-cancel" onClick={() => setAssignModal(null)}>Cancel</button>
+                                <button style={{ ...btnPrimary, flex: 1 }} onClick={saveAssign}>Assign Plan</button>
+                                <button style={btnSecondary} onClick={() => setAssignModal(null)}>Cancel</button>
                             </div>
                         </div>
                     </div>
