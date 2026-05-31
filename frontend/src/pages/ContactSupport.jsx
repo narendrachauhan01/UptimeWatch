@@ -359,22 +359,26 @@ export default function ContactSupport({ user }) {
 
             {/* Table */}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E5E7EB',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',overflow:'hidden'}}>
-                <div style={{padding:'14px 20px',borderBottom:'1px solid #F3F4F6',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-                    <div>
-                        <div style={{fontWeight:700,fontSize:14,color:'#111827'}}>Support Tickets</div>
-                        <div style={{fontSize:12,color:'#9CA3AF',marginTop:2}}>Your most recent support tickets list</div>
+                <div style={{padding:'14px 16px',borderBottom:'1px solid #F3F4F6'}}>
+                    {/* Top row: title + New button */}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,marginBottom:10}}>
+                        <div>
+                            <div style={{fontWeight:700,fontSize:14,color:'#111827'}}>Support Tickets</div>
+                            <div style={{fontSize:12,color:'#9CA3AF',marginTop:2}}>Your most recent support tickets list</div>
+                        </div>
+                        <button onClick={()=>setView('new')} style={{padding:'8px 16px',background:'#4F46E5',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>+ New Ticket</button>
                     </div>
-                    <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                        <div style={{display:'flex',gap:4,background:'#F3F4F6',borderRadius:8,padding:3}}>
+                    {/* Bottom row: filter + search */}
+                    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                        <div style={{display:'flex',gap:3,background:'#F3F4F6',borderRadius:8,padding:3}}>
                             {[['all','All'],['solved','Solved'],['pending','Pending']].map(([v,l])=>(
-                                <button key={v} onClick={()=>setFilter(v)} style={{padding:'5px 14px',borderRadius:6,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',background:filter===v?'#fff':'transparent',color:filter===v?'#111827':'#6B7280',boxShadow:filter===v?'0 1px 3px rgba(0,0,0,0.1)':'none'}}>{l}</button>
+                                <button key={v} onClick={()=>setFilter(v)} style={{padding:'5px 10px',borderRadius:6,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',background:filter===v?'#fff':'transparent',color:filter===v?'#111827':'#6B7280',boxShadow:filter===v?'0 1px 3px rgba(0,0,0,0.1)':'none'}}>{l}</button>
                             ))}
                         </div>
-                        <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 12px',background:'#F9FAFB',border:'1px solid #E5E7EB',borderRadius:8,width:180}}>
+                        <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',background:'#F9FAFB',border:'1px solid #E5E7EB',borderRadius:8,flex:1,minWidth:120}}>
                             <svg width="14" height="14" fill="none" stroke="#9CA3AF" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{border:'none',outline:'none',fontSize:13,color:'#374151',width:'100%',background:'transparent'}}/>
                         </div>
-                        <button onClick={()=>setView('new')} style={{padding:'8px 18px',background:'#4F46E5',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>+ New Ticket</button>
                     </div>
                 </div>
 
