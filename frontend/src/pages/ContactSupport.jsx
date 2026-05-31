@@ -22,15 +22,14 @@ export default function ContactSupport({ user }) {
     };
 
     return (
-        <div style={{ minHeight:'100vh', background:'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-            <div style={{ width:'100%', maxWidth:520 }}>
-
-                {/* Header */}
-                <div style={{ textAlign:'center', marginBottom:32 }}>
-                    <div style={{ fontSize:52, marginBottom:12 }}>🎧</div>
-                    <h1 style={{ fontSize:26, fontWeight:800, color:'#1e1b4b', margin:'0 0 8px' }}>Contact Support</h1>
-                    <p style={{ fontSize:14, color:'#64748b', margin:0 }}>We'll get back to you within 24 hours</p>
+        <div className="pg-wrap">
+            <div className="pg-header">
+                <div>
+                    <h1 className="pg-title">Contact Support <span style={{color:'#7c3aed'}}>.</span></h1>
+                    <p className="pg-sub">We'll get back to you within 24 hours</p>
                 </div>
+            </div>
+            <div style={{ maxWidth:560 }}>
 
                 {done ? (
                     <div style={{ background:'#f0fdf4', border:'1.5px solid #bbf7d0', borderRadius:20, padding:40, textAlign:'center' }}>
