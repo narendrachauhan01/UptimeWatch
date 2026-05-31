@@ -276,6 +276,7 @@ exports.getMe = async (req, res) => {
 exports.contactSupport = async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
+        console.log(`[Support] Request from ${email} — ${subject}`);
         if (!name || !email || !subject || !message) return res.status(400).json({ error: 'All fields required' });
         const { sendEmail } = require('../services/email');
         const adminEmail = process.env.ADMIN_EMAIL || 'chauhan.narendrasingh.01@gmail.com';
