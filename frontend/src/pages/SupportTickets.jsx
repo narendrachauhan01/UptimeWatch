@@ -406,7 +406,6 @@ export default function SupportTickets() {
                                     <td style={{ padding:'14px 16px' }}>
                                         <div style={{ fontWeight:600,color:'#111827' }}>{t.name}</div>
                                         <div style={{ fontSize:11,color:'#9CA3AF',marginTop:2 }}>{t.email}</div>
-                                        {t.accountId && <div style={{ fontSize:10,fontWeight:700,color:'#4F46E5',background:'#EEF2FF',padding:'1px 6px',borderRadius:4,marginTop:2,display:'inline-block',fontFamily:'monospace' }}>{t.accountId}</div>}
                                     </td>
                                     <td style={{ padding:'14px 16px',color:'#374151',maxWidth:280 }}>{t.subject}</td>
                                     <td style={{ padding:'14px 16px' }}>
