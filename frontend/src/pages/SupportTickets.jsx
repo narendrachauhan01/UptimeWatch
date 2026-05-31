@@ -65,7 +65,9 @@ export default function SupportTickets() {
     const [selected, setSelected] = useState(null);
     const [reply,    setReply]    = useState('');
     const [sending,  setSending]  = useState(false);
-    const [notif,    setNotif]    = useState(null); // { id, name, subject }
+    const [notif,       setNotif]       = useState(null);
+    const [statusOpen,  setStatusOpen]  = useState(false);
+    const [priorityOpen,setPriorityOpen]= useState(false);
     const prevUnread = React.useRef([]);
 
     const load = async (silent=false) => {
@@ -247,20 +249,45 @@ export default function SupportTickets() {
                                 </div>
                                 <button onClick={()=>setSelected(null)} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:6, width:24, height:24, cursor:'pointer', color:'#fff', fontSize:12, flexShrink:0, marginLeft:8 }}>✕</button>
                             </div>
-                            <div style={{ display:'flex', gap:6 }}>
-                                <select value={selected.status} onChange={e=>update(selected._id,{status:e.target.value})}
-                                    style={{ flex:1, padding:'6px 10px', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', outline:'none', appearance:'auto' }}>
-                                    <option value="open" style={{color:'#000',background:'#fff'}}>Open</option>
-                                    <option value="in_progress" style={{color:'#000',background:'#fff'}}>In Progress</option>
-                                    <option value="resolved" style={{color:'#000',background:'#fff'}}>Resolved</option>
-                                    <option value="closed" style={{color:'#000',background:'#fff'}}>Closed</option>
-                                </select>
-                                <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
-                                    style={{ flex:1, padding:'6px 10px', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', outline:'none', appearance:'auto' }}>
-                                    <option value="low" style={{color:'#000',background:'#fff'}}>🟢 Low</option>
-                                    <option value="medium" style={{color:'#000',background:'#fff'}}>🟡 Medium</option>
-                                    <option value="high" style={{color:'#000',background:'#fff'}}>🔴 High</option>
-                                </select>
+                            <div style={{ display:'flex', gap:6, position:'relative' }}>
+                                {/* Status custom dropdown */}
+                                <div style={{ flex:1, position:'relative' }}>
+                                    <div onClick={()=>{ setStatusOpen(o=>!o); setPriorityOpen(false); }}
+                                        style={{ padding:'6px 10px', border:'1px solid rgba(255,255,255,0.25)', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center', userSelect:'none' }}>
+                                        <span>{{open:'🔵 Open',in_progress:'🟡 In Progress',resolved:'✅ Resolved',closed:'⚫ Closed'}[selected.status]}</span>
+                                        <span style={{ fontSize:9, opacity:0.7 }}>▼</span>
+                                    </div>
+                                    {statusOpen && (
+                                        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'#fff', borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,0.18)', zIndex:200, overflow:'hidden', border:'1px solid #e2e8f0' }}>
+                                            {[['open','🔵 Open','#3b82f6'],['in_progress','🟡 In Progress','#f59e0b'],['resolved','✅ Resolved','#16a34a'],['closed','⚫ Closed','#64748b']].map(([v,l,c])=>(
+                                                <div key={v} onClick={()=>{ update(selected._id,{status:v}); setStatusOpen(false); }}
+                                                    style={{ padding:'10px 14px', cursor:'pointer', fontSize:13, fontWeight:600, color: selected.status===v?c:'#374151', background: selected.status===v?`${c}12`:'#fff', borderBottom:'1px solid #f1f5f9', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                                    {l} {selected.status===v && <span style={{ color:c }}>✓</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Priority custom dropdown */}
+                                <div style={{ flex:1, position:'relative' }}>
+                                    <div onClick={()=>{ setPriorityOpen(o=>!o); setStatusOpen(false); }}
+                                        style={{ padding:'6px 10px', border:'1px solid rgba(255,255,255,0.25)', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center', userSelect:'none' }}>
+                                        <span>{{low:'🟢 Low',medium:'🟡 Medium',high:'🔴 High'}[selected.priority]}</span>
+                                        <span style={{ fontSize:9, opacity:0.7 }}>▼</span>
+                                    </div>
+                                    {priorityOpen && (
+                                        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'#fff', borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,0.18)', zIndex:200, overflow:'hidden', border:'1px solid #e2e8f0' }}>
+                                            {[['low','🟢 Low','#16a34a'],['medium','🟡 Medium','#f59e0b'],['high','🔴 High','#ef4444']].map(([v,l,c])=>(
+                                                <div key={v} onClick={()=>{ update(selected._id,{priority:v}); setPriorityOpen(false); }}
+                                                    style={{ padding:'10px 14px', cursor:'pointer', fontSize:13, fontWeight:600, color: selected.priority===v?c:'#374151', background: selected.priority===v?`${c}12`:'#fff', borderBottom:'1px solid #f1f5f9', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                                    {l} {selected.priority===v && <span style={{ color:c }}>✓</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <button onClick={()=>del(selected._id)} style={{ padding:'6px 12px', background:'rgba(239,68,68,0.3)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'#fca5a5', fontSize:12, cursor:'pointer', fontWeight:700 }}>🗑</button>
                             </div>
                         </div>
