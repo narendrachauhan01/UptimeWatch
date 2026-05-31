@@ -58,9 +58,13 @@ function TargetModal({ target, onClose, onSave }) {
     const save = async () => {
         if (!form.name.trim() || !form.host.trim()) return;
         setSaving(true);
-        await onSave({ ...form, notifyRecipients: selected });
+        try {
+            await onSave({ ...form, notifyRecipients: selected });
+            onClose();
+        } catch(e) {
+            alert('Save failed: ' + (e.response?.data?.error || e.message));
+        }
         setSaving(false);
-        onClose();
     };
 
     const toggleR = (id) => setSelected(p => p.includes(id) ? p.filter(x=>x!==id) : [...p, id]);
@@ -390,8 +394,10 @@ export default function PingMonitor() {
         load();
     };
     const editTargetSave = async (form) => {
-        await axios.put(`${API_URL}/api/ping-targets/${editTarget._id}`, form, { withCredentials: true });
+        const r = await axios.put(`${API_URL}/api/ping-targets/${editTarget._id}`, form, { withCredentials: true });
+        setEditTarget(null);
         load();
+        return r;
     };
     const deleteTarget = async (id) => {
         if (!window.confirm('Delete this target?')) return;
