@@ -90,6 +90,8 @@ export default function ContactSupport({ user }) {
     const prevUnread = React.useRef([]);
 
     const selectedRef = React.useRef(null);
+    const chatEndRef   = React.useRef(null);
+    const scrollToBottom = () => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
 
     const load = async (silent=false) => {
         if (!silent) setLoading(true);
@@ -113,8 +115,11 @@ export default function ContactSupport({ user }) {
         if (!silent) setLoading(false);
     };
 
-    // Keep selectedRef in sync
-    useEffect(() => { selectedRef.current = selected; }, [selected]);
+    // Keep selectedRef in sync + scroll to bottom when ticket opens or new message arrives
+    useEffect(() => {
+        selectedRef.current = selected;
+        if (selected) setTimeout(scrollToBottom, 100);
+    }, [selected]);
 
     useEffect(() => {
         load();
@@ -151,6 +156,7 @@ export default function ContactSupport({ user }) {
             replyFiles.forEach(f => fd.append('images', f));
             const r = await axios.post(`${API_URL}/api/users/support/${selected._id}/reply`, fd, { withCredentials: true });
             setSelected(r.data); setReply(''); setReplyFiles([]); load();
+            setTimeout(scrollToBottom, 100);
         } catch (e) {
             alert('Failed to send reply: ' + (e.response?.data?.error || e.message));
         }
@@ -193,7 +199,7 @@ export default function ContactSupport({ user }) {
                     </div>
 
                     {/* Chat bubbles */}
-                    <div style={{ padding:'20px 16px', minHeight:350, maxHeight:480, overflowY:'auto', display:'flex', flexDirection:'column', gap:16, background:'#f8fafc' }}>
+                    <div style={{ padding:'20px 16px', minHeight:350, maxHeight:480, overflowY:'auto', display:'flex', flexDirection:'column', gap:16, background:'#f8fafc' }} id="chat-scroll">
 
                         {/* Original message — YOU (right) */}
                         <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
@@ -236,6 +242,7 @@ export default function ContactSupport({ user }) {
                                 </div>
                             );
                         })}
+                        <div ref={chatEndRef} />
                     </div>
 
                     {/* Reply input bar */}

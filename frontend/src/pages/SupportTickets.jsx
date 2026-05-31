@@ -88,8 +88,13 @@ export default function SupportTickets() {
         if (!silent) setLoading(false);
     };
 
-    const selectedRef = React.useRef(null);
-    useEffect(() => { selectedRef.current = selected; }, [selected]);
+    const selectedRef  = React.useRef(null);
+    const chatEndRef   = React.useRef(null);
+    const scrollToBottom = () => { chatEndRef.current?.scrollIntoView({ behavior:'smooth' }); };
+    useEffect(() => {
+        selectedRef.current = selected;
+        if (selected) setTimeout(scrollToBottom, 100);
+    }, [selected]);
 
     useEffect(() => {
         load();
@@ -123,7 +128,8 @@ export default function SupportTickets() {
             const r = await axios.post(`${API_URL}/api/admin/support-tickets/${selected._id}/reply`, fd, { withCredentials: true });
             setSelected(r.data);
             setReply('');
-            load();
+            load(true);
+            setTimeout(scrollToBottom, 100);
         } catch {}
         setSending(false);
     };
@@ -289,6 +295,7 @@ export default function SupportTickets() {
                                     </div>
                                 );
                             })}
+                            <div ref={chatEndRef} />
                         </div>
 
                         {/* Reply bar */}
