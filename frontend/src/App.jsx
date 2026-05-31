@@ -187,31 +187,6 @@ function AdminNotifBell() {
   );
 }
 
-function DarkModeToggle() {
-  const [dark, setDark] = React.useState(() => localStorage.getItem('theme') === 'dark');
-  const apply = (isDark) => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    document.body.style.background = isDark ? '#0f172a' : '';
-    document.body.style.color = isDark ? '#e2e8f0' : '';
-  };
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    apply(next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-  };
-  React.useEffect(() => {
-    const saved = localStorage.getItem('theme') || 'light';
-    if (saved === 'dark') { setDark(true); apply(true); }
-  }, []);
-  return (
-    <button onClick={toggle} title={dark ? 'Light mode' : 'Dark mode'}
-      style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:8, width:34, height:34, cursor:'pointer', color:'rgba(255,255,255,0.7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>
-      {dark ? '☀️' : '🌙'}
-    </button>
-  );
-}
 
 function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }) {
   const location = useLocation();
@@ -243,7 +218,6 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
               {unreadCount > 0 && <span className="sb-bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
             </button>
           )}
-          <DarkModeToggle />
           {isAdmin && <AdminNotifBell />}
         </div>
 
