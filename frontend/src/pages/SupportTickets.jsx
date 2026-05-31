@@ -247,25 +247,21 @@ export default function SupportTickets() {
                                 </div>
                                 <button onClick={()=>setSelected(null)} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:6, width:24, height:24, cursor:'pointer', color:'#fff', fontSize:12, flexShrink:0, marginLeft:8 }}>✕</button>
                             </div>
-                            <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                                {/* Status pills */}
-                                {['open','in_progress','resolved','closed'].map(s => (
-                                    <button key={s} type="button" onClick={()=>update(selected._id,{status:s})}
-                                        style={{ padding:'4px 10px', borderRadius:20, fontSize:10, fontWeight:700, cursor:'pointer', border:'none', transition:'all 0.15s',
-                                            background: selected.status===s ? '#fff' : 'rgba(255,255,255,0.12)',
-                                            color: selected.status===s ? '#3730a3' : 'rgba(255,255,255,0.75)' }}>
-                                        {s==='open'?'Open':s==='in_progress'?'In Progress':s==='resolved'?'Resolved':'Closed'}
-                                    </button>
-                                ))}
-                                <div style={{ flex:1 }}/>
-                                {/* Priority */}
-                                {[['low','🟢'],['medium','🟡'],['high','🔴']].map(([p,icon]) => (
-                                    <button key={p} type="button" onClick={()=>update(selected._id,{priority:p})}
-                                        style={{ width:30, height:30, borderRadius:'50%', fontSize:14, cursor:'pointer', border: selected.priority===p?'2px solid #fff':'2px solid transparent', background: selected.priority===p?'rgba(255,255,255,0.2)':'transparent', transition:'all 0.15s' }}>
-                                        {icon}
-                                    </button>
-                                ))}
-                                <button onClick={()=>del(selected._id)} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(239,68,68,0.35)', border:'none', color:'#fca5a5', fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>🗑</button>
+                            <div style={{ display:'flex', gap:6 }}>
+                                <select value={selected.status} onChange={e=>update(selected._id,{status:e.target.value})}
+                                    style={{ flex:1, padding:'6px 10px', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', outline:'none', appearance:'auto' }}>
+                                    <option value="open" style={{color:'#000',background:'#fff'}}>Open</option>
+                                    <option value="in_progress" style={{color:'#000',background:'#fff'}}>In Progress</option>
+                                    <option value="resolved" style={{color:'#000',background:'#fff'}}>Resolved</option>
+                                    <option value="closed" style={{color:'#000',background:'#fff'}}>Closed</option>
+                                </select>
+                                <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
+                                    style={{ flex:1, padding:'6px 10px', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.12)', color:'#fff', outline:'none', appearance:'auto' }}>
+                                    <option value="low" style={{color:'#000',background:'#fff'}}>🟢 Low</option>
+                                    <option value="medium" style={{color:'#000',background:'#fff'}}>🟡 Medium</option>
+                                    <option value="high" style={{color:'#000',background:'#fff'}}>🔴 High</option>
+                                </select>
+                                <button onClick={()=>del(selected._id)} style={{ padding:'6px 12px', background:'rgba(239,68,68,0.3)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'#fca5a5', fontSize:12, cursor:'pointer', fontWeight:700 }}>🗑</button>
                             </div>
                         </div>
 
