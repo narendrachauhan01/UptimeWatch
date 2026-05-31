@@ -346,6 +346,7 @@ export default function SupportTickets() {
                                 <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Ticket ID</th>
                                 <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Requested By</th>
                                 <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Subject</th>
+                                <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Priority</th>
                                 <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Create Date</th>
                                 <th style={{ padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5 }}>Status</th>
                                 <th style={{ padding:'11px 16px',width:40 }}/>
@@ -367,7 +368,15 @@ export default function SupportTickets() {
                                         <div style={{ fontWeight:600,color:'#111827' }}>{t.name}</div>
                                         <div style={{ fontSize:11,color:'#9CA3AF',marginTop:2 }}>{t.email}</div>
                                     </td>
-                                    <td style={{ padding:'14px 16px',color:'#374151',maxWidth:300 }}>{t.subject}</td>
+                                    <td style={{ padding:'14px 16px',color:'#374151',maxWidth:280 }}>{t.subject}</td>
+                                    <td style={{ padding:'14px 16px' }}>
+                                        <span style={{ fontSize:12, fontWeight:700,
+                                            color: t.priority==='high'?'#DC2626':t.priority==='medium'?'#D97706':'#6B7280',
+                                            background: t.priority==='high'?'#FEF2F2':t.priority==='medium'?'#FFFBEB':'#F9FAFB',
+                                            padding:'3px 10px', borderRadius:20, whiteSpace:'nowrap' }}>
+                                            {t.priority==='high'?'🔴 High':t.priority==='medium'?'🟡 Medium':'🟢 Low'}
+                                        </span>
+                                    </td>
                                     <td style={{ padding:'14px 16px',color:'#6B7280',whiteSpace:'nowrap',fontSize:12 }}>{fmtDate(t.createdAt)}</td>
                                     <td style={{ padding:'14px 16px' }}>
                                         <span style={{ fontSize:12,fontWeight:600,color:statusColor[t.status]||'#6B7280' }}>
