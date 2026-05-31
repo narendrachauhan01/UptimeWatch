@@ -26,7 +26,9 @@ export default function ContactSupport({ user }) {
             await axios.post(`${API_URL}/api/users/support`, form, { withCredentials: true });
             setDone(true);
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to send. Please email us directly.');
+            const msg = err.response?.data?.error || err.message || 'Failed to send';
+            setError(msg + ' — Please email us directly at chauhan.narendrasingh.01@gmail.com');
+            console.error('Support send error:', err);
         }
         setSending(false);
     };
