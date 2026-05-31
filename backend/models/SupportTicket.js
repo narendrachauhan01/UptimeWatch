@@ -16,7 +16,8 @@ const supportTicketSchema = new mongoose.Schema({
     images:   [{ type: String }],
     priority: { type: String, enum: ['low','medium','high'], default: 'medium' },
     status:   { type: String, enum: ['open','in_progress','resolved','closed'], default: 'open' },
-    replies:  [replySchema],
+    replies:      [replySchema],
+    adminUnread:  { type: Boolean, default: false }, // true when user replies
 }, { timestamps: true });
 
 module.exports = mongoose.model('SupportTicket', supportTicketSchema);

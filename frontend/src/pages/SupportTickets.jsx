@@ -63,21 +63,45 @@ export default function SupportTickets() {
     const [selected, setSelected] = useState(null);
     const [reply,    setReply]    = useState('');
     const [sending,  setSending]  = useState(false);
+    const [notif,    setNotif]    = useState(null); // { id, name, subject }
+    const prevUnread = React.useRef([]);
 
-    const load = async () => {
-        setLoading(true);
+    const load = async (silent=false) => {
+        if (!silent) setLoading(true);
         try {
             const r = await axios.get(`${API_URL}/api/admin/support-tickets`, { withCredentials: true });
-            setTickets(r.data);
+            const fresh = r.data;
+            // Detect newly unread tickets
+            const newUnread = fresh.filter(t => t.adminUnread && !prevUnread.current.includes(t._id));
+            if (newUnread.length > 0) {
+                setNotif({ id: newUnread[0]._id, name: newUnread[0].name, subject: newUnread[0].subject });
+                setTimeout(() => setNotif(null), 5000);
+            }
+            prevUnread.current = fresh.filter(t=>t.adminUnread).map(t=>t._id);
+            setTickets(fresh);
         } catch {}
-        setLoading(false);
+        if (!silent) setLoading(false);
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        load();
+        const t = setInterval(() => load(true), 15000); // poll every 15s
+        return () => clearInterval(t);
+    }, []);
+
+    const markRead = async (id) => {
+        await axios.post(`${API_URL}/api/admin/support-tickets/${id}/mark-read`, {}, { withCredentials: true });
+        setTickets(p => p.map(t => t._id===id ? {...t, adminUnread:false} : t));
+    };
+
+    const openTicket = (t) => {
+        setSelected(t);
+        if (t.adminUnread) markRead(t._id);
+    };
 
     const update = async (id, data) => {
         await axios.put(`${API_URL}/api/admin/support-tickets/${id}`, data, { withCredentials: true });
-        load();
+        load(true);
         if (selected?._id === id) setSelected(t => ({ ...t, ...data }));
     };
 
@@ -111,6 +135,19 @@ export default function SupportTickets() {
 
     return (
         <div className="pg-wrap">
+            {/* New message notification popup */}
+            {notif && (
+                <div onClick={()=>{ const t=tickets.find(x=>x._id===notif.id); if(t) openTicket(t); setNotif(null); }}
+                    style={{ position:'fixed', bottom:24, right:24, zIndex:9999, background:'#7c3aed', color:'#fff', borderRadius:16, padding:'16px 20px', boxShadow:'0 8px 32px rgba(124,58,237,0.4)', cursor:'pointer', maxWidth:320, display:'flex', gap:12, alignItems:'center', animation:'slideIn 0.3s ease' }}>
+                    <div style={{ fontSize:28 }}>💬</div>
+                    <div>
+                        <div style={{ fontWeight:800, fontSize:14 }}>New message!</div>
+                        <div style={{ fontSize:12, opacity:0.85, marginTop:2 }}><strong>{notif.name}</strong>: {notif.subject}</div>
+                        <div style={{ fontSize:11, opacity:0.7, marginTop:4 }}>Click to view thread →</div>
+                    </div>
+                    <button onClick={e=>{e.stopPropagation();setNotif(null);}} style={{ background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:22, height:22, color:'#fff', cursor:'pointer', fontSize:12, flexShrink:0 }}>✕</button>
+                </div>
+            )}
             <div className="pg-header">
                 <div>
                     <h1 className="pg-title">Support Tickets <span style={{color:'#7c3aed'}}>.</span></h1>
@@ -155,12 +192,16 @@ export default function SupportTickets() {
                             <div style={{ fontSize:36, marginBottom:8 }}>🎧</div>No tickets
                         </div>
                     ) : filtered.map(t => (
-                        <div key={t._id} onClick={()=>setSelected(t)}
-                            style={{ background:'#fff', borderRadius:12, border:`1.5px solid ${selected?._id===t._id?'#7c3aed':'#e2e8f0'}`, padding:'14px 16px', marginBottom:8, cursor:'pointer', borderLeft:`4px solid ${prioColor(t.priority)}`, transition:'all 0.15s' }}>
-                            <div style={{ fontWeight:700, fontSize:13, color:'#1e1b4b', marginBottom:4 }}>{t.subject}</div>
+                        <div key={t._id} onClick={()=>openTicket(t)}
+                            style={{ background: t.adminUnread?'#faf5ff':'#fff', borderRadius:12, border:`1.5px solid ${selected?._id===t._id?'#7c3aed':t.adminUnread?'#c4b5fd':'#e2e8f0'}`, padding:'14px 16px', marginBottom:8, cursor:'pointer', borderLeft:`4px solid ${prioColor(t.priority)}`, transition:'all 0.15s', position:'relative' }}>
+                            {t.adminUnread && (
+                                <div style={{ position:'absolute', top:10, right:10, width:10, height:10, borderRadius:'50%', background:'#7c3aed', boxShadow:'0 0 0 3px rgba(124,58,237,0.25)' }}/>
+                            )}
+                            <div style={{ fontWeight: t.adminUnread?800:700, fontSize:13, color:'#1e1b4b', marginBottom:4, paddingRight:16 }}>{t.subject}</div>
                             <div style={{ fontSize:11, color:'#94a3b8', marginBottom:6 }}>
                                 {t.name} · {new Date(t.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}
                                 {t.replies?.length>0 && <span style={{ marginLeft:6 }}>· {t.replies.length} replies</span>}
+                                {t.adminUnread && <span style={{ marginLeft:6, color:'#7c3aed', fontWeight:700 }}>· New message!</span>}
                             </div>
                             <div style={{ display:'flex', gap:6 }}>
                                 <span style={{ padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700, background:prioBg(t.priority), color:prioColor(t.priority) }}>{prioLabel(t.priority)}</span>

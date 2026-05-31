@@ -37,8 +37,13 @@ router.get('/support-tickets',              auth, adminOnly, async (req, res) =>
 router.put('/support-tickets/:id',          auth, adminOnly, async (req, res) => {
     const SupportTicket = require('../models/SupportTicket');
     const { status, priority } = req.body;
-    const t = await SupportTicket.findByIdAndUpdate(req.params.id, { status, priority }, { new: true });
+    const t = await SupportTicket.findByIdAndUpdate(req.params.id, { status, priority, adminUnread: false }, { new: true });
     res.json(t);
+});
+router.post('/support-tickets/:id/mark-read', auth, adminOnly, async (req, res) => {
+    const SupportTicket = require('../models/SupportTicket');
+    await SupportTicket.findByIdAndUpdate(req.params.id, { adminUnread: false });
+    res.json({ ok: true });
 });
 router.post('/support-tickets/:id/reply',   auth, adminOnly, upload.array('images',5), async (req, res) => {
     const SupportTicket = require('../models/SupportTicket');
@@ -47,6 +52,7 @@ router.post('/support-tickets/:id/reply',   auth, adminOnly, upload.array('image
     const images = (req.files||[]).map(f => `/uploads/support/${f.filename}`);
     t.replies.push({ from: 'admin', message: req.body.message, images });
     if (t.status === 'open') t.status = 'in_progress';
+    t.adminUnread = false; // admin replied = seen
     await t.save();
     res.json(t);
 });
