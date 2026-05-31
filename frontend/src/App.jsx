@@ -315,7 +315,7 @@ function AppInner() {
     return () => clearInterval(t);
   }, [authed, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const publicPaths = ['/', '/login', '/register', '/pricing', '/reset-password', '/terms', '/support'];
+  const publicPaths = ['/', '/login', '/register', '/pricing', '/reset-password', '/terms'];
   const isPublicPath = publicPaths.includes(location.pathname);
 
   if (authed === null && !isPublicPath) return (
