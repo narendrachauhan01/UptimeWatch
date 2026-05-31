@@ -201,7 +201,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
     const [paySearch, setPaySearch] = useState('');
     const [payStatusFilter, setPayStatusFilter] = useState('all');
     const [assignModal, setAssignModal] = useState(null);
-    const [assignForm, setAssignForm]   = useState({ plan: 'bronze', duration: '1m', customDate: '' });
+    const [assignForm, setAssignForm]   = useState({ plan: 'bronze', duration: '1m', customDate: '', billing: 'monthly' });
     const [profileForm, setProfileForm] = useState({ username: '', email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
     const [profileSaving, setProfileSaving] = useState(false);
     const [profileMsg, setProfileMsg] = useState({ text: '', type: '' });
@@ -418,7 +418,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
 
     const openAssign = (u) => {
         setAssignModal({ user: u });
-        setAssignForm({ plan: u.plan === 'free_trial' ? 'bronze' : u.plan, duration: '1m', customDate: '' });
+        setAssignForm({ plan: u.plan === 'free_trial' ? 'bronze' : u.plan, duration: '1m', customDate: '', billing: u.billing || 'monthly' });
     };
 
     const calcEndsAt = () => {
@@ -433,7 +433,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
         const endsAt = calcEndsAt();
         if (!endsAt) { showToast('Select plan end date'); return; }
         try {
-            await adminUpdateUser(assignModal.user._id, { plan: assignForm.plan, planEndsAt: endsAt, isBlocked: false });
+            await adminUpdateUser(assignModal.user._id, { plan: assignForm.plan, planEndsAt: endsAt, billing: assignForm.billing, isBlocked: false });
             showToast(`${PLAN_LABEL[assignForm.plan]} assigned to ${assignModal.user.name}`);
             setAssignModal(null);
             load();
@@ -1755,12 +1755,29 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 />
                             )}
 
+                            {/* Billing Type */}
+                            <div style={{ marginBottom: 16 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.sub, marginBottom: 8 }}>BILLING TYPE</div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    {[['monthly','📅 Monthly'],['annually','📆 Annual']].map(([val, label]) => (
+                                        <button key={val} onClick={() => setAssignForm(f => ({ ...f, billing: val }))}
+                                            style={{ flex:1, padding:'9px 0', border:`2px solid ${assignForm.billing===val?(val==='annually'?'#f59e0b':'#3b82f6'):T.border}`, borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer',
+                                                background: assignForm.billing===val?(val==='annually'?'#fef3c7':'#eff6ff'):'#fff',
+                                                color: assignForm.billing===val?(val==='annually'?'#b45309':'#1d4ed8'):T.sub }}>
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Preview */}
                             <div style={{
                                 background: '#F9FAFB', border: `1px solid ${T.border}`, borderRadius: 8,
                                 padding: '12px 16px', fontSize: 13, color: T.sub, marginBottom: 20,
                             }}>
                                 Plan: <strong style={{ color: PLAN_COLORS[assignForm.plan] }}>{PLAN_LABEL[assignForm.plan]}</strong>
+                                &nbsp;·&nbsp;
+                                Billing: <strong style={{ color: assignForm.billing==='annually'?'#b45309':'#1d4ed8' }}>{assignForm.billing==='annually'?'Annual':'Monthly'}</strong>
                                 &nbsp;·&nbsp;
                                 Expires: <strong style={{ color: T.text }}>{calcEndsAt() || '—'}</strong>
                             </div>
