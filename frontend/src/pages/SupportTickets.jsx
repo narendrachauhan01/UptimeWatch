@@ -61,6 +61,7 @@ export default function SupportTickets() {
     const [reply,    setReply]     = useState('');
     const [sending,  setSending]   = useState(false);
     const [notif,    setNotif]     = useState(null);
+    const [menuOpen, setMenuOpen]  = useState(null); // ticket._id
     const prevUnread = useRef([]);
     const selectedRef = useRef(null);
     const chatBoxRef  = useRef(null);
@@ -83,6 +84,7 @@ export default function SupportTickets() {
     };
 
     useEffect(()=>{ load(); const t=setInterval(()=>load(true),10000); return()=>clearInterval(t); },[]);
+    useEffect(()=>{ const h=()=>setMenuOpen(null); document.addEventListener('click',h); return()=>document.removeEventListener('click',h); },[]);
 
     const markRead = async(id)=>{ await axios.post(`${API_URL}/api/admin/support-tickets/${id}/mark-read`,{},{withCredentials:true}).catch(()=>{}); setTickets(p=>p.map(t=>t._id===id?{...t,adminUnread:false}:t)); };
     const openTicket = (t)=>{ setSelected(t); setView('reply'); if(t.adminUnread) markRead(t._id); };
@@ -383,8 +385,25 @@ export default function SupportTickets() {
                                             {statusLabel[t.status]||t.status}
                                         </span>
                                     </td>
-                                    <td style={{ padding:'14px 16px' }} onClick={e=>e.stopPropagation()}>
-                                        <button onClick={()=>del(t._id)} style={{ background:'none',border:'none',color:'#9CA3AF',cursor:'pointer',fontSize:16,padding:'2px 6px' }}>···</button>
+                                    <td style={{ padding:'14px 16px', position:'relative' }} onClick={e=>e.stopPropagation()}>
+                                        <button onClick={e=>{ e.stopPropagation(); setMenuOpen(menuOpen===t._id?null:t._id); }}
+                                            style={{ background:'none',border:'none',color:'#9CA3AF',cursor:'pointer',fontSize:18,padding:'2px 8px',borderRadius:6,lineHeight:1 }}>···</button>
+                                        {menuOpen===t._id && (
+                                            <div style={{ position:'absolute',right:12,top:'100%',background:'#fff',border:'1px solid #E5E7EB',borderRadius:8,boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:130,overflow:'hidden' }}>
+                                                <div onClick={()=>{ openTicket(t); setMenuOpen(null); }}
+                                                    style={{ padding:'10px 16px',fontSize:13,color:'#374151',cursor:'pointer',fontWeight:500 }}
+                                                    onMouseEnter={e=>e.target.style.background='#F9FAFB'}
+                                                    onMouseLeave={e=>e.target.style.background='#fff'}>
+                                                    View More
+                                                </div>
+                                                <div onClick={()=>{ setMenuOpen(null); del(t._id); }}
+                                                    style={{ padding:'10px 16px',fontSize:13,color:'#EF4444',cursor:'pointer',fontWeight:500 }}
+                                                    onMouseEnter={e=>e.target.style.background='#FEF2F2'}
+                                                    onMouseLeave={e=>e.target.style.background='#fff'}>
+                                                    Delete
+                                                </div>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
