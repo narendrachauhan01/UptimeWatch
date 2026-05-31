@@ -417,7 +417,10 @@ export default function SupportTickets() {
                                             {t.priority==='high'?'🔴 High':t.priority==='medium'?'🟡 Medium':'🟢 Low'}
                                         </span>
                                     </td>
-                                    <td style={{ padding:'14px 16px',color:'#6B7280',whiteSpace:'nowrap',fontSize:12 }}>{fmtDateTime(t.createdAt)}</td>
+                                    <td style={{ padding:'14px 16px',color:'#6B7280',whiteSpace:'nowrap',fontSize:12 }}>
+                                        <div>{fmtDate(t.createdAt)}</div>
+                                        <div style={{ fontSize:11,color:'#9CA3AF',marginTop:2 }}>{timeAgo(t.createdAt)}</div>
+                                    </td>
                                     <td style={{ padding:'14px 16px' }}>
                                         <span style={{ fontSize:12,fontWeight:600,color:statusColor[t.status]||'#6B7280' }}>
                                             {statusLabel[t.status]||t.status}
