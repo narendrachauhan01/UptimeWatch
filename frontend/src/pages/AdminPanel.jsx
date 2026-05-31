@@ -224,6 +224,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
             setSettingsForm({
                 trialDays: d.trialDays,
                 verificationFee: d.verificationFee ?? 2,
+                annualDiscount: d.annualDiscount ?? 20,
                 freeTrialInterval: d.freeTrialInterval ?? 300,
                 freeTrialRecipientLimit: d.freeTrialRecipientLimit ?? 2,
                 freeTrialFeatures: (d.freeTrialFeatures || []).join('\n'),
@@ -257,6 +258,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
             const payload = {
                 trialDays: settingsForm.trialDays,
                 verificationFee: settingsForm.verificationFee,
+                annualDiscount: Number(settingsForm.annualDiscount),
                 freeTrialInterval: Number(settingsForm.freeTrialInterval),
                 freeTrialRecipientLimit: Number(settingsForm.freeTrialRecipientLimit),
                 freeTrialFeatures: settingsForm.freeTrialFeatures.split('\n').map(s => s.trim()).filter(Boolean),
@@ -1368,6 +1370,20 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 onChange={e => setSettingsForm({ ...settingsForm, verificationFee: Number(e.target.value) })}
                             />
                             <span style={{ color: '#64748b', fontWeight: 600 }}>one-time</span>
+                        </div>
+                    </div>
+
+                    <div className="ap-card" style={{ marginTop: 16 }}>
+                        <div className="ap-card-title">Annual Billing Discount</div>
+                        <p className="ap-card-sub">Discount % shown on Landing page when user selects Annually toggle.</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                            <input
+                                type="number" min="0" max="80" className="ap-settings-input"
+                                style={{ width: 100 }}
+                                value={settingsForm.annualDiscount ?? 20}
+                                onChange={e => setSettingsForm({ ...settingsForm, annualDiscount: Number(e.target.value) })}
+                            />
+                            <span style={{ color: '#64748b', fontWeight: 600 }}>% off (0–80)</span>
                         </div>
                     </div>
 

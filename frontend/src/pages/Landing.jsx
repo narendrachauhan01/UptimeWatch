@@ -38,7 +38,8 @@ export default function Landing() {
     gold:       parseFeatures(planData?.plans?.gold?.features),
   };
 
-  const disc = (p) => billing === 'annually' ? Math.round(p * 0.8) : p;
+  const discPct = planData?.annualDiscount ?? 20;
+  const disc = (p) => billing === 'annually' ? Math.round(p * (1 - discPct / 100)) : p;
   const plans = [
     { key: 'free_trial', ...PLAN_META.free_trial, price: `₹${planData?.verificationFee ?? 2}`, origPrice: null, note: '5-day trial · one-time verification' },
     { key: 'bronze', ...PLAN_META.bronze, price: `₹${disc(planData?.plans?.bronze?.price ?? 499)}`, origPrice: billing==='annually'?`₹${planData?.plans?.bronze?.price??499}`:null, note: `${planData?.plans?.bronze?.sites ?? 5} sites` },
@@ -258,7 +259,7 @@ export default function Landing() {
               background: billing==='annually' ? '#1e293b' : 'transparent',
               color: billing==='annually' ? '#fff' : '#64748b' }}>
               Annually
-              <span style={{ background:'#f59e0b', color:'#fff', fontSize:11, fontWeight:800, padding:'2px 10px', borderRadius:50 }}>Save 20%</span>
+              <span style={{ background:'#f59e0b', color:'#fff', fontSize:11, fontWeight:800, padding:'2px 10px', borderRadius:50 }}>Save {discPct}%</span>
             </button>
           </div>
 

@@ -61,6 +61,7 @@ const settingsSchema = new mongoose.Schema({
         charts:      { type: Boolean, default: true },
         pingMonitor: { type: Boolean, default: true },
     },
+    annualDiscount: { type: Number, default: 20 },
     plans: {
         bronze: {
             price:           { type: Number, default: 499 },
@@ -143,6 +144,7 @@ settingsSchema.statics.update = async function (data) {
         const f = sanitizeFeatures(data.freeTrialFeatures);
         if (f) s.freeTrialFeatures = f;
     }
+    if (data.annualDiscount !== undefined) s.annualDiscount = Math.min(80, Math.max(0, Number(data.annualDiscount) || 0));
     if (data.plans) {
         for (const key of ['bronze', 'silver', 'gold']) {
             if (data.plans[key]) {

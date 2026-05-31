@@ -75,6 +75,7 @@ exports.getPlans = async (req, res) => {
             trialDays: settings.trialDays || 5,
             freeTrialFeatures: settings.freeTrialFeatures || [],
             freeTrialAccess: settings.freeTrialAccess || { domainSsl: true, charts: true },
+            annualDiscount: settings.annualDiscount ?? 20,
         });
     } catch (e) {
         res.status(500).json({ error: e.message });
