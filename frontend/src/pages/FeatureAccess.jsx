@@ -40,8 +40,15 @@ const FEATURES = [
     { key: 'rocketChat',  label: 'Rocket.Chat Integration',  desc: 'Send alerts to Rocket.Chat channels', icon: '🚀' },
 ];
 
+const BRONZE_FEATURES = [
+    { key: 'whatsapp',   label: 'WhatsApp Alerts',         desc: 'Send downtime and recovery alerts via WhatsApp', icon: '💬' },
+    { key: 'webhook',    label: 'Webhook Integration',     desc: 'Send alert payloads to custom webhook URLs', icon: '🔗' },
+    { key: 'rocketChat', label: 'Rocket.Chat Integration', desc: 'Send alerts to Rocket.Chat channels', icon: '🚀' },
+];
+
 export default function FeatureAccess() {
-    const [access, setAccess] = useState({ domainSsl: true, charts: true, pingMonitor: true, whatsapp: true, webhook: true, rocketChat: true });
+    const [access, setAccess]       = useState({ domainSsl: true, charts: true, pingMonitor: true, whatsapp: true, webhook: true, rocketChat: true });
+    const [bronzeAcc, setBronzeAcc] = useState({ whatsapp: true, webhook: true, rocketChat: true });
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
@@ -50,15 +57,17 @@ export default function FeatureAccess() {
     useEffect(() => {
         adminGetSettings().then(r => {
             if (r.data.freeTrialAccess) setAccess(r.data.freeTrialAccess);
+            if (r.data.bronzeAccess)    setBronzeAcc(r.data.bronzeAccess);
         }).catch(() => showToast('Failed to load settings'));
     }, []);
 
-    const toggle = (key) => setAccess(prev => ({ ...prev, [key]: !prev[key] }));
+    const toggle       = (key) => setAccess(prev => ({ ...prev, [key]: !prev[key] }));
+    const toggleBronze = (key) => setBronzeAcc(prev => ({ ...prev, [key]: !prev[key] }));
 
     const save = async () => {
         setSaving(true);
         try {
-            await adminUpdateSettings({ freeTrialAccess: access });
+            await adminUpdateSettings({ freeTrialAccess: access, bronzeAccess: bronzeAcc });
             showToast('✅ Saved!');
         } catch { showToast('❌ Save failed'); }
         setSaving(false);
@@ -209,16 +218,42 @@ export default function FeatureAccess() {
             </div>
 
             {/* Info note */}
-            <div style={{
-                padding: '12px 16px',
-                background: '#FFFBEB',
-                border: '1px solid #FDE68A',
-                borderRadius: 10,
-                fontSize: 13,
-                color: '#92400E',
-                lineHeight: 1.5,
-            }}>
-                Changes take effect immediately for all Free Trial users. Paid plan users always have full access.
+            <div style={{ padding:'12px 16px', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, fontSize:13, color:'#92400E', lineHeight:1.5 }}>
+                Changes take effect immediately for all Free Trial users.
+            </div>
+
+            {/* ── Bronze Plan Access ── */}
+            <div style={{ marginTop:24 }}>
+                <div style={{ marginBottom:8 }}>
+                    <h2 style={{ fontSize:18, fontWeight:800, color:'#111827', margin:'0 0 4px' }}>🥉 Bronze Plan Feature Access</h2>
+                    <p style={{ fontSize:13, color:'#6B7280', margin:0 }}>Control which features Bronze plan users can access</p>
+                </div>
+                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E5E7EB', overflow:'hidden' }}>
+                    <div style={{ padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E5E7EB', display:'flex', justifyContent:'space-between' }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:0.5 }}>Feature</span>
+                        <span style={{ fontSize:12, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:0.5 }}>Access</span>
+                    </div>
+                    {BRONZE_FEATURES.map((f, i) => (
+                        <div key={f.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px', borderBottom: i < BRONZE_FEATURES.length-1 ? '1px solid #F3F4F6' : 'none', gap:16 }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                                <div style={{ width:40, height:40, borderRadius:10, background:'#FEF3C7', border:'1px solid #FDE68A', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{f.icon}</div>
+                                <div>
+                                    <div style={{ fontWeight:600, fontSize:14, color:'#111827' }}>{f.label}</div>
+                                    <div style={{ fontSize:12, color:'#6B7280', marginTop:1 }}>{f.desc}</div>
+                                </div>
+                            </div>
+                            <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+                                <span style={{ fontSize:12, fontWeight:600, padding:'3px 10px', borderRadius:20, background: bronzeAcc[f.key] ? '#EEF2FF' : '#F3F4F6', color: bronzeAcc[f.key] ? '#4F46E5' : '#6B7280', border:`1px solid ${bronzeAcc[f.key]?'#C7D2FE':'#E5E7EB'}` }}>
+                                    {bronzeAcc[f.key] ? 'Allowed' : 'Blocked'}
+                                </span>
+                                <Toggle checked={!!bronzeAcc[f.key]} onChange={() => toggleBronze(f.key)} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div style={{ marginTop:12, padding:'12px 16px', background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, fontSize:13, color:'#92400E' }}>
+                    Changes take effect immediately for all Bronze plan users.
+                </div>
             </div>
         </div>
     );

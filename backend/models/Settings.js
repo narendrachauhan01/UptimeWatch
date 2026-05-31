@@ -64,6 +64,11 @@ const settingsSchema = new mongoose.Schema({
         webhook:     { type: Boolean, default: true },
         rocketChat:  { type: Boolean, default: true },
     },
+    bronzeAccess: {
+        whatsapp:    { type: Boolean, default: true },
+        webhook:     { type: Boolean, default: true },
+        rocketChat:  { type: Boolean, default: true },
+    },
     annualDiscount: { type: Number, default: 20 },
     annualPlans: {
         enabled:  { type: Boolean, default: true },
@@ -140,6 +145,7 @@ settingsSchema.statics.get = async function () {
     if (s.freeTrialAccess && s.freeTrialAccess.whatsapp   === undefined) { s.freeTrialAccess.whatsapp = true;   s.markModified('freeTrialAccess'); dirty = true; }
     if (s.freeTrialAccess && s.freeTrialAccess.webhook    === undefined) { s.freeTrialAccess.webhook = true;    s.markModified('freeTrialAccess'); dirty = true; }
     if (s.freeTrialAccess && s.freeTrialAccess.rocketChat === undefined) { s.freeTrialAccess.rocketChat = true; s.markModified('freeTrialAccess'); dirty = true; }
+    if (!s.bronzeAccess) { s.bronzeAccess = { whatsapp: true, webhook: true, rocketChat: true }; s.markModified('bronzeAccess'); dirty = true; }
     const DEFAULT_INTERVALS   = { bronze: 120, silver: 60,  gold: 30 };
     const DEFAULT_REC_LIMITS  = { bronze: 10,  silver: 20,  gold: 30 };
     for (const k of ['bronze', 'silver', 'gold']) {
@@ -165,6 +171,10 @@ settingsSchema.statics.update = async function (data) {
     if (data.freeTrialAccess !== undefined) {
         s.freeTrialAccess = { ...s.freeTrialAccess, ...data.freeTrialAccess };
         s.markModified('freeTrialAccess');
+    }
+    if (data.bronzeAccess !== undefined) {
+        s.bronzeAccess = { ...s.bronzeAccess, ...data.bronzeAccess };
+        s.markModified('bronzeAccess');
     }
     if (data.freeTrialFeatures !== undefined) {
         const f = sanitizeFeatures(data.freeTrialFeatures);

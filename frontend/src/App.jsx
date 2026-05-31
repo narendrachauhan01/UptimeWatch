@@ -342,6 +342,7 @@ function AppInner() {
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [freeAccess, setFreeAccess] = useState({ domainSsl: true, charts: true, pingMonitor: true, whatsapp: true, webhook: true, rocketChat: true });
+  const [bronzeAccess, setBronzeAccess] = useState({ whatsapp: true, webhook: true, rocketChat: true });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -362,7 +363,10 @@ function AppInner() {
   const showToast = (message, type = 'success') => setToast({ message, type });
 
   useEffect(() => {
-    getPlans().then(r => { if (r.data.freeTrialAccess) setFreeAccess(r.data.freeTrialAccess); }).catch(() => {});
+    getPlans().then(r => {
+      if (r.data.freeTrialAccess) setFreeAccess(r.data.freeTrialAccess);
+      if (r.data.bronzeAccess)    setBronzeAccess(r.data.bronzeAccess);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -633,7 +637,7 @@ function AppInner() {
               {isAdmin && <Route path="/deleted-users" element={<DeletedUsers />} />}
               <Route path="/site/:id" element={<SiteDetail />} />
               <Route path="/add-monitor" element={<AddMonitor />} />
-              <Route path="/integrations" element={<Integrations user={user} freeAccess={freeAccess} />} />
+              <Route path="/integrations" element={<Integrations user={user} freeAccess={freeAccess} bronzeAccess={bronzeAccess} />} />
               <Route path="/ping" element={!user || user.plan !== 'free_trial' || freeAccess.pingMonitor ? <PingMonitor /> : <UpgradeGate user={user} feature="Ping Monitor"><PingMonitor /></UpgradeGate>} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/support" element={<ContactSupport user={user} />} />
