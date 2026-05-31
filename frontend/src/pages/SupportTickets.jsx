@@ -42,14 +42,16 @@ function AdminImageUpload({ sendReply, reply, sending }) {
                     </div>
                 ))}
             </div>
-            <div style={{ display:'flex', gap:6 }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                 <input ref={ref} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e=>{ setFiles(p=>[...p,...Array.from(e.target.files)].slice(0,5)); e.target.value=''; }}/>
-                <button type="button" onClick={()=>ref.current.click()} style={{ padding:'7px 12px', border:'1.5px dashed #e2e8f0', borderRadius:8, background:'#f8fafc', color:'#64748b', fontSize:12, cursor:'pointer' }}>
-                    📎 {files.length>0?`${files.length} image${files.length>1?'s':''}` : 'Attach'}
+                <button type="button" onClick={()=>ref.current.click()}
+                    style={{ width:36, height:36, borderRadius:'50%', border:'1.5px solid #e2e8f0', background:'#f8fafc', color:'#64748b', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, position:'relative' }}>
+                    📎
+                    {files.length>0 && <span style={{ position:'absolute', top:-4, right:-4, width:16, height:16, borderRadius:'50%', background:'#7c3aed', color:'#fff', fontSize:9, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>{files.length}</span>}
                 </button>
                 <button onClick={()=>sendReply(files).then(()=>setFiles([]))} disabled={sending||!reply.trim()}
-                    style={{ flex:1, padding:'7px', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', border:'none', borderRadius:8, fontWeight:700, cursor:'pointer', opacity:(!reply.trim()||sending)?0.5:1, fontSize:13 }}>
-                    {sending?'Sending...':'🛡 Send Reply'}
+                    style={{ flex:1, padding:'9px 16px', background:'linear-gradient(135deg,#4f46e5,#3730a3)', color:'#fff', border:'none', borderRadius:10, fontWeight:700, cursor:'pointer', opacity:(!reply.trim()||sending)?0.4:1, fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                    {sending ? '⏳ Sending...' : <><span>🛡</span><span>Send Reply</span></>}
                 </button>
             </div>
         </div>
@@ -245,21 +247,25 @@ export default function SupportTickets() {
                                 </div>
                                 <button onClick={()=>setSelected(null)} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:6, width:24, height:24, cursor:'pointer', color:'#fff', fontSize:12, flexShrink:0, marginLeft:8 }}>✕</button>
                             </div>
-                            <div style={{ display:'flex', gap:6 }}>
-                                <select value={selected.status} onChange={e=>update(selected._id,{status:e.target.value})}
-                                    style={{ flex:1, padding:'5px 8px', border:'none', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.15)', color:'#fff' }}>
-                                    <option value="open" style={{color:'#000'}}>Open</option>
-                                    <option value="in_progress" style={{color:'#000'}}>In Progress</option>
-                                    <option value="resolved" style={{color:'#000'}}>Resolved</option>
-                                    <option value="closed" style={{color:'#000'}}>Closed</option>
-                                </select>
-                                <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
-                                    style={{ flex:1, padding:'5px 8px', border:'none', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.15)', color:'#fff' }}>
-                                    <option value="low" style={{color:'#000'}}>🟢 Low</option>
-                                    <option value="medium" style={{color:'#000'}}>🟡 Medium</option>
-                                    <option value="high" style={{color:'#000'}}>🔴 High</option>
-                                </select>
-                                <button onClick={()=>del(selected._id)} style={{ padding:'5px 10px', background:'rgba(239,68,68,0.3)', border:'none', borderRadius:6, color:'#fca5a5', fontSize:11, cursor:'pointer', fontWeight:700 }}>🗑</button>
+                            <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                                {/* Status pills */}
+                                {['open','in_progress','resolved','closed'].map(s => (
+                                    <button key={s} type="button" onClick={()=>update(selected._id,{status:s})}
+                                        style={{ padding:'4px 10px', borderRadius:20, fontSize:10, fontWeight:700, cursor:'pointer', border:'none', transition:'all 0.15s',
+                                            background: selected.status===s ? '#fff' : 'rgba(255,255,255,0.12)',
+                                            color: selected.status===s ? '#3730a3' : 'rgba(255,255,255,0.75)' }}>
+                                        {s==='open'?'Open':s==='in_progress'?'In Progress':s==='resolved'?'Resolved':'Closed'}
+                                    </button>
+                                ))}
+                                <div style={{ flex:1 }}/>
+                                {/* Priority */}
+                                {[['low','🟢'],['medium','🟡'],['high','🔴']].map(([p,icon]) => (
+                                    <button key={p} type="button" onClick={()=>update(selected._id,{priority:p})}
+                                        style={{ width:30, height:30, borderRadius:'50%', fontSize:14, cursor:'pointer', border: selected.priority===p?'2px solid #fff':'2px solid transparent', background: selected.priority===p?'rgba(255,255,255,0.2)':'transparent', transition:'all 0.15s' }}>
+                                        {icon}
+                                    </button>
+                                ))}
+                                <button onClick={()=>del(selected._id)} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(239,68,68,0.35)', border:'none', color:'#fca5a5', fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>🗑</button>
                             </div>
                         </div>
 
