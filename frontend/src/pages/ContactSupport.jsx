@@ -391,7 +391,7 @@ export default function ContactSupport({ user }) {
                 :<div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}><table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:550}}>
                     <thead>
                         <tr style={{background:'#F9FAFB',borderBottom:'1px solid #E5E7EB'}}>
-                            {['Ticket ID','Subject','Priority','Create Date','Status',''].map(h=>(
+                            {['Ticket ID','Subject','Priority','Create Date','Status'].map(h=>(
                                 <th key={h} style={{padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#6B7280',textTransform:'uppercase',letterSpacing:0.5,whiteSpace:'nowrap'}}>{h}</th>
                             ))}
                         </tr>
@@ -422,7 +422,6 @@ export default function ContactSupport({ user }) {
                                     <span style={{fontSize:12,fontWeight:600,color:statusColor[t.status]||'#6B7280'}}>{statusLabel[t.status]||t.status}</span>
                                 </td>
                                 <td style={{padding:'14px 16px'}}>
-                                    <button onClick={e=>{e.stopPropagation();openTicket(t);}} style={{background:'none',border:'none',color:'#9CA3AF',cursor:'pointer',fontSize:16,padding:'2px 6px'}}>···</button>
                                 </td>
                             </tr>
                         ))}
