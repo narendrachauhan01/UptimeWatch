@@ -311,8 +311,8 @@ export default function Account({ user, onUserUpdate }) {
                 const expired  = !isActive;
 
                 return (
-                    <div style={{ display:'flex', justifyContent:'center', padding:'8px 0' }}>
-                        <div style={{ width:'100%', maxWidth:380 }}>
+                    <div style={{ display:'flex', justifyContent:'flex-start', padding:'8px 0' }}>
+                        <div style={{ width:'100%', maxWidth:340 }}>
                             <div className={`acct-plan-card acct-current`} style={{ margin:'0 auto' }}>
                                 <div className="acct-active-glow" />
                                 <div className="acct-plan-card-header" style={{ background: PLAN_GRADIENTS[plan] }}>
