@@ -217,6 +217,7 @@ export default function ContactSupport({ user }) {
                     <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:12, padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:0.5, marginBottom:12 }}>Ticket Info</div>
                         {[
+                            ['Ticket ID', `#${selected._id.slice(-6).toUpperCase()}`],
                             ['Status', statusStyle(selected.status).label],
                             ['Priority', PRIO_LABEL[selected.priority]],
                             ['Created', new Date(selected.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})],
