@@ -12,7 +12,7 @@ const TOPICS = [
 ];
 
 export default function ContactSupport({ user }) {
-    const [form,    setForm]    = useState({ name: user?.name||'', email: user?.email||'', subject: '', message: '' });
+    const [form,    setForm]    = useState({ name: user?.name||'', email: user?.email||'', subject: '', message: '', priority: 'medium' });
     const [sending, setSending] = useState(false);
     const [done,    setDone]    = useState(false);
     const [error,   setError]   = useState('');
@@ -102,6 +102,22 @@ export default function ContactSupport({ user }) {
                                             ))}
                                         </div>
                                     )}
+                                </div>
+
+                                <div>
+                                    <label style={{ fontSize:12, fontWeight:700, color:'#374151', display:'block', marginBottom:8 }}>Priority *</label>
+                                    <div style={{ display:'flex', gap:8 }}>
+                                        {[
+                                            { value:'low',    label:'🟢 Low',    border:'#86efac', color:'#15803d', activeBg:'#16a34a' },
+                                            { value:'medium', label:'🟡 Medium', border:'#fde68a', color:'#b45309', activeBg:'#f59e0b' },
+                                            { value:'high',   label:'🔴 High',   border:'#fca5a5', color:'#dc2626', activeBg:'#ef4444' },
+                                        ].map(p => (
+                                            <button key={p.value} type="button" onClick={()=>setForm({...form,priority:p.value})}
+                                                style={{ flex:1, padding:'10px 8px', border:`2px solid ${form.priority===p.value?p.activeBg:p.border}`, borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', background: form.priority===p.value?p.activeBg:'#fff', color: form.priority===p.value?'#fff':p.color, transition:'all 0.15s' }}>
+                                                {p.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div>

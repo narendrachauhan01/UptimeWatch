@@ -1167,18 +1167,38 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                         <button onClick={loadTickets} style={{ padding:'8px 16px', background:'#f1f5f9', border:'1.5px solid #e2e8f0', borderRadius:9, fontSize:13, fontWeight:600, cursor:'pointer' }}>🔄 Refresh</button>
                     </div>
 
+                    {/* Priority summary */}
+                    {tickets.length > 0 && (
+                        <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+                            {[['high','🔴 High','#fef2f2','#dc2626'],['medium','🟡 Medium','#fffbeb','#b45309'],['low','🟢 Low','#f0fdf4','#15803d']].map(([p,l,bg,c]) => (
+                                <div key={p} style={{ padding:'6px 16px', background:bg, borderRadius:20, fontSize:12, fontWeight:700, color:c }}>
+                                    {l}: {tickets.filter(t=>t.priority===p&&t.status!=='closed').length} open
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {tickets.length === 0 ? (
                         <div style={{ background:'#fff', borderRadius:16, border:'1.5px solid #e2e8f0', padding:60, textAlign:'center' }}>
                             <div style={{ fontSize:48, marginBottom:12 }}>🎧</div>
                             <div style={{ fontWeight:700, color:'#1e1b4b', fontSize:16 }}>No support tickets yet</div>
                             <div style={{ fontSize:13, color:'#94a3b8', marginTop:6 }}>Tickets from users will appear here</div>
                         </div>
-                    ) : tickets.map(t => (
-                        <div key={t._id} style={{ background:'#fff', borderRadius:16, border:`1.5px solid ${t.status==='open'?'#bfdbfe':t.status==='replied'?'#bbf7d0':'#e2e8f0'}`, padding:22, marginBottom:12, borderLeft:`4px solid ${t.status==='open'?'#3b82f6':t.status==='replied'?'#16a34a':'#94a3b8'}` }}>
+                    ) : [...tickets].sort((a,b) => {
+                        const p = {high:0,medium:1,low:2};
+                        return (p[a.priority]??1) - (p[b.priority]??1);
+                    }).map(t => {
+                        const prioColor = t.priority==='high'?'#ef4444':t.priority==='medium'?'#f59e0b':'#22c55e';
+                        const prioBg    = t.priority==='high'?'#fef2f2':t.priority==='medium'?'#fffbeb':'#f0fdf4';
+                        return (
+                        <div key={t._id} style={{ background:'#fff', borderRadius:16, border:`1.5px solid ${t.status==='open'?'#bfdbfe':t.status==='replied'?'#bbf7d0':'#e2e8f0'}`, padding:22, marginBottom:12, borderLeft:`4px solid ${prioColor}` }}>
                             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
                                 <div style={{ flex:1 }}>
                                     <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:6 }}>
                                         <span style={{ fontWeight:800, fontSize:15, color:'#1e1b4b' }}>{t.subject}</span>
+                                        <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:prioBg, color:prioColor }}>
+                                            {t.priority==='high'?'🔴 High':t.priority==='medium'?'🟡 Medium':'🟢 Low'}
+                                        </span>
                                         <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700,
                                             background: t.status==='open'?'#eff6ff':t.status==='replied'?'#f0fdf4':'#f1f5f9',
                                             color: t.status==='open'?'#1d4ed8':t.status==='replied'?'#15803d':'#64748b' }}>
@@ -1213,7 +1233,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    );})}
                 </div>
             )}
 

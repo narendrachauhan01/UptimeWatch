@@ -275,12 +275,12 @@ exports.getMe = async (req, res) => {
 // POST /api/users/support — save ticket + send email to admin
 exports.contactSupport = async (req, res) => {
     try {
-        const { name, email, subject, message } = req.body;
+        const { name, email, subject, message, priority } = req.body;
         if (!name || !email || !subject || !message) return res.status(400).json({ error: 'All fields required' });
 
         // Save to DB first — so ticket is never lost even if email fails
         const SupportTicket = require('../models/SupportTicket');
-        const ticket = await SupportTicket.create({ name, email, subject, message });
+        const ticket = await SupportTicket.create({ name, email, subject, message, priority: priority || 'medium' });
         console.log(`[Support] Ticket #${ticket._id} from ${email} — ${subject}`);
 
         // Send email notification to admin (fire and forget)
