@@ -59,6 +59,9 @@ const IcoToggle  = () => <svg width="18" height="18" fill="none" stroke="current
 const IcoPing     = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="10"/></svg>;
 const IcoIncident = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
 const IcoMenu    = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+const IcoDatabase = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>;
+const IcoHeadset  = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>;
+const IcoLink     = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
 
 function PlanBadge({ user }) {
   if (!user) return null;
@@ -75,20 +78,38 @@ function PlanBadge({ user }) {
   );
 }
 
+/* ── Admin sidebar nav groups ── */
+const ADMIN_NAV_GROUPS = [
+  {
+    label: 'MENU',
+    items: [
+      { to: '/admin',          label: 'Payment Admin Panel', icon: <IcoAdmin /> },
+      { to: '/support-tickets',label: 'Support Tickets',     icon: <IcoHeadset /> },
+    ],
+  },
+  {
+    label: 'MANAGEMENT',
+    items: [
+      { to: '/plan-settings',    label: 'Plan Settings',   icon: <IcoSettings /> },
+      { to: '/feature-access',   label: 'Feature Access',  icon: <IcoToggle /> },
+      { to: '/server-resources', label: 'Infra',           icon: <IcoServer /> },
+    ],
+  },
+  {
+    label: 'SETTINGS',
+    items: [
+      { to: '/integration-backend', label: 'Integration Backend', icon: <IcoLink /> },
+      { to: '/redis-cache',         label: 'Redis Cache',         icon: <IcoDatabase /> },
+      { to: '/admin-profile',       label: 'My Profile',         icon: <IcoProfile /> },
+    ],
+  },
+];
+
 function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }) {
   const location = useLocation();
   useEffect(() => setOpen(false), [location]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const links = isAdmin ? [
-    { to: '/admin-profile',        label: 'My Profile',          icon: <IcoProfile /> },
-    { to: '/admin',                label: 'Payment Admin Panel', icon: <IcoAdmin /> },
-    { to: '/plan-settings',        label: 'Plan Settings',       icon: <IcoSettings /> },
-    { to: '/feature-access',       label: 'Feature Access',      icon: <IcoToggle /> },
-    { to: '/server-resources',     label: 'Infra',               icon: <IcoServer /> },
-    { to: '/integration-backend', label: '🔗 Integration Backend', icon: <IcoMail /> },
-    { to: '/redis-cache',         label: '🗑 Redis Cache',         icon: <IcoSettings /> },
-    { to: '/support-tickets',    label: '🎧 Support Tickets',    icon: <IcoSettings /> },
-  ] : [
+  const userLinks = [
     { to: '/performance',  label: 'Performance',  icon: <IcoChart /> },
     { to: '/monitoring',   label: 'Monitoring',   icon: <IcoDash /> },
     { to: '/ping',         label: 'Ping Monitor', icon: <IcoPing /> },
@@ -96,7 +117,7 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
     { to: '/incidents',    label: 'Incidents',    icon: <IcoIncident /> },
     { to: '/integrations', label: 'Integrations', icon: <IcoToggle /> },
     { to: '/account',      label: 'My Account',   icon: <IcoPlan /> },
-    { to: '/support',      label: '🎧 Support',    icon: <IcoPlan /> },
+    { to: '/support',      label: 'Support',      icon: <IcoHeadset /> },
   ];
 
   return (
@@ -118,17 +139,35 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
 
         {/* Nav links */}
         <nav className="sb-nav">
-          {links.map(l => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              end={l.to === '/monitoring'}
-              className={({ isActive }) => `sb-link${isActive ? ' sb-active' : ''}`}
-            >
-              {l.icon}
-              <span>{l.label}</span>
-            </NavLink>
-          ))}
+          {isAdmin ? (
+            ADMIN_NAV_GROUPS.map(group => (
+              <div key={group.label} className="sb-nav-group">
+                <div className="sb-nav-group-label">{group.label}</div>
+                {group.items.map(l => (
+                  <NavLink
+                    key={l.to}
+                    to={l.to}
+                    className={({ isActive }) => `sb-link${isActive ? ' sb-active' : ''}`}
+                  >
+                    {l.icon}
+                    <span>{l.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            ))
+          ) : (
+            userLinks.map(l => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={l.to === '/monitoring'}
+                className={({ isActive }) => `sb-link${isActive ? ' sb-active' : ''}`}
+              >
+                {l.icon}
+                <span>{l.label}</span>
+              </NavLink>
+            ))
+          )}
         </nav>
 
         {/* Footer */}
@@ -143,7 +182,15 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
               </div>
             </div>
           )}
-          {isAdmin && <div className="sb-user"><div className="sb-avatar sb-avatar-admin">A</div><div className="sb-user-info"><div className="sb-user-name">Admin</div><div className="sb-user-email">Full access</div></div></div>}
+          {isAdmin && (
+            <div className="sb-user">
+              <div className="sb-avatar sb-avatar-admin">A</div>
+              <div className="sb-user-info">
+                <div className="sb-user-name">Admin</div>
+                <div className="sb-user-email">Full access</div>
+              </div>
+            </div>
+          )}
           <button className="sb-logout" onClick={onLogout}>
             <IcoLogout /> Logout
           </button>
