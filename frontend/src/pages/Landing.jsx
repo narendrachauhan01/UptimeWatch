@@ -69,7 +69,7 @@ export default function Landing() {
           </div>
           <div className="lp-nav-right">
             <Link to="/login" className="lp-nav-login">Login</Link>
-            <Link to="/register" className="lp-nav-cta">Start Free →</Link>
+            <Link to="/register" className="lp-nav-cta">Get Started Free</Link>
           </div>
           <button className={`lp-burger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(!menuOpen)}>
             <span /><span /><span />
@@ -81,7 +81,7 @@ export default function Landing() {
             <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
             <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
             <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
-            <Link to="/register" className="lp-nav-cta" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center' }}>Start Free Trial</Link>
+            <Link to="/register" className="lp-nav-cta" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center' }}>Get Started Free</Link>
           </div>
         )}
       </nav>
