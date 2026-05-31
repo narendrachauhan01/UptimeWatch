@@ -154,36 +154,6 @@ function PlanSelectScreen({ planData, user, onSelect, onBack }) {
                 })}
             </div>
 
-            {/* Custom / Enterprise Plan */}
-            <div className="pss-custom-card">
-                <div className="pss-custom-left">
-                    <div className="pss-custom-icon">🏢</div>
-                    <div className="pss-custom-info">
-                        <div className="pss-custom-name">Custom / Enterprise</div>
-                        <div className="pss-custom-sub">Dedicated support · Custom integrations · SLA guarantee</div>
-                    </div>
-                </div>
-                <div className="pss-custom-right">
-                    <div className="pss-custom-input-wrap">
-                        <label className="pss-custom-label">Sites required</label>
-                        <input
-                            className="pss-custom-input"
-                            type="number"
-                            min="1"
-                            placeholder="e.g. 50"
-                            value={customSites}
-                            onChange={e => setCustomSites(e.target.value)}
-                        />
-                    </div>
-                    <button
-                        className="pss-custom-btn"
-                        onClick={() => onSelect('custom', customSites)}
-                        disabled={!customSites || Number(customSites) < 1}
-                    >
-                        Request Quote →
-                    </button>
-                </div>
-            </div>
         </div>
     );
 }
