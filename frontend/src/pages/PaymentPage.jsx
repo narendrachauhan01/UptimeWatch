@@ -3,6 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getPlans, createOrder, verifyPayment, deleteMyAccount } from '../api';
 import UWLogo from '../components/UWLogo';
 
+function parseFeature(f) {
+    const idx = f.indexOf(':');
+    if (idx === -1) return { type: 'ok', label: f };
+    return { type: f.slice(0, idx), label: f.slice(idx + 1) };
+}
+
 const PLAN_LABEL = {
     verification: 'Free Trial',
     bronze:       'Bronze',
@@ -53,9 +59,6 @@ const PLAN_BADGE = {
 };
 
 function PlanSelectScreen({ planData, user, onSelect, onBack }) {
-    const [customSites, setCustomSites] = useState('');
-    const [billing, setBilling] = useState('monthly');
-
     const discPct = planData?.annualDiscount ?? 20;
     const ap = planData?.annualPlans;
     const annualPrice = (key, monthly) => {
@@ -79,20 +82,11 @@ function PlanSelectScreen({ planData, user, onSelect, onBack }) {
                 <p className="pss-sub">Welcome, <strong>{user?.name}</strong>! Select a plan to get started.</p>
             </div>
 
-            {/* Monthly / Annually Toggle */}
+            {/* Annual savings badge */}
             <div style={{ display:'flex', justifyContent:'center', marginBottom:28 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.08)', borderRadius:50, padding:5 }}>
-                    <button onClick={() => setBilling('monthly')} style={{ padding:'9px 22px', borderRadius:50, border:'none', cursor:'pointer', fontWeight:700, fontSize:14, transition:'all 0.2s',
-                        background: billing==='monthly' ? '#fff' : 'transparent',
-                        color: billing==='monthly' ? '#1e293b' : 'rgba(255,255,255,0.6)' }}>
-                        Monthly
-                    </button>
-                    <button onClick={() => setBilling('annually')} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 22px', borderRadius:50, border:'none', cursor:'pointer', fontWeight:700, fontSize:14, transition:'all 0.2s',
-                        background: billing==='annually' ? '#fff' : 'transparent',
-                        color: billing==='annually' ? '#1e293b' : 'rgba(255,255,255,0.6)' }}>
-                        Annually
-                        <span style={{ background:'#f59e0b', color:'#fff', fontSize:11, fontWeight:800, padding:'2px 10px', borderRadius:50 }}>Save {discPct}%</span>
-                    </button>
+                <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(245,158,11,0.15)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:50, padding:'8px 20px' }}>
+                    <span style={{ fontSize:16 }}>🎉</span>
+                    <span style={{ fontWeight:700, fontSize:14, color:'#fbbf24' }}>Annual pricing — Save {discPct}% on all plans!</span>
                 </div>
             </div>
 
@@ -102,7 +96,7 @@ function PlanSelectScreen({ planData, user, onSelect, onBack }) {
                     const monthlyPrice = isVerif
                         ? (planData?.verificationFee ?? 2)
                         : (planData?.plans?.[p]?.price ?? { bronze: 499, silver: 999, gold: 1499 }[p]);
-                    const price = (!isVerif && billing === 'annually') ? annualPrice(p, monthlyPrice) : monthlyPrice;
+                    const price = !isVerif ? annualPrice(p, monthlyPrice) : monthlyPrice;
                     const features = isVerif
                         ? (planData?.freeTrialFeatures?.length ? planData.freeTrialFeatures : PLAN_FEATURES_FALLBACK.verification)
                         : (planData?.plans?.[p]?.features?.length ? planData.plans[p].features : PLAN_FEATURES_FALLBACK[p]);
@@ -123,27 +117,32 @@ function PlanSelectScreen({ planData, user, onSelect, onBack }) {
                                 {isVerif ? (
                                     <div className="pss-free-tag">₹{price}</div>
                                 ) : (
-                                    <div>
+                                    <div style={{ textAlign:'center' }}>
                                         <div className="pss-price-big" style={{ color: accent }}>₹{price}</div>
-                                        {billing === 'annually' && <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', textDecoration:'line-through', textAlign:'center' }}>₹{monthlyPrice}/mo</div>}
+                                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', textDecoration:'line-through' }}>₹{monthlyPrice}/mo</div>
                                     </div>
                                 )}
                             </div>
                             <div className="pss-plan-name">{PLAN_LABEL[p]}</div>
                             {isVerif
                                 ? <div className="pss-period">one-time verification</div>
-                                : <div className="pss-period">{billing === 'annually' ? 'per month · billed annually' : 'per month'}</div>
+                                : <div className="pss-period">per month · billed annually</div>
                             }
                             {isVerif && <div className="pss-trial-note">5-day free trial · Non-refundable</div>}
                             <ul className="pss-features">
-                                {features.map(f => (
-                                    <li key={f}>
-                                        <svg width="13" height="13" fill="none" stroke={accent} strokeWidth="2.5" viewBox="0 0 24 24">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        {f}
-                                    </li>
-                                ))}
+                                {features.map(f => {
+                                    const { type, label } = parseFeature(f);
+                                    return (
+                                        <li key={f} style={{ opacity: type === 'no' ? 0.4 : 1 }}>
+                                            {type === 'ok'      && <svg width="13" height="13" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24" style={{flexShrink:0}}><polyline points="20 6 9 17 4 12"/></svg>}
+                                            {type === 'no'      && <svg width="13" height="13" fill="none" stroke="#f87171" strokeWidth="2.5" viewBox="0 0 24 24" style={{flexShrink:0}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                                            {type === 'limited' && <span style={{flexShrink:0, fontSize:12}}>😐</span>}
+                                            {type === 'soon'    && <span style={{flexShrink:0, fontSize:11}}>🔜</span>}
+                                            <span>{label}</span>
+                                            {type === 'soon' && <span style={{ fontSize:9, background:'rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.5)', borderRadius:4, padding:'1px 5px', marginLeft:2, fontWeight:700 }}>Soon</span>}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                             <button className="pss-btn" style={{ background: PLAN_GRADIENT[p] || `linear-gradient(135deg,${accent},${accent}cc)` }}
                                 onClick={() => onSelect(p)}>
