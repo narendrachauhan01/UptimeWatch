@@ -42,8 +42,11 @@ router.get('/support-tickets',              auth, adminOnly, async (req, res) =>
     const tickets = await SupportTicket.find().sort('-createdAt');
     const filled = await Promise.all(tickets.map(async t => {
         const obj = t.toObject();
-        if (!obj.accountId && obj.userId) {
-            const u = await User.findById(obj.userId).select('accountId');
+        if (!obj.accountId) {
+            // Try userId first, then email
+            let u = null;
+            if (obj.userId) u = await User.findById(obj.userId).select('accountId');
+            if (!u && obj.email) u = await User.findOne({ email: obj.email }).select('accountId');
             obj.accountId = u?.accountId || null;
         }
         return obj;
