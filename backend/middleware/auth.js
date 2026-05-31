@@ -27,7 +27,7 @@ module.exports = async function authMiddleware(req, res, next) {
                     (user.plan === 'free_trial' && user.trialVerified && user.trialEndsAt && new Date() > new Date(user.trialEndsAt)) ||
                     (user.plan !== 'free_trial' && user.planEndsAt && new Date() > new Date(user.planEndsAt));
                 // Allow payment routes always
-                const allowedPaths = ['/api/payment', '/api/users/logout', '/api/users/profile'];
+                const allowedPaths = ['/api/payment', '/api/users/logout', '/api/users/profile', '/api/users/support'];
                 const isAllowed = allowedPaths.some(p => req.path.startsWith(p));
                 if (expired && !isAllowed) {
                     return res.status(403).json({ error: 'Plan expired. Upgrade to continue.', planExpired: true });

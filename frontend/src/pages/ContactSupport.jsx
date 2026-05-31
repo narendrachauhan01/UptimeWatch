@@ -126,7 +126,9 @@ export default function ContactSupport({ user }) {
             replyFiles.forEach(f => fd.append('images', f));
             const r = await axios.post(`${API_URL}/api/users/support/${selected._id}/reply`, fd, { withCredentials: true });
             setSelected(r.data); setReply(''); setReplyFiles([]); load();
-        } catch {}
+        } catch (e) {
+            alert('Failed to send reply: ' + (e.response?.data?.error || e.message));
+        }
         setSending(false);
     };
 
