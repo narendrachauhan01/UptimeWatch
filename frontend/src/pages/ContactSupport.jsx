@@ -357,22 +357,6 @@ export default function ContactSupport({ user }) {
                 <p style={{fontSize:14,color:'#6B7280',margin:0}}>View and manage your support requests</p>
             </div>
 
-            {/* Stats */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:14,marginBottom:24}}>
-                {[
-                    {label:'Total tickets',   value:tickets.length,                                                         icon:'🎫',bg:'#EEF2FF',color:'#4F46E5',f:'all'},
-                    {label:'Pending',         value:tickets.filter(t=>t.status==='open'||t.status==='in_progress').length,  icon:'⏳',bg:'#FFF7ED',color:'#EA580C',f:'pending'},
-                    {label:'Solved',          value:tickets.filter(t=>t.status==='resolved').length,                        icon:'✅',bg:'#F0FDF4',color:'#16A34A',f:'solved'},
-                    {label:'Closed',          value:tickets.filter(t=>t.status==='closed').length,                          icon:'🔒',bg:'#F9FAFB',color:'#6B7280',f:'closed'},
-                ].map(s=>{
-                    const active=filter===s.f;
-                    return <div key={s.label} onClick={()=>setFilter(active?'all':s.f)} style={{background:'#fff',borderRadius:10,border:`1px solid ${active?s.color:'#E5E7EB'}`,borderTop:`3px solid ${s.color}`,padding:'16px 18px',boxShadow:active?`0 4px 12px ${s.color}25`:'0 1px 3px rgba(0,0,0,0.06)',cursor:'pointer',transition:'all 0.15s'}}>
-                        <div style={{fontSize:24,fontWeight:800,color:active?s.color:'#111827',lineHeight:1,marginBottom:4}}>{s.value}</div>
-                        <div style={{fontSize:12,color:'#6B7280'}}>{s.label}</div>
-                    </div>;
-                })}
-            </div>
-
             {/* Table */}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E5E7EB',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',overflow:'hidden'}}>
                 <div style={{padding:'14px 20px',borderBottom:'1px solid #F3F4F6',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
