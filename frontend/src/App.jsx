@@ -341,7 +341,7 @@ function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [freeAccess, setFreeAccess] = useState({ domainSsl: true, charts: true, pingMonitor: true });
+  const [freeAccess, setFreeAccess] = useState({ domainSsl: true, charts: true, pingMonitor: true, whatsapp: true, webhook: true, rocketChat: true });
   const navigate = useNavigate();
   const location = useLocation();
 

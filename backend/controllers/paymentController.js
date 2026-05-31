@@ -74,7 +74,7 @@ exports.getPlans = async (req, res) => {
             verificationFee: settings.verificationFee || 2,
             trialDays: settings.trialDays || 5,
             freeTrialFeatures: settings.freeTrialFeatures || [],
-            freeTrialAccess: settings.freeTrialAccess || { domainSsl: true, charts: true },
+            freeTrialAccess: settings.freeTrialAccess || { domainSsl: true, charts: true, pingMonitor: true, whatsapp: true, webhook: true, rocketChat: true },
             annualDiscount: settings.annualDiscount ?? 20,
             annualPlans: settings.annualPlans,
             customPlans: settings.customPlans,
