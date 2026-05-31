@@ -582,9 +582,17 @@ function AppInner() {
             <UWLogo size={30} />
             <span>UptimeForge</span>
           </div>
-          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
-            <IcoMenu />
-          </button>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {!isAdmin && (
+              <button className="sb-bell" onClick={handleBell} aria-label="Notifications" style={{ position:'relative' }}>
+                <IcoBell />
+                {unreadCount > 0 && <span className="sb-bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+              </button>
+            )}
+            <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+              <IcoMenu />
+            </button>
+          </div>
         </div>
 
         <TrialBanner user={user} />
