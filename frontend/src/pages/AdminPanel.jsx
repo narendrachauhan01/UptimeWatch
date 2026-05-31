@@ -778,7 +778,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                     ) : (
                     <>
                     {/* ── Monthly Users ── */}
-                    <div style={{ marginBottom: 24 }}>
+                    {(durationFilter === 'all' || monthlyFiltered.length > 0) && <div style={{ marginBottom: 24 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                             <span style={{ fontWeight:800, fontSize:15, color:'#1e40af' }}>📅 Monthly Users</span>
                             <span style={{ background:'#dbeafe', color:'#1e40af', fontWeight:700, fontSize:12, padding:'2px 10px', borderRadius:50 }}>{monthlyFiltered.length}</span>
@@ -911,10 +911,10 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                             </div>
                         </div>
                         )}
-                    </div>
+                    </div>}
 
                     {/* ── Annual Users ── */}
-                    <div>
+                    {(durationFilter === 'all' || annualFiltered.length > 0) && <div>
                         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                             <span style={{ fontWeight:800, fontSize:15, color:'#b45309' }}>📆 Annual Users</span>
                             <span style={{ background:'#fef3c7', color:'#b45309', fontWeight:700, fontSize:12, padding:'2px 10px', borderRadius:50 }}>{annualFiltered.length}</span>
@@ -1012,7 +1012,7 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                             </div>
                         </div>
                         )}
-                    </div>
+                    </div>}
                     </>
                     )}
                 </div>
