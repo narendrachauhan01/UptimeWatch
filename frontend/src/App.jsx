@@ -95,7 +95,7 @@ function Sidebar({ onLogout, user, isAdmin, open, setOpen, onBell, unreadCount }
     { to: '/domain-ssl',   label: 'Domain & SSL', icon: <IcoLock /> },
     { to: '/incidents',    label: 'Incidents',    icon: <IcoIncident /> },
     { to: '/integrations', label: 'Integrations', icon: <IcoToggle /> },
-    { to: '/account',      label: 'My Plan',      icon: <IcoPlan /> },
+    { to: '/account',      label: 'My Account',   icon: <IcoPlan /> },
     { to: '/support',      label: '🎧 Support',    icon: <IcoPlan /> },
   ];
 
