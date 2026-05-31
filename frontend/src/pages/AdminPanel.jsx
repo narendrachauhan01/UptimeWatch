@@ -627,7 +627,10 @@ export default function AdminPanel({ initialTab = 'overview' }) {
                                 }}>
                                     <Avatar name={u.name} size={36} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
+                                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                                            <span style={{ fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</span>
+                                            {u.accountId && <span style={{ fontSize:11, fontWeight:700, background:'#ede9fe', color:'#7c3aed', padding:'1px 8px', borderRadius:20, flexShrink:0, fontFamily:'monospace' }}>{u.accountId}</span>}
+                                        </div>
                                         <div style={{ fontSize: 12, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {u.email}{u.phone ? ` · ${u.phone}` : ''}
                                         </div>
