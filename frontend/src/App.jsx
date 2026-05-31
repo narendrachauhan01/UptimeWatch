@@ -1,39 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import UWLogo from './components/UWLogo';
 import CookieConsent from './components/CookieConsent';
-import Dashboard from './pages/Dashboard';
-import WhatsAppPage from './pages/WhatsApp';
-import Alerts from './pages/Alerts';
-import DomainSSL from './pages/DomainSSL';
-import Charts from './pages/Charts';
-import EmailPage from './pages/Email';
-import Resources from './pages/Resources';
-import PlanSettings from './pages/PlanSettings';
-import FeatureAccess from './pages/FeatureAccess';
-import PingMonitor from './pages/PingMonitor';
-import SiteDetail from './pages/SiteDetail';
-import AddMonitor from './pages/AddMonitor';
-import Login from './pages/Login';
-import ResetPassword from './pages/ResetPassword';
-import Register from './pages/Register';
-import Pricing from './pages/Pricing';
-import Landing from './pages/Landing';
-import Account from './pages/Account';
-import AdminPanel from './pages/AdminPanel';
-import VerifyAccount from './pages/VerifyAccount';
-import PaymentPage from './pages/PaymentPage';
-import CompleteProfile from './pages/CompleteProfile';
-import Integrations from './pages/Integrations';
-import IntegrationBackend from './pages/IntegrationBackend';
-import RedisCache from './pages/RedisCache';
-import PlanCanceling from './pages/PlanCanceling';
-import DeletedUsers from './pages/DeletedUsers';
-import ContactSupport from './pages/ContactSupport';
-import SupportTickets from './pages/SupportTickets';
-import Servers from './pages/Servers';
-import TermsOfService from './pages/TermsOfService';
+const Dashboard         = lazy(() => import('./pages/Dashboard'));
+const WhatsAppPage      = lazy(() => import('./pages/WhatsApp'));
+const Alerts            = lazy(() => import('./pages/Alerts'));
+const DomainSSL         = lazy(() => import('./pages/DomainSSL'));
+const Charts            = lazy(() => import('./pages/Charts'));
+const EmailPage         = lazy(() => import('./pages/Email'));
+const Resources         = lazy(() => import('./pages/Resources'));
+const PlanSettings      = lazy(() => import('./pages/PlanSettings'));
+const FeatureAccess     = lazy(() => import('./pages/FeatureAccess'));
+const PingMonitor       = lazy(() => import('./pages/PingMonitor'));
+const SiteDetail        = lazy(() => import('./pages/SiteDetail'));
+const AddMonitor        = lazy(() => import('./pages/AddMonitor'));
+const Login             = lazy(() => import('./pages/Login'));
+const ResetPassword     = lazy(() => import('./pages/ResetPassword'));
+const Register          = lazy(() => import('./pages/Register'));
+const Pricing           = lazy(() => import('./pages/Pricing'));
+const Landing           = lazy(() => import('./pages/Landing'));
+const Account           = lazy(() => import('./pages/Account'));
+const AdminPanel        = lazy(() => import('./pages/AdminPanel'));
+const VerifyAccount     = lazy(() => import('./pages/VerifyAccount'));
+const PaymentPage       = lazy(() => import('./pages/PaymentPage'));
+const CompleteProfile   = lazy(() => import('./pages/CompleteProfile'));
+const Integrations      = lazy(() => import('./pages/Integrations'));
+const IntegrationBackend= lazy(() => import('./pages/IntegrationBackend'));
+const RedisCache        = lazy(() => import('./pages/RedisCache'));
+const PlanCanceling     = lazy(() => import('./pages/PlanCanceling'));
+const DeletedUsers      = lazy(() => import('./pages/DeletedUsers'));
+const ContactSupport    = lazy(() => import('./pages/ContactSupport'));
+const SupportTickets    = lazy(() => import('./pages/SupportTickets'));
+const Servers           = lazy(() => import('./pages/Servers'));
+const TermsOfService    = lazy(() => import('./pages/TermsOfService'));
 import { API_URL, getNotifications, markNotificationsRead, getPlans, clearNotifications } from './api';
 import Toast from './components/Toast';
 import NotificationPanel from './components/NotificationPanel';
@@ -460,15 +460,17 @@ function AppInner() {
   if (isPublicPath && !authed) {
     return (
       <>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register onRegister={handleRegister} />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/support" element={<ContactSupport user={user} />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/register" element={<Register onRegister={handleRegister} />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/support" element={<ContactSupport user={user} />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+        </Suspense>
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </>
     );
@@ -495,16 +497,18 @@ function AppInner() {
   if (!authed) {
     return (
       <>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register onRegister={handleRegister} />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/support" element={<ContactSupport user={user} />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="*" element={<Login onLogin={handleLogin} />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/register" element={<Register onRegister={handleRegister} />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/support" element={<ContactSupport user={user} />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<Login onLogin={handleLogin} />} />
+          </Routes>
+        </Suspense>
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </>
     );
@@ -599,38 +603,40 @@ function AppInner() {
         <TrialBanner user={user} />
 
         <main className="content">
-          <Routes>
-            <Route path="/verify-account" element={<VerifyAccount user={user} />} />
-            <Route path="/complete-profile" element={<CompleteProfile user={user} onComplete={handleUserUpdate} />} />
-            <Route path="/monitoring" element={<Dashboard readOnly={planExpired} />} />
-            <Route path="/dashboard" element={<Navigate to="/monitoring" replace />} />
-            <Route path="/alerts" element={<Navigate to="/incidents" replace />} />
-            <Route path="/charts" element={<Navigate to="/performance" replace />} />
-            <Route path="/servers" element={<Servers user={user} isAdmin={isAdmin} onNotify={loadNotifications} readOnly={planExpired} />} />
-            <Route path="/incidents" element={<Alerts />} />
-            <Route path="/server-resources" element={isAdmin ? <Resources /> : <Dashboard />} />
-            <Route path="/domain-ssl" element={!user || user.plan !== 'free_trial' || freeAccess.domainSsl ? <DomainSSL /> : <UpgradeGate user={user} feature="Domain & SSL Monitoring"><DomainSSL /></UpgradeGate>} />
-            <Route path="/performance"     element={!user || user.plan !== 'free_trial' || freeAccess.charts    ? <Charts />   : <UpgradeGate user={user} feature="Performance Charts"><Charts /></UpgradeGate>} />
-            <Route path="/email" element={isAdmin ? <EmailPage /> : <Dashboard />} />
-            <Route path="/whatsapp" element={isAdmin ? <WhatsAppPage /> : <Dashboard />} />
-            <Route path="/account" element={<Account user={user} onUserUpdate={handleUserUpdate} />} />
-            {isAdmin && <Route path="/admin" element={<AdminPanel />} />}
-            {isAdmin && <Route path="/admin-profile" element={<AdminPanel initialTab="profile" />} />}
-            {isAdmin && <Route path="/plan-settings" element={<PlanSettings />} />}
-            {isAdmin && <Route path="/feature-access" element={<FeatureAccess />} />}
-            {isAdmin && <Route path="/integration-backend" element={<IntegrationBackend />} />}
-            {isAdmin && <Route path="/redis-cache" element={<RedisCache />} />}
-            {isAdmin && <Route path="/plan-canceling" element={<PlanCanceling />} />}
-            {isAdmin && <Route path="/support-tickets" element={<SupportTickets />} />}
-            {isAdmin && <Route path="/deleted-users" element={<DeletedUsers />} />}
-            <Route path="/site/:id" element={<SiteDetail />} />
-            <Route path="/add-monitor" element={<AddMonitor />} />
-            <Route path="/integrations" element={<Integrations />} />
-            <Route path="/ping" element={!user || user.plan !== 'free_trial' || freeAccess.pingMonitor ? <PingMonitor /> : <UpgradeGate user={user} feature="Ping Monitor"><PingMonitor /></UpgradeGate>} />
-            <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/support" element={<ContactSupport user={user} />} />
-            <Route path="*" element={<Dashboard />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/verify-account" element={<VerifyAccount user={user} />} />
+              <Route path="/complete-profile" element={<CompleteProfile user={user} onComplete={handleUserUpdate} />} />
+              <Route path="/monitoring" element={<Dashboard readOnly={planExpired} />} />
+              <Route path="/dashboard" element={<Navigate to="/monitoring" replace />} />
+              <Route path="/alerts" element={<Navigate to="/incidents" replace />} />
+              <Route path="/charts" element={<Navigate to="/performance" replace />} />
+              <Route path="/servers" element={<Servers user={user} isAdmin={isAdmin} onNotify={loadNotifications} readOnly={planExpired} />} />
+              <Route path="/incidents" element={<Alerts />} />
+              <Route path="/server-resources" element={isAdmin ? <Resources /> : <Dashboard />} />
+              <Route path="/domain-ssl" element={!user || user.plan !== 'free_trial' || freeAccess.domainSsl ? <DomainSSL /> : <UpgradeGate user={user} feature="Domain & SSL Monitoring"><DomainSSL /></UpgradeGate>} />
+              <Route path="/performance"     element={!user || user.plan !== 'free_trial' || freeAccess.charts    ? <Charts />   : <UpgradeGate user={user} feature="Performance Charts"><Charts /></UpgradeGate>} />
+              <Route path="/email" element={isAdmin ? <EmailPage /> : <Dashboard />} />
+              <Route path="/whatsapp" element={isAdmin ? <WhatsAppPage /> : <Dashboard />} />
+              <Route path="/account" element={<Account user={user} onUserUpdate={handleUserUpdate} />} />
+              {isAdmin && <Route path="/admin" element={<AdminPanel />} />}
+              {isAdmin && <Route path="/admin-profile" element={<AdminPanel initialTab="profile" />} />}
+              {isAdmin && <Route path="/plan-settings" element={<PlanSettings />} />}
+              {isAdmin && <Route path="/feature-access" element={<FeatureAccess />} />}
+              {isAdmin && <Route path="/integration-backend" element={<IntegrationBackend />} />}
+              {isAdmin && <Route path="/redis-cache" element={<RedisCache />} />}
+              {isAdmin && <Route path="/plan-canceling" element={<PlanCanceling />} />}
+              {isAdmin && <Route path="/support-tickets" element={<SupportTickets />} />}
+              {isAdmin && <Route path="/deleted-users" element={<DeletedUsers />} />}
+              <Route path="/site/:id" element={<SiteDetail />} />
+              <Route path="/add-monitor" element={<AddMonitor />} />
+              <Route path="/integrations" element={<Integrations />} />
+              <Route path="/ping" element={!user || user.plan !== 'free_trial' || freeAccess.pingMonitor ? <PingMonitor /> : <UpgradeGate user={user} feature="Ping Monitor"><PingMonitor /></UpgradeGate>} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/support" element={<ContactSupport user={user} />} />
+              <Route path="*" element={<Dashboard />} />
+            </Routes>
+          </Suspense>
         </main>
 
         <footer className="app-footer">
