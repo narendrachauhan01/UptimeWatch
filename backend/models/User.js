@@ -33,7 +33,7 @@ userSchema.pre('save', async function () {
         this.trialEndsAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
     }
     if (this.isModified('password') && this.password) {
-        this.password = await bcrypt.hash(this.password, 10);
+        this.password = await bcrypt.hash(this.password, 8);
     }
 });
 
