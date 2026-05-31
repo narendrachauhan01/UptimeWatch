@@ -110,115 +110,134 @@ export default function SupportTickets() {
     // ── Ticket Reply View ────────────────────────────────────────────────────
     if(view==='reply' && selected) return (
         <div className="pg-wrap">
-            {/* Header */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-                <button onClick={()=>setView('list')} style={{ background:'none',border:'none',color:'#4F46E5',cursor:'pointer',fontWeight:600,fontSize:14,padding:0,display:'flex',alignItems:'center',gap:4 }}>
-                    ← Back
-                </button>
-                <span style={{ color:'#9CA3AF' }}>/</span>
-                <span style={{ fontSize:14, color:'#374151', fontWeight:600 }}>Ticket Reply</span>
+            {/* Header breadcrumb */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                <h1 style={{ fontSize:22, fontWeight:800, color:'#111827', margin:0 }}>Ticket Reply</h1>
+                <div style={{ fontSize:13, color:'#9CA3AF' }}>
+                    <span style={{ cursor:'pointer', color:'#4F46E5' }} onClick={()=>setView('list')}>Home</span>
+                    <span style={{ margin:'0 6px' }}>›</span>
+                    <span>Ticket Reply</span>
+                </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:20, alignItems:'start' }}>
-                {/* Left — conversation */}
-                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E5E7EB', boxShadow:'0 1px 3px rgba(0,0,0,0.06)', overflow:'hidden' }}>
-                    {/* Ticket title bar */}
-                    <div style={{ padding:'16px 20px', borderBottom:'1px solid #F3F4F6', background:'#FAFAFA' }}>
-                        <div style={{ fontWeight:700, fontSize:15, color:'#111827' }}>
-                            Ticket #{selected._id.slice(-6).toUpperCase()} — {selected.subject}
-                        </div>
-                        <div style={{ fontSize:12, color:'#9CA3AF', marginTop:4 }}>
-                            {fmtDate(selected.createdAt)} · {timeAgo(selected.createdAt)}
-                        </div>
-                    </div>
-
-                    {/* Messages */}
-                    <div ref={chatBoxRef} style={{ padding:'20px', maxHeight:420, overflowY:'auto', display:'flex', flexDirection:'column', gap:20, background:'#F9FAFB' }}>
-                        {/* Original */}
-                        <div style={{ display:'flex', gap:12 }}>
-                            <div style={{ width:38,height:38,borderRadius:'50%',background:'#EEF2FF',color:'#4F46E5',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                                {(selected.name||'U')[0].toUpperCase()}
-                            </div>
-                            <div style={{ flex:1 }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                                    <div>
-                                        <span style={{ fontWeight:700, fontSize:14, color:'#111827' }}>{selected.name}</span>
-                                        <span style={{ fontSize:12, color:'#9CA3AF', marginLeft:8 }}>{selected.email}</span>
-                                    </div>
-                                    <span style={{ fontSize:12, color:'#9CA3AF' }}>{fmtDate(selected.createdAt)}, {new Date(selected.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})} ({timeAgo(selected.createdAt)})</span>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 260px', gap:20, alignItems:'start' }}>
+                {/* Left — full ticket thread */}
+                <div>
+                    {/* Ticket header card */}
+                    <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E5E7EB', boxShadow:'0 1px 3px rgba(0,0,0,0.06)', marginBottom:0, overflow:'hidden' }}>
+                        <div style={{ padding:'16px 20px', borderBottom:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                            <div>
+                                <div style={{ fontWeight:700, fontSize:15, color:'#111827' }}>
+                                    Ticket #{selected._id.slice(-6).toUpperCase()} — {selected.subject}
                                 </div>
-                                <div style={{ background:'#fff', border:'1px solid #E5E7EB', borderRadius:10, padding:'14px 16px', fontSize:14, color:'#374151', lineHeight:1.7, whiteSpace:'pre-wrap' }}>
+                                <div style={{ fontSize:12, color:'#9CA3AF', marginTop:3 }}>
+                                    {new Date(selected.createdAt).toLocaleDateString('en-US',{weekday:'short'})}, {new Date(selected.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})} ({timeAgo(selected.createdAt)})
+                                </div>
+                            </div>
+                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                                <span style={{ fontSize:12, color:'#6B7280' }}>{(selected.replies?.length||0)+1} of {tickets.length}</span>
+                                <button onClick={()=>{ const i=filtered.findIndex(t=>t._id===selected._id); if(i>0) setSelected(filtered[i-1]); }} style={{ width:28,height:28,border:'1px solid #E5E7EB',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center' }}>‹</button>
+                                <button onClick={()=>{ const i=filtered.findIndex(t=>t._id===selected._id); if(i<filtered.length-1) setSelected(filtered[i+1]); }} style={{ width:28,height:28,border:'1px solid #E5E7EB',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center' }}>›</button>
+                            </div>
+                        </div>
+
+                        {/* Messages thread */}
+                        <div ref={chatBoxRef} style={{ maxHeight:380, overflowY:'auto' }}>
+                            {/* Original message */}
+                            <div style={{ padding:'20px', borderBottom:'1px solid #F3F4F6' }}>
+                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+                                    <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                                        <div style={{ width:40,height:40,borderRadius:'50%',background:'#E0E7FF',color:'#4F46E5',fontWeight:800,fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                                            {(selected.name||'U')[0].toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight:700, fontSize:14, color:'#111827' }}>{selected.name}</div>
+                                            <div style={{ fontSize:12, color:'#9CA3AF' }}>{selected.email}</div>
+                                        </div>
+                                    </div>
+                                    <span style={{ fontSize:12, color:'#9CA3AF' }}>
+                                        {new Date(selected.createdAt).toLocaleDateString('en-US',{weekday:'short'})}, {new Date(selected.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})} ({timeAgo(selected.createdAt)})
+                                    </span>
+                                </div>
+                                <div style={{ fontSize:14, color:'#374151', lineHeight:1.8, whiteSpace:'pre-wrap', paddingLeft:50 }}>
                                     {selected.message}
                                 </div>
-                                <ImgThumb urls={selected.images}/>
+                                <div style={{ paddingLeft:50 }}><ImgThumb urls={selected.images}/></div>
                             </div>
-                        </div>
 
-                        {/* Replies */}
-                        {selected.replies?.map((r,i)=>{
-                            const isAdmin=r.from==='admin';
-                            return (
-                                <div key={i} style={{ display:'flex', gap:12, flexDirection: isAdmin?'row-reverse':'row' }}>
-                                    <div style={{ width:38,height:38,borderRadius:'50%',background:isAdmin?'#D1FAE5':'#EEF2FF',color:isAdmin?'#065F46':'#4F46E5',fontWeight:800,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                                        {isAdmin?'🛡':(selected.name||'U')[0].toUpperCase()}
-                                    </div>
-                                    <div style={{ flex:1 }}>
-                                        <div style={{ display:'flex', justifyContent: isAdmin?'flex-end':'flex-start', alignItems:'center', gap:8, marginBottom:6 }}>
-                                            <span style={{ fontWeight:700, fontSize:13, color:'#111827' }}>{isAdmin?'Support Team':selected.name}</span>
-                                            {isAdmin&&<span style={{ fontSize:11, color:'#6B7280' }}>From - admin support team</span>}
-                                            <span style={{ fontSize:12, color:'#9CA3AF' }}>{fmtDate(r.at)}, {new Date(r.at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})} ({timeAgo(r.at)})</span>
+                            {/* Replies */}
+                            {selected.replies?.map((r,i)=>{
+                                const isAdmin=r.from==='admin';
+                                return (
+                                    <div key={i} style={{ padding:'20px', borderBottom:'1px solid #F3F4F6', background: isAdmin?'#FAFFFE':'#fff' }}>
+                                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+                                            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                                                <div style={{ width:40,height:40,borderRadius:'50%',background:isAdmin?'#D1FAE5':'#E0E7FF',color:isAdmin?'#065F46':'#4F46E5',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                                                    {isAdmin?'S':(selected.name||'U')[0].toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight:700, fontSize:14, color:'#111827' }}>{isAdmin?'Support Team':selected.name}</div>
+                                                    <div style={{ fontSize:12, color:'#9CA3AF' }}>{isAdmin?'From - admin support team':selected.email}</div>
+                                                </div>
+                                            </div>
+                                            <span style={{ fontSize:12, color:'#9CA3AF' }}>
+                                                {new Date(r.at).toLocaleDateString('en-US',{weekday:'short'})}, {new Date(r.at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})} ({timeAgo(r.at)})
+                                            </span>
                                         </div>
-                                        <div style={{ background:'#fff', border:`1px solid ${isAdmin?'#A7F3D0':'#E5E7EB'}`, borderRadius:10, padding:'14px 16px', fontSize:14, color:'#374151', lineHeight:1.7, whiteSpace:'pre-wrap' }}>
+                                        <div style={{ fontSize:14, color:'#374151', lineHeight:1.8, whiteSpace:'pre-wrap', paddingLeft:50 }}>
                                             {r.message}
                                         </div>
-                                        <ImgThumb urls={r.images}/>
+                                        <div style={{ paddingLeft:50 }}><ImgThumb urls={r.images}/></div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
+
+                        {/* Reply textarea */}
+                        {selected.status!=='closed' ? (
+                            <div style={{ borderTop:'1px solid #E5E7EB' }}>
+                                <textarea value={reply} onChange={e=>setReply(e.target.value)} rows={4}
+                                    placeholder="Type your reply here..."
+                                    style={{ width:'100%', padding:'16px 20px', border:'none', outline:'none', resize:'none', fontSize:14, color:'#374151', lineHeight:1.6, boxSizing:'border-box', fontFamily:'inherit' }}/>
+                                <AdminImageUpload sendReply={sendReply} reply={reply} sending={sending}/>
+                            </div>
+                        ) : (
+                            <div style={{ padding:16, textAlign:'center', color:'#9CA3AF', fontSize:13, borderTop:'1px solid #E5E7EB' }}>Ticket is closed</div>
+                        )}
                     </div>
 
-                    {/* Reply box */}
-                    {selected.status!=='closed' ? (
-                        <div style={{ borderTop:'1px solid #E5E7EB' }}>
-                            <textarea value={reply} onChange={e=>setReply(e.target.value)} rows={4}
-                                placeholder="Type your reply here..."
-                                style={{ width:'100%', padding:'16px', border:'none', outline:'none', resize:'none', fontSize:14, color:'#374151', lineHeight:1.6, boxSizing:'border-box' }}/>
-                            <AdminImageUpload sendReply={sendReply} reply={reply} sending={sending}/>
-                            {/* Status radio */}
-                            <div style={{ padding:'12px 16px', borderTop:'1px solid #F3F4F6', display:'flex', alignItems:'center', gap:20 }}>
-                                <span style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Status:</span>
-                                {[['in_progress','In-Progress','#4F46E5'],['resolved','Solved','#10B981'],['closed','On-Hold','#6B7280']].map(([v,l,c])=>(
-                                    <label key={v} style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, color:'#374151', fontWeight: selected.status===v?700:400 }}>
-                                        <input type="radio" checked={selected.status===v} onChange={()=>update(selected._id,{status:v})}
-                                            style={{ accentColor:c, width:16, height:16 }}/>
-                                        <span style={{ color: selected.status===v?c:'#6B7280', fontWeight: selected.status===v?700:500 }}>{l}</span>
-                                    </label>
-                                ))}
-                                <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-                                    <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
-                                        style={{ padding:'5px 10px', border:'1px solid #E5E7EB', borderRadius:6, fontSize:12, color:'#374151', cursor:'pointer' }}>
-                                        <option value="low">🟢 Low</option>
-                                        <option value="medium">🟡 Medium</option>
-                                        <option value="high">🔴 High</option>
-                                    </select>
-                                    <button onClick={()=>del(selected._id)} style={{ padding:'5px 12px', background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:6, color:'#EF4444', fontSize:12, cursor:'pointer', fontWeight:600 }}>Delete</button>
-                                </div>
+                    {/* Status row — outside card like TailAdmin */}
+                    {selected.status!=='closed' && (
+                        <div style={{ display:'flex', alignItems:'center', gap:24, marginTop:16, padding:'14px 20px', background:'#fff', borderRadius:10, border:'1px solid #E5E7EB' }}>
+                            <span style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Status:</span>
+                            {[['in_progress','In-Progress','#4F46E5'],['resolved','Solved','#10B981'],['closed','On-Hold','#6B7280']].map(([v,l,c])=>(
+                                <label key={v} style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13 }}>
+                                    <input type="radio" checked={selected.status===v} onChange={()=>update(selected._id,{status:v})}
+                                        style={{ accentColor:c, width:16, height:16 }}/>
+                                    <span style={{ color:selected.status===v?c:'#6B7280', fontWeight:selected.status===v?700:500 }}>{l}</span>
+                                </label>
+                            ))}
+                            <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+                                <select value={selected.priority} onChange={e=>update(selected._id,{priority:e.target.value})}
+                                    style={{ padding:'5px 10px', border:'1px solid #E5E7EB', borderRadius:6, fontSize:12, color:'#374151', cursor:'pointer' }}>
+                                    <option value="low">🟢 Low</option>
+                                    <option value="medium">🟡 Medium</option>
+                                    <option value="high">🔴 High</option>
+                                </select>
+                                <button onClick={()=>del(selected._id)} style={{ padding:'5px 14px', background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:6, color:'#EF4444', fontSize:12, cursor:'pointer', fontWeight:600 }}>Delete</button>
                             </div>
                         </div>
-                    ) : (
-                        <div style={{ padding:16, textAlign:'center', color:'#9CA3AF', fontSize:13, borderTop:'1px solid #E5E7EB' }}>🔒 Ticket closed</div>
                     )}
                 </div>
 
                 {/* Right — ticket details */}
-                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E5E7EB', boxShadow:'0 1px 3px rgba(0,0,0,0.06)', padding:20 }}>
-                    <div style={{ fontWeight:700, fontSize:15, color:'#111827', marginBottom:16 }}>Ticket Details</div>
+                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E5E7EB', boxShadow:'0 1px 3px rgba(0,0,0,0.06)', padding:'20px' }}>
+                    <div style={{ fontWeight:700, fontSize:15, color:'#111827', marginBottom:16, paddingBottom:12, borderBottom:'1px solid #F3F4F6' }}>Ticket Details</div>
                     {[
                         ['Customer',  selected.name],
                         ['Email',     selected.email],
                         ['Ticket ID', `#${selected._id.slice(-6).toUpperCase()}`],
-                        ['Priority',  selected.priority==='high'?'🔴 High':selected.priority==='medium'?'🟡 Medium':'🟢 Low'],
+                        ['Category',  selected.subject?.split(' ').slice(0,2).join(' ')+'...'],
                         ['Created',   fmtDate(selected.createdAt)],
                     ].map(([k,v])=>(
                         <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F3F4F6', fontSize:13 }}>
