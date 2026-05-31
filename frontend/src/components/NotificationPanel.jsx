@@ -18,7 +18,7 @@ function timeAgo(date) {
   return `${days}d ago`;
 }
 
-export default function NotificationPanel({ open, onClose, notifications }) {
+export default function NotificationPanel({ open, onClose, notifications, onClear }) {
   return (
     <>
       {open && <div className="notif-overlay" onClick={onClose} />}
@@ -32,11 +32,18 @@ export default function NotificationPanel({ open, onClose, notifications }) {
               </span>
             )}
           </div>
-          <button className="notif-close" onClick={onClose}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {notifications.length > 0 && (
+              <button onClick={onClear} style={{ fontSize:12, fontWeight:600, color:'#ef4444', background:'#fef2f2', border:'1px solid #fecdd3', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>
+                Clear All
+              </button>
+            )}
+            <button className="notif-close" onClick={onClose}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="notif-list">

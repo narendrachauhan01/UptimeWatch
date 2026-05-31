@@ -34,7 +34,7 @@ import ContactSupport from './pages/ContactSupport';
 import SupportTickets from './pages/SupportTickets';
 import Servers from './pages/Servers';
 import TermsOfService from './pages/TermsOfService';
-import { API_URL, getNotifications, markNotificationsRead, getPlans } from './api';
+import { API_URL, getNotifications, markNotificationsRead, getPlans, clearNotifications } from './api';
 import Toast from './components/Toast';
 import NotificationPanel from './components/NotificationPanel';
 import './App.css';
@@ -573,6 +573,7 @@ function AppInner() {
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
         notifications={notifications}
+        onClear={async () => { await clearNotifications(); setNotifications([]); }}
       />
 
       <div className="app-main">
