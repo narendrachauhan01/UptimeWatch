@@ -5013,3 +5013,16 @@ tr:hover td { background: linear-gradient(135deg,#faf5ff,#f8fafc); }
   .mon-bar-wrap > div { width: 100% !important; }
   .mon-bar-wrap > div > div:first-child { width: 100% !important; }
 }
+
+/* ── Support Tickets Mobile ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ticket-reply-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .ticket-reply-grid > div:first-child {
+    order: 1;
+  }
+  .ticket-reply-grid > div:last-child {
+    order: 2;
+  }
+}

@@ -149,7 +149,7 @@ export default function ContactSupport({ user }) {
                 </div>
             </div>
 
-            <div style={{display:'grid',gridTemplateColumns:'1fr 260px',gap:20,alignItems:'start'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 260px',gap:20,alignItems:'start'}} className="ticket-reply-grid">
                 <div>
                     <div style={{background:'#fff',borderRadius:12,border:'1px solid #E5E7EB',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',overflow:'hidden'}}>
                         <div style={{padding:'16px 20px',borderBottom:'1px solid #F3F4F6',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>

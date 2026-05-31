@@ -141,7 +141,8 @@ export default function SupportTickets() {
                 </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 260px', gap:20, alignItems:'start' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 260px', gap:20, alignItems:'start' }}
+                className="ticket-reply-grid">
                 {/* Left — full ticket thread */}
                 <div>
                     {/* Ticket header card */}
@@ -323,7 +324,7 @@ export default function SupportTickets() {
             </div>
 
             {/* Stats row — clickable filters */}
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24 }}>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:20 }}>
                 {[
                     { label:'Total tickets',   value:tickets.length,                                                                       icon:'🎫', bg:'#EEF2FF', color:'#4F46E5', f:'all' },
                     { label:'Pending tickets', value:tickets.filter(t=>t.status==='open'||t.status==='in_progress').length,                icon:'⏳', bg:'#FFF7ED', color:'#EA580C', f:'pending' },
@@ -346,23 +347,23 @@ export default function SupportTickets() {
             {/* Table card */}
             <div style={{ background:'#fff',borderRadius:12,border:'1px solid #E5E7EB',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',overflow:'hidden' }}>
                 {/* Table toolbar */}
-                <div style={{ padding:'16px 20px',borderBottom:'1px solid #F3F4F6',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap' }}>
+                <div style={{ padding:'14px 16px',borderBottom:'1px solid #F3F4F6',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap' }}>
                     <div>
                         <div style={{ fontWeight:700,fontSize:14,color:'#111827' }}>Support Tickets</div>
                         <div style={{ fontSize:12,color:'#9CA3AF',marginTop:2 }}>Your most recent support tickets list</div>
                     </div>
-                    <div style={{ display:'flex',gap:10,alignItems:'center' }}>
+                    <div style={{ display:'flex',gap:8,alignItems:'center',flexWrap:'wrap' }}>
                         {/* Filter pills */}
-                        <div style={{ display:'flex',gap:4,background:'#F3F4F6',borderRadius:8,padding:3 }}>
+                        <div style={{ display:'flex',gap:3,background:'#F3F4F6',borderRadius:8,padding:3 }}>
                             {[['all','All'],['solved','Solved'],['pending','Pending']].map(([v,l])=>(
                                 <button key={v} onClick={()=>setFilter(v)}
-                                    style={{ padding:'5px 14px',borderRadius:6,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',background:filter===v?'#fff':'transparent',color:filter===v?'#111827':'#6B7280',boxShadow:filter===v?'0 1px 3px rgba(0,0,0,0.1)':'none' }}>
+                                    style={{ padding:'5px 10px',borderRadius:6,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',background:filter===v?'#fff':'transparent',color:filter===v?'#111827':'#6B7280',boxShadow:filter===v?'0 1px 3px rgba(0,0,0,0.1)':'none' }}>
                                     {l}
                                 </button>
                             ))}
                         </div>
                         {/* Search */}
-                        <div style={{ display:'flex',alignItems:'center',gap:8,padding:'7px 12px',background:'#F9FAFB',border:'1px solid #E5E7EB',borderRadius:8,width:200 }}>
+                        <div style={{ display:'flex',alignItems:'center',gap:6,padding:'7px 10px',background:'#F9FAFB',border:'1px solid #E5E7EB',borderRadius:8,minWidth:130,flex:1 }}>
                             <svg width="14" height="14" fill="none" stroke="#9CA3AF" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..."
                                 style={{ border:'none',outline:'none',fontSize:13,color:'#374151',width:'100%',background:'transparent' }}/>
